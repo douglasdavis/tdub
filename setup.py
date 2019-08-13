@@ -24,6 +24,7 @@ setup(
     version = get_version(),
     scripts=[],
     packages=find_packages(exclude=["tests"]),
+    entry_points={"console_scripts": ["tdub = tdub._app:cli"]},
     description="tdub is tee double-you",
     long_description=long_description,
     long_description_content_type="text/markdown",

@@ -7,7 +7,7 @@ import numpy as np
 import uproot
 import dask.dataframe as dd
 from dask.delayed import delayed
-from typing import List, Union, Tuple, Optional
+from typing import List, Union, Optional, Dict
 
 
 def delayed_dataframe(
@@ -49,7 +49,7 @@ def delayed_dataframe(
     @delayed
     def get_frame(f, tn):
         tree = uproot.open(f)[tn]
-        return tree.pandas.df()
+        return tree.pandas.df(branches=branches)
 
     dfs = [get_frame(f, tree_name) for f in files]
 
@@ -60,7 +60,7 @@ def delayed_dataframe(
 def selected_dataframes(
     root_files: Union[str, List[str]],
     tree_name: str = "WtLoop_nominal",
-    selections: List[Tuple[str, str]] = [],
+    selections: Dict[str, str] = {},
     branches: Optional[List[str]] = None,
 ):
     """Construct a set of dataframes based on a list of selection queries
@@ -71,7 +71,7 @@ def selected_dataframes(
        a single ROOT file or list of ROOT files
     tree_name : str
        the tree name to turn into a dataframe
-    selections : list(tuple(str,str))
+    selections : dict(str,str)
        the list of selections to apply on the dataframe in the form
        ``(name, query)``.
     branches : list(str), optional
@@ -87,12 +87,9 @@ def selected_dataframes(
     --------
     >>> from glob import glob
     >>> files = glob("/path/to/files/*.root")
-    >>> selections = [("r2j2b", "(reg2j2b == True) & (OS == True)"),
-    ...               ("r2j1b", "(reg2j1b == True) & (OS == True)")]
+    >>> selections = {"r2j2b": "(reg2j2b == True) & (OS == True)",
+    ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
     >>> frames = selected_dataframes(files, selections=selections)
     """
     df = delayed_dataframe(root_files, tree_name, branches)
-    selected_dfs = []
-    for sel_name, sel_query in selections:
-        selected_dfs.append((sel_name, df.query(sel_query)))
-    return selected_dfs
+    return {sel_name: df.query(sel_query) for sel_name, sel_query in selections.items()}
