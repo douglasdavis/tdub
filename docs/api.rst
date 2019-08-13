@@ -1,9 +1,11 @@
 API Reference
 =============
 
-.. currentmodule:: tdub
+data
+----
 
-Summary
--------
+.. currentmodule:: tdub.data
 
-TBD
+.. autofunction:: delayed_dataframe
+
+.. autofunction:: selected_dataframes

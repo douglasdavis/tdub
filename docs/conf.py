@@ -1,4 +1,3 @@
-
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -38,7 +37,6 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
-    # "autodocsumm",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -50,28 +48,21 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # syntax highlighting style
-pygments_style = "sphinx"
+pygments_style = "default"
 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
-    "description": "tee-double-you",
-    "github_user": "douglasdavis",
-    "github_repo": "tdub",
-    "github_type": "star",
-    "github_count": False,
-    "font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
-    "head_font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"' ,
-    "font_size": "18px",
-    "page_width": "980px",
-    "sidebar_width": "240px",
-    "fixed_sidebar": True,
-    "show_relbars": True,
+    "canonical_url": "https://github.com/douglasdavis/tdub",
+    "display_version": True,
+    "collapse_navigation": True,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -82,4 +73,6 @@ html_static_path = ["_static"]
 intersphinx_mapping = {
     "python": ("http://docs.python.org/", None),
     "numpy": ("http://docs.scipy.org/doc/numpy", None),
+    "dask": ("https://docs.dask.org/en/latest/", None),
+    "uproot": ("https://uproot.readthedocs.io/en/latest/", None),
 }
