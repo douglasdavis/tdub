@@ -1,11 +1,7 @@
 API Reference
 =============
 
-data
-----
+.. toctree::
+   :maxdepth: 2
 
-.. currentmodule:: tdub.data
-
-.. autofunction:: delayed_dataframe
-
-.. autofunction:: selected_dataframes
+   api_frames.rst
