@@ -1,0 +1,3 @@
+uproot >= 3.8
+dask[dataframe, array, delayed]
+pygram11 >= 0.5.1
