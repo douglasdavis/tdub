@@ -1,5 +1,5 @@
 """
-tee-double-you
+tW analysis tools
 """
 
-__version__ = "0.0.1.dev2"
+__version__ = "0.0.1.dev3"
