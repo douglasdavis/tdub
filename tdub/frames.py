@@ -6,12 +6,14 @@ from __future__ import annotations
 
 import numpy as np
 import uproot
+import dask
 import dask.dataframe as dd
-from dask.delayed import delayed
-from typing import List, Union, Optional, Dict
 import logging
+from typing import List, Union, Optional, Dict
+
 
 log = logging.getLogger(__name__)
+
 
 def delayed_dataframe(
     root_files: Union[str, List[str]],
@@ -49,7 +51,7 @@ def delayed_dataframe(
     else:
         files = root_files
 
-    @delayed
+    @dask.delayed
     def get_frame(f, tn):
         tree = uproot.open(f)[tn]
         return tree.pandas.df(branches=branches)

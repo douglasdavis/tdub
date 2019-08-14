@@ -8,6 +8,7 @@ import logging
 
 def _h5_regions(args, log):
     frames = stdregion_dataframes(args.files, args.tree_name, args.branches)
+    computes = []
     for name, frame in frames.items():
         output_name = f"{args.prefix}_{name}.h5"
         if args.delay:
@@ -16,7 +17,7 @@ def _h5_regions(args, log):
             log.info(f"generating undelayed {output_name}")
             frame.to_hdf(output_name, f"/{args.tree_name}")
     if args.delay:
-        dask.compute(computes)
+        dask.compute(*computes)
     return 0
 
 
