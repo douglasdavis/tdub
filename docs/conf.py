@@ -71,8 +71,9 @@ html_theme_options = {
 html_static_path = ["_static"]
 
 intersphinx_mapping = {
-    "python": ("http://docs.python.org/", None),
+    "python": ("http://docs.python.org", None),
     "numpy": ("http://docs.scipy.org/doc/numpy", None),
-    "dask": ("https://docs.dask.org/en/latest/", None),
-    "uproot": ("https://uproot.readthedocs.io/en/latest/", None),
+    "dask": ("https://docs.dask.org/en/latest", None),
+    "uproot": ("https://uproot.readthedocs.io/en/latest", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
 }

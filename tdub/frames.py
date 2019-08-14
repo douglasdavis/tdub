@@ -10,9 +10,28 @@ import dask
 import dask.dataframe as dd
 import logging
 from typing import List, Union, Optional, Dict
+from dataclasses import dataclass, field
 
 
 log = logging.getLogger(__name__)
+
+
+@dataclass
+class SelectedDataFrame:
+    """DataFrame constructed from a selection string
+
+    Attributes
+    ----------
+    name : str
+       shorthand name of the selection
+    selection : str
+       the selection string (in :py:func:`pandas.eval` form)
+    df : :obj:`dask.dataframe.DataFrame`
+       the dask DataFrame
+    """
+    name: str
+    selection: str
+    df: dd.DataFrame = field(repr=False, compare=False)
 
 
 def delayed_dataframe(
@@ -21,8 +40,6 @@ def delayed_dataframe(
     branches: Optional[List[str]] = None,
 ) -> dd.DataFrame:
     """Construct a dask flavored DataFrame from delayed uproot tree reading
-
-    We use uproot's :meth:`uproot.TTreeMethods_pandas.df` implementation.
 
     Parameters
     ----------
@@ -36,8 +53,8 @@ def delayed_dataframe(
 
     Returns
     -------
-    df : :obj:`dask.dataframe.DataFrame`
-       a dask dataframe created via :meth:`dask.dataframe.from_delayed`
+    :obj:`dask.dataframe.DataFrame`
+       a dask dataframe created via :py:func:`dask.dataframe.from_delayed`
 
     Examples
     --------
@@ -57,9 +74,7 @@ def delayed_dataframe(
         return tree.pandas.df(branches=branches)
 
     dfs = [get_frame(f, tree_name) for f in files]
-
-    df = dd.from_delayed(dfs)
-    return df
+    return dd.from_delayed(dfs)
 
 
 def selected_dataframes(
@@ -85,9 +100,8 @@ def selected_dataframes(
 
     Returns
     -------
-    selected_dfs : dict((str, str), dask.dataframe.DataFrame)
-       key is (str, str): (name, selection string), val is the
-       associated dask DataFrame.
+    dict(str, SelectedFrame)
+       dictionary containing queried dataframes.
 
     Examples
     --------
@@ -99,7 +113,7 @@ def selected_dataframes(
     """
     df = delayed_dataframe(root_files, tree_name, branches)
     return {
-        (sel_name, sel_query): df.query(sel_query)
+        sel_name: SelectedDataFrame(sel_name, sel_query, df.query(sel_query))
         for sel_name, sel_query in selections.items()
     }
 
@@ -131,8 +145,8 @@ def stdregion_dataframes(
 
     Returns
     -------
-    selected_dfs : dict(str, dask.dataframe.DataFrame)
-       dictionary of ``{name, DataFrame}`` satisfying standard region selections
+    dict(str, SelectedFrame)
+       dictionary containing queried dataframes.
 
     Examples
     --------
