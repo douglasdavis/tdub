@@ -7,14 +7,21 @@ import logging
 
 
 def _h5_regions(args, log):
+    import numexpr
+    numexpr.set_num_threads(1)
+    client = Client()
     frames = stdregion_dataframes(args.files, args.tree_name, args.branches)
+    log.info("Executing queries:")
+    for k, v in frames.items():
+        log.info(f"  - {k[0]}: {k[1]}")
     computes = []
     for name, frame in frames.items():
-        output_name = f"{args.prefix}_{name}.h5"
+        output_name = f"{args.prefix}_{name[0]}.h5"
         if args.delay:
+            log.info(f"adding delayed to_hdf ({output_name})")
             computes.append(frame.to_hdf(output_name, f"/{args.tree_name}", compute=False))
         else:
-            log.info(f"generating undelayed {output_name}")
+            log.info(f"saving one at a time({output_name})")
             frame.to_hdf(output_name, f"/{args.tree_name}")
     if args.delay:
         dask.compute(*computes)

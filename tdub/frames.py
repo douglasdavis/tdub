@@ -1,5 +1,5 @@
 """
-Module for handling datasets
+Module for handling dataframes
 """
 
 from __future__ import annotations
@@ -85,8 +85,9 @@ def selected_dataframes(
 
     Returns
     -------
-    selected_dfs : dict(str, dask.dataframe.DataFrame)
-       list of DataFrames satisfying selection string
+    selected_dfs : dict((str, str), dask.dataframe.DataFrame)
+       key is (str, str): (name, selection string), val is the
+       associated dask DataFrame.
 
     Examples
     --------
@@ -97,7 +98,10 @@ def selected_dataframes(
     >>> frames = selected_dataframes(files, selections=selections)
     """
     df = delayed_dataframe(root_files, tree_name, branches)
-    return {sel_name: df.query(sel_query) for sel_name, sel_query in selections.items()}
+    return {
+        (sel_name, sel_query): df.query(sel_query)
+        for sel_name, sel_query in selections.items()
+    }
 
 
 def stdregion_dataframes(
@@ -107,8 +111,8 @@ def stdregion_dataframes(
 ) -> Dict[str, dd.DataFrame]:
     """Prepare our standard regions (selections) from a master dataframe
 
-    This is just a hardcoded call of :meth:`selected_dataframes`. By
-    standard selection we mean our good ole:
+    This is just a call of :meth:`selected_dataframes` with hardcoded
+    selections (using our standard regions):
 
       - ``1j1b``
       - ``2j1b``
