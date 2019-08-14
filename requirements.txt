@@ -1,4 +1,4 @@
 uproot >= 3.8
-dask[dataframe, array, delayed, distributed]
 pygram11 >= 0.5.1
 tables >= 3.5
+dask[complete]
