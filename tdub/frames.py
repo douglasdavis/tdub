@@ -126,12 +126,7 @@ def stdregion_dataframes(
     """Prepare our standard regions (selections) from a master dataframe
 
     This is just a call of :meth:`selected_dataframes` with hardcoded
-    selections (using our standard regions):
-
-      - ``1j1b``
-      - ``2j1b``
-      - ``2j2b``
-      - ``3j``
+    selections (using our standard regions): 1j1b, 2j1b, 2j2b, 3j.
 
     Parameters
     ----------
@@ -145,7 +140,7 @@ def stdregion_dataframes(
 
     Returns
     -------
-    dict(str, SelectedFrame)
+    dict(str, :obj:`SelectedDataFrame`)
        dictionary containing queried dataframes.
 
     Examples
