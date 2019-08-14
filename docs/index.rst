@@ -1,10 +1,8 @@
 tdub
 ====
 
-an analysis
-
 .. toctree::
    :maxdepth: 2
-   :caption: Stuff:
 
+   cli.rst
    api.rst

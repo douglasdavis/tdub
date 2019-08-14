@@ -29,23 +29,24 @@ class SelectedDataFrame:
     df : :obj:`dask.dataframe.DataFrame`
        the dask DataFrame
     """
+
     name: str
     selection: str
     df: dd.DataFrame = field(repr=False, compare=False)
 
 
 def delayed_dataframe(
-    root_files: Union[str, List[str]],
-    tree_name: str = "WtLoop_nominal",
+    files: Union[str, List[str]],
+    tree: str = "WtLoop_nominal",
     branches: Optional[List[str]] = None,
 ) -> dd.DataFrame:
     """Construct a dask flavored DataFrame from delayed uproot tree reading
 
     Parameters
     ----------
-    root_files : list(str) or str
+    files : list(str) or str
        a single ROOT file or list of ROOT files
-    tree_name : str
+    tree : str
        the tree name to turn into a dataframe
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
@@ -63,44 +64,44 @@ def delayed_dataframe(
     >>> ddf = delayed_df(files, branches=["branch_a", "branch_b"])
 
     """
-    if isinstance(root_files, str):
-        files = [root_files]
+    if isinstance(files, str):
+        files = [files]
     else:
-        files = root_files
+        files = files
 
     @dask.delayed
     def get_frame(f, tn):
-        tree = uproot.open(f)[tn]
-        return tree.pandas.df(branches=branches)
+        t = uproot.open(f)[tn]
+        return t.pandas.df(branches=branches)
 
-    dfs = [get_frame(f, tree_name) for f in files]
+    dfs = [get_frame(f, tree) for f in files]
     return dd.from_delayed(dfs)
 
 
 def selected_dataframes(
-    root_files: Union[str, List[str]],
-    tree_name: str = "WtLoop_nominal",
-    selections: Dict[str, str] = {},
+    files: Union[str, List[str]],
+    selections: Dict[str, str],
+    tree: str = "WtLoop_nominal",
     branches: Optional[List[str]] = None,
 ) -> Dict[str, dd.DataFrame]:
     """Construct a set of dataframes based on a list of selection queries
 
     Parameters
     ----------
-    root_files : list(str) or str
+    files : list(str) or str
        a single ROOT file or list of ROOT files
-    tree_name : str
-       the tree name to turn into a dataframe
     selections : dict(str,str)
        the list of selections to apply on the dataframe in the form
        ``(name, query)``.
+    tree : str
+       the tree name to turn into a dataframe
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None`` (all branches)
 
     Returns
     -------
-    dict(str, SelectedFrame)
+    dict(str, :obj:`SelectedDataFrame`)
        dictionary containing queried dataframes.
 
     Examples
@@ -111,7 +112,7 @@ def selected_dataframes(
     ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
     >>> frames = selected_dataframes(files, selections=selections)
     """
-    df = delayed_dataframe(root_files, tree_name, branches)
+    df = delayed_dataframe(files, tree, branches)
     return {
         sel_name: SelectedDataFrame(sel_name, sel_query, df.query(sel_query))
         for sel_name, sel_query in selections.items()
@@ -119,8 +120,8 @@ def selected_dataframes(
 
 
 def stdregion_dataframes(
-    root_files: Union[str, List[str]],
-    tree_name: str = "WtLoop_nominal",
+    files: Union[str, List[str]],
+    tree: str = "WtLoop_nominal",
     branches: Optional[List[str]] = None,
 ) -> Dict[str, dd.DataFrame]:
     """Prepare our standard regions (selections) from a master dataframe
@@ -130,9 +131,9 @@ def stdregion_dataframes(
 
     Parameters
     ----------
-    root_files : list(str) or str
+    files : list(str) or str
        a single ROOT file or list of ROOT files
-    tree_name : str
+    tree : str
        the tree name to turn into a dataframe
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
@@ -160,4 +161,4 @@ def stdregion_dataframes(
     use_branches = None
     if branches is not None:
         use_branches = set(branches) | set(["reg1j1b", "reg2j1b", "reg2j2b", "reg3j", "OS"])
-    return selected_dataframes(root_files, tree_name, selections, use_branches)
+    return selected_dataframes(files, selections, tree, use_branches)
