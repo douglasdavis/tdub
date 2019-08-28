@@ -1,5 +1,5 @@
 tdub.frames
-------------
+-----------
 
 A module for handling dataframes.
 
@@ -10,6 +10,7 @@ Summary
 
 .. autosummary::
 
+   DatasetInMemory
    SelectedDataFrame
    delayed_dataframe
    selected_dataframes
@@ -18,10 +19,16 @@ Summary
 Reference
 ^^^^^^^^^
 
+.. autoclass:: DatasetInMemory
+   :members:
+
 .. autoclass:: SelectedDataFrame
+   :members:
 
 .. autofunction:: delayed_dataframe
 
 .. autofunction:: selected_dataframes
+
+.. autofunction:: selected_dataframe
 
 .. autofunction:: stdregion_dataframes

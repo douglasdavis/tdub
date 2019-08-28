@@ -6,25 +6,17 @@ from dask.utils import SerializableLock
 import logging
 
 
-def _h5_regions(args, log):
+def _parquet_regions(args, log):
     import numexpr
     numexpr.set_num_threads(1)
-    client = Client()
     frames = stdregion_dataframes(args.files, args.tree_name, args.branches)
     log.info("Executing queries:")
     for k, v in frames.items():
         log.info(f"  - {v.name}: {v.selection}")
-    computes = []
     for name, frame in frames.items():
-        output_name = f"{args.prefix}_{name}.h5"
-        if args.delay:
-            log.info(f"adding delayed to_hdf ({output_name})")
-            computes.append(frame.df.to_hdf(output_name, f"/{args.tree_name}", compute=False))
-        else:
-            log.info(f"saving one at a time ({output_name})")
-            frame.df.to_hdf(output_name, f"/{args.tree_name}")
-    if args.delay:
-        dask.compute(*computes)
+        output_name = f"{args.prefix}_{name}.parquet"
+        log.info(f"saving one at a time ({output_name})")
+        frame.df.to_parquet(output_name, f"/{args.tree_name}")
     return 0
 
 
@@ -33,12 +25,11 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="tdub", description="tee-double-you CLI")
     subparsers = parser.add_subparsers(dest="action", help="Action")
 
-    regions2hdf = subparsers.add_parser("regions2hdf", help="generate HDF5 files for individual regions")
-    regions2hdf.add_argument("files", type=str, nargs="+", help="input ROOT files")
-    regions2hdf.add_argument("prefix", type=str, help="output file name prefix")
-    regions2hdf.add_argument("-b","--branches", type=str, nargs="+", default=None, help="Branches")
-    regions2hdf.add_argument("-d","--delay", action="store_true", help="delay to_hdf calls (unstable)")
-    regions2hdf.add_argument("-t","--tree-name", type=str, default="WtLoop_nominal", help="ROOT tree name")
+    regions2parquet = subparsers.add_parser("regions2parquet", help="generate parquet output for individual regions")
+    regions2parquet.add_argument("files", type=str, nargs="+", help="input ROOT files")
+    regions2parquet.add_argument("prefix", type=str, help="output file name prefix")
+    regions2parquet.add_argument("-b","--branches", type=str, nargs="+", default=None, help="Branches")
+    regions2parquet.add_argument("-t","--tree-name", type=str, default="WtLoop_nominal", help="ROOT tree name")
     # fmt: on
     return (parser.parse_args(), parser)
 
@@ -58,7 +49,7 @@ def cli():
     log = logging.getLogger("tdub.cli")
     # fmt: on
 
-    if args.action == "regions2hdf":
-        return _h5_regions(args, log)
+    if args.action == "regions2parquet":
+        return _parquet_regions(args, log)
     else:
         parser.print_help()

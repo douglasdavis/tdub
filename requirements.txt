@@ -1,4 +1,9 @@
+awkward >= 0.12.7
 uproot >= 3.8
-pygram11 >= 0.5.1
+pygram11 >= 0.5.2
 tables >= 3.5
-dask[complete]
+matplotlib >= 3.1.1
+dask[complete] >= 2.3.0
+pyarrow >= 0.14.1
+xxhash >= 1.4.1
+lz4 >= 2.1.10

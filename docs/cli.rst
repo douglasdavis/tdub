@@ -5,10 +5,10 @@ Top level CLI:
 
 .. command-output:: tdub --help
 
-regions2hdf
-^^^^^^^^^^^
+regions2parquet
+^^^^^^^^^^^^^^^
 
-Turn a set of ROOT files into HDF5 files split into our standard
+Turn a set of ROOT files into parquet output split into our standard
 regions:
 
-.. command-output:: tdub regions2hdf --help
+.. command-output:: tdub regions2parquet --help
