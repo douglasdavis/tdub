@@ -20,6 +20,7 @@ Function Summary
 
    delayed_dataframe
    selected_dataframes
+   specific_dataframe
    stdregion_dataframes
 
 Reference
@@ -35,6 +36,6 @@ Reference
 
 .. autofunction:: selected_dataframes
 
-.. autofunction:: selected_dataframe
+.. autofunction:: specific_dataframe
 
 .. autofunction:: stdregion_dataframes

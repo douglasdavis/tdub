@@ -4,15 +4,13 @@ Module for handling dataframes
 
 from __future__ import annotations
 
-import numpy as np
 import uproot
 import logging
 import dask.dataframe as dd
-import pandas as pd
-import re
 from typing import List, Union, Optional, Dict
 from dataclasses import dataclass, field
 from tdub.regions import *
+from tdub.utils import categorize_branches
 
 log = logging.getLogger(__name__)
 
@@ -44,27 +42,12 @@ class DatasetInMemory:
     ) -> DatasetInMemory:
         self.name = name
         all_columns = list(ddf.columns)
-        weight_re = re.compile("^weight_")
-        weight_columns = list(filter(weight_re.match, all_columns))
-        payload_columns = list(set(all_columns) ^ set(weight_columns))
-        self._df = ddf[payload_columns].compute()
-        self._weights = ddf[weight_columns].compute()
-        if dropnonkin:
-            dropem = list(
-                {
-                    "elel",
-                    "elmu",
-                    "mumu",
-                    "OS",
-                    "SS",
-                    "reg1j1b",
-                    "reg2j1b",
-                    "reg2j2b",
-                    "reg3j",
-                }
-                & set(all_columns)
-            )
-            self._df.drop(columns=dropem, inplace=True)
+        categorized = categorize_branches(all_columns)
+        nonweights = categorized["kin"]
+        if not dropnonkin:
+            nonweights += categorized["meta"]
+        self._df = ddf[nonweights].compute()
+        self._weights = ddf[categorized["weights"]].compute()
 
     @property
     def df(self):
@@ -130,9 +113,13 @@ def delayed_dataframe(
     >>> ddf = delayed_dataframe(files, branches=["branch_a", "branch_b"])
 
     """
-    branches = list(set(branches) | set([weight_name]))
+    use_branches = branches
+    if branches is not None:
+        use_branches = list(set(branches) | set([weight_name]))
     cache = uproot.ArrayCache("1 GB")
-    return uproot.daskframe(files, tree, branches, namedecode="utf-8", basketcache=cache)
+    return uproot.daskframe(
+        files, tree, use_branches, namedecode="utf-8", basketcache=cache
+    )
 
 
 def selected_dataframes(
@@ -179,7 +166,7 @@ def selected_dataframes(
     }
 
 
-def selected_dataframe(
+def specific_dataframe(
     files: Union[str, List[str]],
     region: Union[Region, str],
     name: str = "nameless",
@@ -195,7 +182,8 @@ def selected_dataframe(
        a single ROOT file or list of ROOT files
     region : tdub.regions.Region or str
        which predefined tW region to select
-    name : give your selection a name
+    name : str
+       give your selection a name
     tree : str
        the tree name to turn into a dataframe
     weight_name: str
@@ -213,7 +201,7 @@ def selected_dataframe(
     --------
     >>> from glob import glob
     >>> files = glob("/path/to/files/*.root")
-    >>> frame_2j1b = selected_dataframe(files, Region.r2j1b, ex_branches=["pT_lep1"])
+    >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, ex_branches=["pT_lep1"])
 
     """
     if isinstance(region, str):
