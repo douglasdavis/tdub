@@ -11,7 +11,7 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
 
     - ``meta`` for meta information (final state information)
     - ``kin`` for kinematic features (used for classifiers)
-    - ``weights`` for any branch satisfying the regex ``^weight_``
+    - ``weights`` for any branch that starts or ends with ``weight``
 
     Parameters
     ----------
@@ -28,6 +28,12 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
         "reg2j1b",
         "reg2j2b",
         "reg3j",
+        "reg1j0b",
+        "reg2j0b",
+        "reg3j1b",
+        "reg3j2b",
+        "reg3jHb",
+        "reg4j",
         "OS",
         "SS",
         "elmu",
@@ -35,11 +41,15 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
         "mumu",
         "runNumber",
         "eventNumber",
+        "tptrw_tool",
     }
-    weight_re = re.compile("^weight_")
+    has_tptrw_tool = "tptrw_tool" in branches
+    weight_re = re.compile("(^weight_\w+)|(\w+_weight$)")
     weights = set(filter(weight_re.match, branches))
     metas = metas & set(branches)
     kins = (set(branches) ^ weights) ^ metas
+    if has_tptrw_tool:
+        weights.add("tptrw_tool")
     return {"weights": list(weights), "kin": list(kins), "meta": list(metas)}
 
 

@@ -3,6 +3,7 @@ import dask
 from tdub.frames import stdregion_dataframes
 from dask.distributed import Client, Lock
 from dask.utils import SerializableLock
+from dask.dataframe import to_parquet
 import logging
 
 
@@ -16,7 +17,7 @@ def _parquet_regions(args, log):
     for name, frame in frames.items():
         output_name = f"{args.prefix}_{name}.parquet"
         log.info(f"saving one at a time ({output_name})")
-        frame.df.to_parquet(output_name, f"/{args.tree_name}")
+        to_parquet(frame.df, output_name, engine="auto")
     return 0
 
 

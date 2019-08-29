@@ -6,8 +6,10 @@ from __future__ import annotations
 
 import uproot
 import logging
+import cachetools
+import dask
 import dask.dataframe as dd
-from typing import List, Union, Optional, Dict
+from typing import List, Union, Optional, Dict, Any
 from dataclasses import dataclass, field
 from tdub.regions import *
 from tdub.utils import categorize_branches
@@ -16,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 class DatasetInMemory:
-    """A dataset structured for simple use that lives in RAM
+    """A dataset structured with everything living on RAM
 
     Attributes
     ----------
@@ -81,12 +83,26 @@ class SelectedDataFrame:
     selection: str
     df: dd.DataFrame = field(repr=False, compare=False)
 
+    def to_ram(self, **kwargs):
+        """create a dataset that lives in memory
+
+        kwargs are passed to the :obj:`DatasetInMemory` constructor
+
+        Examples
+        --------
+        >>> sdf = specific_dataframe(files, "2j2b", name="ttbar_2j2b")
+        >>> dim = sdf.to_ram(dropnonkin=False)
+        """
+        return DatasetInMemory(self.name, self.df, **kwargs)
+
 
 def delayed_dataframe(
     files: Union[str, List[str]],
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
+    repartition_kw: Optional[Dict[str, Any]] = None,
+    **kwargs,
 ) -> dd.DataFrame:
     """Construct a dask flavored DataFrame from uproot
 
@@ -101,6 +117,10 @@ def delayed_dataframe(
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None``, includes all branches.
+    repartition_kw : dict(str, Any), optional
+       arguments to pass to :py:func:`dask.dataframe.DataFrame.repartition`
+    kwargs
+       passed to :py:func:`uproot.daskframe`
 
     Returns
     -------
@@ -116,10 +136,27 @@ def delayed_dataframe(
     use_branches = branches
     if branches is not None:
         use_branches = list(set(branches) | set([weight_name]))
-    cache = uproot.ArrayCache("1 GB")
-    return uproot.daskframe(
-        files, tree, use_branches, namedecode="utf-8", basketcache=cache
-    )
+    # cache = uproot.ArrayCache("10 MB")
+    # ddf = uproot.daskframe(
+    #    files,
+    #    tree,
+    #    use_branches,
+    #    namedecode="utf-8",
+    #    basketcache=cache,
+    #    **kwargs,
+    # )
+
+    @dask.delayed
+    def get_frame(f, tn):
+        t = uproot.open(f)[tn]
+        return t.pandas.df(branches=use_branches)
+
+    dfs = [get_frame(f, tree) for f in files]
+    ddf = dd.from_delayed(dfs)
+    if repartition_kw is not None:
+        log.info(f"repartition with {repartition_kw}")
+        ddf = ddf.repartition(**repartition_kw)
+    return ddf
 
 
 def selected_dataframes(
@@ -128,6 +165,7 @@ def selected_dataframes(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
+    ddf_kw: Optional[Dict[str, Any]] = dict(),
 ) -> Dict[str, dd.DataFrame]:
     """Construct a set of dataframes based on a list of selection queries
 
@@ -145,6 +183,8 @@ def selected_dataframes(
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None`` (all branches)
+    ddf_kw : dict(str, Any), optional
+       set of arguments to pass to :py:func:`delayed_dataframe`
 
     Returns
     -------
@@ -159,7 +199,7 @@ def selected_dataframes(
     ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
     >>> frames = selected_dataframes(files, selections=selections)
     """
-    df = delayed_dataframe(files, tree, weight_name, branches)
+    df = delayed_dataframe(files, tree, weight_name, branches, **ddf_kw)
     return {
         sel_name: SelectedDataFrame(sel_name, sel_query, df.query(sel_query))
         for sel_name, sel_query in selections.items()
@@ -202,17 +242,13 @@ def specific_dataframe(
     >>> from glob import glob
     >>> files = glob("/path/to/files/*.root")
     >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, ex_branches=["pT_lep1"])
-
+    >>> frame_2j2b = specific_dataframe(files, "2j2b", ex_branches=["met"])
     """
     if isinstance(region, str):
-        if region == "1j1b":
-            r = Region.r1j1b
-        elif region == "2j1b":
-            r = Region.r2j1b
-        elif region == "2j2b":
-            r = Region.r2j2b
-        elif region == "3j":
-            r = Region.r3j
+        if region.startswith("r"):
+            r = Region[region]
+        else:
+            r = Region[f"r{region}"]
     elif isinstance(region, Region):
         r = region
     else:
@@ -238,6 +274,7 @@ def stdregion_dataframes(
     files: Union[str, List[str]],
     tree: str = "WtLoop_nominal",
     branches: Optional[List[str]] = None,
+    partitioning: Union[int, str] = 4,
 ) -> Dict[str, dd.DataFrame]:
     """Prepare our standard regions (selections) from a master dataframe
 
@@ -253,6 +290,8 @@ def stdregion_dataframes(
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None`` (all branches)
+    partitioning : int or str
+       partion size for the dask dataframes
 
     Returns
     -------
@@ -273,4 +312,11 @@ def stdregion_dataframes(
         use_branches = list(
             set(branches) | set(["reg1j1b", "reg2j1b", "reg2j2b", "reg3j", "OS"])
         )
-    return selected_dataframes(files, selections, tree, use_branches)
+    repart_kw = None
+    if isinstance(partitioning, str):
+        repart_kw = dict(partition_size=partitioning)
+    elif isinstance(partitioning, int):
+        repart_kw = dict(npartitions=partitioning)
+    return selected_dataframes(
+        files, selections, tree, use_branches, ddf_kw=dict(repartition_kw=repart_kw)
+    )
