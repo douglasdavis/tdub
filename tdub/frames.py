@@ -155,7 +155,7 @@ def selected_dataframes(
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
     delayed_dataframe_kw: Optional[Dict[str, Any]] = None,
-) -> Dict[str, dd.DataFrame]:
+) -> Dict[str, SelectedDataFrame]:
     """Construct a set of dataframes based on a list of selection queries
 
     Parameters
@@ -202,7 +202,7 @@ def specific_dataframe(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     extra_branches: List[str] = [],
-) -> Dict[str, dd.DataFrame]:
+) -> SelectedDataFrame:
     """Construct a set of dataframes based on a list of selection queries
 
     Parameters
@@ -224,7 +224,7 @@ def specific_dataframe(
 
     Returns
     -------
-    :obj:`dask.dataframe.DataFrame`
+    :obj:`SelectedDataFrame
 
     Examples
     --------
@@ -264,7 +264,7 @@ def stdregion_dataframes(
     tree: str = "WtLoop_nominal",
     branches: Optional[List[str]] = None,
     partitioning: Optional[Union[int, str]] = None,
-) -> Dict[str, dd.DataFrame]:
+) -> Dict[str, SelectedDataFrame]:
     """Prepare our standard regions (selections) from a master dataframe
 
     This is just a call of :meth:`selected_dataframes` with hardcoded
