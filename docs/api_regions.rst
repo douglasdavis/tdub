@@ -5,8 +5,8 @@ A module for to make using our regions easy
 
 .. currentmodule:: tdub.regions
 
-Summary
-^^^^^^^
+Class Summary
+^^^^^^^^^^^^^
 
 .. autosummary::
 

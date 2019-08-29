@@ -5,13 +5,19 @@ A module for handling dataframes.
 
 .. currentmodule:: tdub.frames
 
-Summary
-^^^^^^^
+Class Summary
+^^^^^^^^^^^^^
 
 .. autosummary::
 
    DatasetInMemory
    SelectedDataFrame
+
+Function Summary
+^^^^^^^^^^^^^^^^
+
+.. autosummary::
+
    delayed_dataframe
    selected_dataframes
    stdregion_dataframes

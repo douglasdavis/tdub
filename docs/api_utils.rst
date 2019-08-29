@@ -5,8 +5,8 @@ A utility module
 
 .. currentmodule:: tdub.utils
 
-Summary
-^^^^^^^
+Function Summary
+^^^^^^^^^^^^^^^^
 
 .. autosummary::
 
