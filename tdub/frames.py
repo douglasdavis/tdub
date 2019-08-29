@@ -224,7 +224,7 @@ def specific_dataframe(
 
     Returns
     -------
-    :obj:`SelectedDataFrame
+    :obj:`SelectedDataFrame`
 
     Examples
     --------
