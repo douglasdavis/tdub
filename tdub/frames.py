@@ -219,8 +219,8 @@ def specific_dataframe(
        weight branch
     extra_branches : list(str), optional
        a list of additional branches to save (the standard branches
-       associated as features for the region you selected will be include
-       by default).
+       associated as features for the region you selected will be
+       included by default).
 
     Returns
     -------
@@ -232,6 +232,7 @@ def specific_dataframe(
     >>> files = glob("/path/to/files/*.root")
     >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, extra_branches=["pT_lep1"])
     >>> frame_2j2b = specific_dataframe(files, "2j2b", extra_branches=["met"])
+
     """
     if isinstance(region, str):
         if region.startswith("r"):
