@@ -1,3 +1,4 @@
 sphinx>=2.1
 sphinx_rtd_theme
 sphinxcontrib-programoutput
+Pallets-Sphinx-Themes
