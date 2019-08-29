@@ -7,3 +7,5 @@ dask[complete] >= 2.3.0
 pyarrow >= 0.14.1
 xxhash >= 1.4.1
 lz4 >= 2.1.10
+scikit-learn >= 0.21.3
+joblib >= 0.13.2
