@@ -102,9 +102,8 @@ def delayed_dataframe(
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
     repartition_kw: Optional[Dict[str, Any]] = None,
-    **kwargs,
 ) -> dd.DataFrame:
-    """Construct a dask flavored DataFrame from uproot
+    """Construct a dask flavored DataFrame from uproot's pandas utility
 
     Parameters
     ----------
@@ -113,14 +112,13 @@ def delayed_dataframe(
     tree : str
        the tree name to turn into a dataframe
     weight_name: str
-       weight branch
+       weight branch (we make sure to grab it if you give something
+       other than ``None`` to ``branches``).
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None``, includes all branches.
     repartition_kw : dict(str, Any), optional
        arguments to pass to :py:func:`dask.dataframe.DataFrame.repartition`
-    kwargs
-       passed to :py:func:`uproot.daskframe`
 
     Returns
     -------
@@ -136,15 +134,6 @@ def delayed_dataframe(
     use_branches = branches
     if branches is not None:
         use_branches = list(set(branches) | set([weight_name]))
-    # cache = uproot.ArrayCache("10 MB")
-    # ddf = uproot.daskframe(
-    #    files,
-    #    tree,
-    #    use_branches,
-    #    namedecode="utf-8",
-    #    basketcache=cache,
-    #    **kwargs,
-    # )
 
     @dask.delayed
     def get_frame(f, tn):
@@ -165,7 +154,7 @@ def selected_dataframes(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
-    ddf_kw: Optional[Dict[str, Any]] = dict(),
+    delayed_dataframe_kw: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, dd.DataFrame]:
     """Construct a set of dataframes based on a list of selection queries
 
@@ -183,7 +172,7 @@ def selected_dataframes(
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None`` (all branches)
-    ddf_kw : dict(str, Any), optional
+    delayed_dataframe_kw : dict(str, Any), optional
        set of arguments to pass to :py:func:`delayed_dataframe`
 
     Returns
@@ -199,7 +188,7 @@ def selected_dataframes(
     ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
     >>> frames = selected_dataframes(files, selections=selections)
     """
-    df = delayed_dataframe(files, tree, weight_name, branches, **ddf_kw)
+    df = delayed_dataframe(files, tree, weight_name, branches, **delayed_dataframe_kw)
     return {
         sel_name: SelectedDataFrame(sel_name, sel_query, df.query(sel_query))
         for sel_name, sel_query in selections.items()
@@ -212,7 +201,7 @@ def specific_dataframe(
     name: str = "nameless",
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
-    ex_branches: List[str] = [],
+    extra_branches: List[str] = [],
 ) -> Dict[str, dd.DataFrame]:
     """Construct a set of dataframes based on a list of selection queries
 
@@ -228,7 +217,7 @@ def specific_dataframe(
        the tree name to turn into a dataframe
     weight_name: str
        weight branch
-    ex_branches : list(str), optional
+    extra_branches : list(str), optional
        a list of additional branches to save (the standard branches
        associated as features for the region you selected will be include
        by default).
@@ -241,8 +230,8 @@ def specific_dataframe(
     --------
     >>> from glob import glob
     >>> files = glob("/path/to/files/*.root")
-    >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, ex_branches=["pT_lep1"])
-    >>> frame_2j2b = specific_dataframe(files, "2j2b", ex_branches=["met"])
+    >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, extra_branches=["pT_lep1"])
+    >>> frame_2j2b = specific_dataframe(files, "2j2b", extra_branches=["met"])
     """
     if isinstance(region, str):
         if region.startswith("r"):
@@ -254,16 +243,16 @@ def specific_dataframe(
     else:
         raise TypeError("region argument must be tdub.regions.Region or str")
     if r == Region.r1j1b:
-        branches = list(set(FSET_1j1b) | set(ex_branches) | {"reg1j1b", "OS"})
+        branches = list(set(FSET_1j1b) | set(extra_branches) | {"reg1j1b", "OS"})
         q = SEL_1j1b
     elif r == Region.r2j1b:
-        branches = list(set(FSET_2j1b) | set(ex_branches) | {"reg2j1b", "OS"})
+        branches = list(set(FSET_2j1b) | set(extra_branches) | {"reg2j1b", "OS"})
         q = SEL_2j1b
     elif r == Region.r2j2b:
-        branches = list(set(FSET_2j2b) | set(ex_branches) | {"reg2j2b", "OS"})
+        branches = list(set(FSET_2j2b) | set(extra_branches) | {"reg2j2b", "OS"})
         q = SEL_2j2b
     elif r == Region.r3j:
-        branches = list(set(FSET_3j) | set(ex_branches) | {"reg3j", "OS"})
+        branches = list(set(FSET_3j) | set(extra_branches) | {"reg3j", "OS"})
         q = SEL_3j
     return SelectedDataFrame(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
@@ -274,7 +263,7 @@ def stdregion_dataframes(
     files: Union[str, List[str]],
     tree: str = "WtLoop_nominal",
     branches: Optional[List[str]] = None,
-    partitioning: Union[int, str] = 4,
+    partitioning: Optional[Union[int, str]] = None,
 ) -> Dict[str, dd.DataFrame]:
     """Prepare our standard regions (selections) from a master dataframe
 
@@ -290,7 +279,7 @@ def stdregion_dataframes(
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None`` (all branches)
-    partitioning : int or str
+    partitioning : int or str, optional
        partion size for the dask dataframes
 
     Returns
@@ -314,9 +303,13 @@ def stdregion_dataframes(
         )
     repart_kw = None
     if isinstance(partitioning, str):
-        repart_kw = dict(partition_size=partitioning)
+        repart_kw = {"partition_size": partitioning}
     elif isinstance(partitioning, int):
-        repart_kw = dict(npartitions=partitioning)
+        repart_kw = {"npartitions": partitioning}
     return selected_dataframes(
-        files, selections, tree, use_branches, ddf_kw=dict(repartition_kw=repart_kw)
+        files,
+        selections,
+        tree,
+        use_branches,
+        delayed_dataframe_kw={"repartition_kw": repart_kw},
     )
