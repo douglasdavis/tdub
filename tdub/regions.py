@@ -14,7 +14,7 @@ __all__ = [
 
 
 class Region(Enum):
-    """Clean way to use region defintions
+    """A simple enum class for easily using region information
 
     Attributes
     ----------
@@ -26,7 +26,18 @@ class Region(Enum):
         Our ``2j2b`` region
     r3j = 3
         Our ``3j`` region
+
+    Examples
+    --------
+
+    Using this enum for grabing the ``2j2b`` region from a set of
+    files:
+
+    >>> from tdub import Region, specific_dataframe
+    >>> sdf = specific_dataframe(files, Region.r2j2b)
+
     """
+
     r1j1b = 0
     r2j1b = 1
     r2j2b = 2

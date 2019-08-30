@@ -22,6 +22,19 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
     -------
     dict(str, list(str))
        dictionary of ``{category : list-of-branches}``
+
+    Examples
+    --------
+    >>> from tdub import categorize_branches
+    >>> branches = ["pT_lep1", "pT_lep2", "weight_nominal", "weight_sys_jvt", "reg2j2b"]
+    >>> cated = categorize_branches(branches)
+    >>> cated["weights"]
+    ['weight_sys_jvt', 'weight_nominal']
+    >>> cated["meta"]
+    ['reg2j2b']
+    >>> cated["kin"]
+    ['pT_lep1', 'pT_lep2']
+
     """
     metas = {
         "reg1j1b",
@@ -56,6 +69,12 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
 def quick_files(datapath: str) -> Dict[str, List[str]]:
     """get a dictionary of ``{sample_str : file_list}`` for quick file access
 
+    These types of samples are currently tested:
+
+    - ``ttbar``
+    - ``tW_DR``
+    - ``tW_DS``
+
     Parameters
     ----------
     datapath : str
@@ -65,6 +84,16 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
     -------
     dict(str, list(str))
         dictionary for quick file access
+
+    Examples
+    --------
+    >>> from pprint import pprint
+    >>> from tdub import quick_files
+    >>> qf = quick_files("/path/to/some_files") ## has 410472 ttbar samples
+    >>> pprint(qf["ttbar"])
+    ['/path/to/some/files/ttbar_410472_FS_MC16d_nominal.root',
+     '/path/to/some/files/ttbar_410472_FS_MC16e_nominal.root',
+     '/path/to/some/files/ttbar_410472_FS_MC16a_nominal.root']
 
     """
     path = str(PosixPath(datapath).resolve())

@@ -1,0 +1,13 @@
+pre {
+    padding: 9px 17px;
+    font-family: monospace;
+}
+
+code {
+    font-family: monospace;
+}
+
+dl pre, blockquote pre, li pre {
+    padding-left: 15px;
+    font-family: monospace;
+}

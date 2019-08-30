@@ -21,6 +21,15 @@ log = logging.getLogger(__name__)
 class DataFramesInMemory:
     """A dataset structured with everything living on RAM
 
+    Parameters
+    ----------
+    name : str
+        dataset name
+    ddf : :obj:`dask.dataframe.DataFrame`
+        dask dataframe with all information (normal payload and weights)
+    dropnonkin : bool
+        drop columns that are not kinematic information (e.g. ``OS`` or ``reg2j1b``)
+
     Attributes
     ----------
     name : str
@@ -30,14 +39,20 @@ class DataFramesInMemory:
     weights : :obj:`pandas.DataFrame`
        dataframe to hold weight information
 
-    Parameters
-    ----------
-    name : str
-        dataset name
-    ddf : :obj:`dask.dataframe.DataFrame`
-        dask dataframe with all information (normal payload and weights)
-    dropnonkin : bool
-        drop columns that are not kinematic information (e.g. ``OS`` or ``reg2j1b``)
+    Examples
+    --------
+    Manually constructing in memory dataframes from a dask dataframe:
+
+    >>> from tdub import DataFramesInMemory, delayed_dataframe, quick_files
+    >>> ttbar_files = quick_files("/path/to/data")["ttbar"]
+    >>> branches = ["pT_lep1", "met", "mass_lep1jet1"]
+    >>> ddf = delayed_dataframe(ttbar_files, branches=branches)
+    >>> dfim = DataFramesInMemory("ttbar", ddf)
+
+    Having the legwork done by other module features (see :py:func:`specific_dataframe`):
+
+    >>> from tdub import specific_dataframe
+    >>> dfim = specific_dataframe(ttbar_files, "2j2b", to_ram=True)
     """
 
     def __init__(
@@ -78,6 +93,18 @@ class SelectedDataFrame:
        the selection string (in :py:func:`pandas.eval` form)
     df : :obj:`dask.dataframe.DataFrame`
        the dask DataFrame
+
+    Notes
+    -----
+    This class is not designed for instance creation on the user end,
+    we have factory functions for creating instances
+
+    See Also
+    --------
+    specific_dataframe
+    selected_dataframes
+    stdregion_dataframes
+
     """
 
     name: str
@@ -96,8 +123,10 @@ class SelectedDataFrame:
 
         Examples
         --------
+        >>> from tdub import specific_dataframe, quick_files
+        >>> files = quick_files("/path/to/data")["ttbar"]
         >>> sdf = specific_dataframe(files, "2j2b", name="ttbar_2j2b")
-        >>> dim = sdf.to_ram(dropnonkin=False)
+        >>> dfim = sdf.to_ram(dropnonkin=False)
         """
         return DataFramesInMemory(self.name, self.df, **kwargs)
 
@@ -133,8 +162,8 @@ def delayed_dataframe(
 
     Examples
     --------
-    >>> from glob import glob
-    >>> files = glob("/path/to/files/*.root")
+    >>> from tdub import delayed_dataframe, quick_files
+    >>> files = quick_files("/path/to/files")["tW_DR"]
     >>> ddf = delayed_dataframe(files, branches=["branch_a", "branch_b"])
 
     """
@@ -189,8 +218,8 @@ def selected_dataframes(
 
     Examples
     --------
-    >>> from glob import glob
-    >>> files = glob("/path/to/files/*.root")
+    >>> from tdub import selected_dataframes, quick_files
+    >>> files = quick_files("/path/to/files")["tW_DS"]
     >>> selections = {"r2j2b": "(reg2j2b == True) & (OS == True)",
     ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
     >>> frames = selected_dataframes(files, selections=selections)
@@ -212,7 +241,7 @@ def specific_dataframe(
     to_ram: bool = False,
     to_ram_kw: Dict[str, Any] = {},
 ) -> Union[SelectedDataFrame, DataFramesInMemory]:
-    """Construct a set of dataframes based on a list of selection queries
+    """Construct a dataframe based on specific predefined region selection
 
     Parameters
     ----------
@@ -244,8 +273,8 @@ def specific_dataframe(
 
     Examples
     --------
-    >>> from glob import glob
-    >>> files = glob("/path/to/files/*.root")
+    >>> from tdub import specific_dataframe, quick_files
+    >>> files = quick_files("/path/to/files")["ttbar"]
     >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, extra_branches=["pT_lep1"])
     >>> frame_2j2b = specific_dataframe(files, "2j2b", extra_branches=["met"])
 
@@ -309,8 +338,8 @@ def stdregion_dataframes(
 
     Examples
     --------
-    >>> from glob import glob
-    >>> files = glob("/path/to/files/*.root")
+    >>> from tdub import stdregion_dataframes, quick_files
+    >>> files = quick_files("/path/to/files")["tW_DR"]
     >>> standard_regions = stdregion_dataframes(files)
 
     """
