@@ -44,7 +44,7 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
         "tptrw_tool",
     }
     has_tptrw_tool = "tptrw_tool" in branches
-    weight_re = re.compile("(^weight_\w+)|(\w+_weight$)")
+    weight_re = re.compile(r"(^weight_\w+)|(\w+_weight$)")
     weights = set(filter(weight_re.match, branches))
     metas = metas & set(branches)
     kins = (set(branches) ^ weights) ^ metas
