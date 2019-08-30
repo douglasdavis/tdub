@@ -10,7 +10,7 @@ Class Summary
 
 .. autosummary::
 
-   DatasetInMemory
+   DataFramesInMemory
    SelectedDataFrame
 
 Function Summary
@@ -26,7 +26,7 @@ Function Summary
 Reference
 ^^^^^^^^^
 
-.. autoclass:: DatasetInMemory
+.. autoclass:: DataFramesInMemory
    :members:
 
 .. autoclass:: SelectedDataFrame

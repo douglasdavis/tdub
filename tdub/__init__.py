@@ -4,7 +4,7 @@ tW analysis tools
 
 __version__ = "0.0.1.dev4"
 
-from tdub.frames import DatasetInMemory
+from tdub.frames import DataFramesInMemory
 from tdub.frames import SelectedDataFrame
 from tdub.frames import delayed_dataframe
 from tdub.frames import selected_dataframes

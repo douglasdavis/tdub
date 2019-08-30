@@ -17,7 +17,7 @@ from tdub.utils import categorize_branches
 log = logging.getLogger(__name__)
 
 
-class DatasetInMemory:
+class DataFramesInMemory:
     """A dataset structured with everything living on RAM
 
     Attributes
@@ -41,7 +41,7 @@ class DatasetInMemory:
 
     def __init__(
         self, name: str, ddf: dd.DataFrame, dropnonkin: bool = True
-    ) -> DatasetInMemory:
+    ) -> DataFramesInMemory:
         self.name = name
         all_columns = list(ddf.columns)
         categorized = categorize_branches(all_columns)
@@ -60,7 +60,7 @@ class DatasetInMemory:
         return self._weights
 
     def __repr__(self):
-        return "<DatasetInMemory(name={}, df_shape={}, weights_shape={}".format(
+        return "<DataFramesInMemory(name={}, df_shape={}, weights_shape={}".format(
             self.name, self.df.shape, self.weights.shape
         )
 
@@ -86,14 +86,14 @@ class SelectedDataFrame:
     def to_ram(self, **kwargs):
         """create a dataset that lives in memory
 
-        kwargs are passed to the :obj:`DatasetInMemory` constructor
+        kwargs are passed to the :obj:`DataFramesInMemory` constructor
 
         Examples
         --------
         >>> sdf = specific_dataframe(files, "2j2b", name="ttbar_2j2b")
         >>> dim = sdf.to_ram(dropnonkin=False)
         """
-        return DatasetInMemory(self.name, self.df, **kwargs)
+        return DataFramesInMemory(self.name, self.df, **kwargs)
 
 
 def delayed_dataframe(
@@ -202,7 +202,9 @@ def specific_dataframe(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     extra_branches: List[str] = [],
-) -> SelectedDataFrame:
+    to_ram: bool = False,
+    to_ram_kw: Dict[str, Any] = {},
+) -> Union[SelectedDataFrame, DataFramesInMemory]:
     """Construct a set of dataframes based on a list of selection queries
 
     Parameters
@@ -221,10 +223,15 @@ def specific_dataframe(
        a list of additional branches to save (the standard branches
        associated as features for the region you selected will be
        included by default).
+    to_ram : bool
+       automatically send dataset to memory via :py:func:`SelectedDataFrame.to_ram`
+    to_ram_kw: dict(str, Any)
+       keywords to send to :py:func:`SelectedDataFrame.to_ram` function
+
 
     Returns
     -------
-    :obj:`SelectedDataFrame`
+    :obj:`SelectedDataFrame` or :obj:`DataFramesInMemory`
 
     Examples
     --------
@@ -255,9 +262,12 @@ def specific_dataframe(
     elif r == Region.r3j:
         branches = list(set(FSET_3j) | set(extra_branches) | {"reg3j", "OS"})
         q = SEL_3j
-    return SelectedDataFrame(
+    sdf = SelectedDataFrame(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
     )
+    if to_ram:
+        return sdf.to_ram(**to_ram_kw)
+    return sdf
 
 
 def stdregion_dataframes(
