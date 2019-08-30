@@ -1,3 +1,4 @@
+
 """
 Module for handling dataframes
 """
@@ -83,10 +84,15 @@ class SelectedDataFrame:
     selection: str
     df: dd.DataFrame = field(repr=False, compare=False)
 
-    def to_ram(self, **kwargs):
+    def to_ram(self, **kwargs) -> DataFramesInMemory:
         """create a dataset that lives in memory
 
         kwargs are passed to the :obj:`DataFramesInMemory` constructor
+
+        Returns
+        -------
+        :obj:`DataFramesInMemory`
+           the wrapper around two pandas-backed DataFrames in memory
 
         Examples
         --------
@@ -123,6 +129,7 @@ def delayed_dataframe(
     Returns
     -------
     :obj:`dask.dataframe.DataFrame`
+       the dask flavored DataFrame with all requested branches
 
     Examples
     --------
@@ -232,6 +239,8 @@ def specific_dataframe(
     Returns
     -------
     :obj:`SelectedDataFrame` or :obj:`DataFramesInMemory`
+       if ``to_ram`` is ``False``, we return the dask-backed ``SelectedDataFrame``,
+       if ``to_ram`` is ``True``, we return the pandas-backed ``DataFrameseInMemory``.
 
     Examples
     --------
