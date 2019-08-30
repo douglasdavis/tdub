@@ -60,7 +60,7 @@ class DataFramesInMemory:
         return self._weights
 
     def __repr__(self):
-        return "<DataFramesInMemory(name={}, df_shape={}, weights_shape={}".format(
+        return "DataFramesInMemory(name={}, df_shape={}, weights_shape={})".format(
             self.name, self.df.shape, self.weights.shape
         )
 
