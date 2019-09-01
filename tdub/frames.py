@@ -1,4 +1,3 @@
-
 """
 Module for handling dataframes
 """
@@ -137,8 +136,9 @@ def delayed_dataframe(
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
     repartition_kw: Optional[Dict[str, Any]] = None,
+    experimental: bool = False,
 ) -> dd.DataFrame:
-    """Construct a dask flavored DataFrame from uproot's pandas utility
+    """Construct a dask flavored DataFrame with help from uproot
 
     Parameters
     ----------
@@ -154,6 +154,9 @@ def delayed_dataframe(
        default is ``None``, includes all branches.
     repartition_kw : dict(str, Any), optional
        arguments to pass to :py:func:`dask.dataframe.DataFrame.repartition`
+    experimental: bool
+       if ``True`` try letting uproot create the Dask DataFrame instead of
+       using ``dask.delayed`` on pandas DataFrames grabbed via uproot.
 
     Returns
     -------
@@ -167,17 +170,25 @@ def delayed_dataframe(
     >>> ddf = delayed_dataframe(files, branches=["branch_a", "branch_b"])
 
     """
-    use_branches = branches
+    bs = branches
     if branches is not None:
-        use_branches = list(set(branches) | set([weight_name]))
+        bs = list(set(branches) | set([weight_name]))
 
-    @dask.delayed
-    def get_frame(f, tn):
-        t = uproot.open(f)[tn]
-        return t.pandas.df(branches=use_branches)
+    # fmt: off
+    if experimental:
+        print("using experimental dataframe creation via uproot.daskframe")
+        import cachetools
+        cache = cachetools.LRUCache(1)
+        ddf = uproot.daskframe(files, tree, bs, namedecode="utf-8", basketcache=cache)
+    else:
+        @dask.delayed
+        def get_frame(f, tn):
+            t = uproot.open(f)[tn]
+            return t.pandas.df(branches=bs)
+        dfs = [get_frame(f, tree) for f in files]
+        ddf = dd.from_delayed(dfs)
+    # fmt: on
 
-    dfs = [get_frame(f, tree) for f in files]
-    ddf = dd.from_delayed(dfs)
     if repartition_kw is not None:
         log.info(f"repartition with {repartition_kw}")
         ddf = ddf.repartition(**repartition_kw)
@@ -224,7 +235,10 @@ def selected_dataframes(
     ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
     >>> frames = selected_dataframes(files, selections=selections)
     """
-    df = delayed_dataframe(files, tree, weight_name, branches, **delayed_dataframe_kw)
+    if delayed_dataframe_kw is None:
+        df = delayed_dataframe(files, tree, weight_name, branches)
+    else:
+        df = delayed_dataframe(files, tree, weight_name, branches, **delayed_dataframe_kw)
     return {
         sel_name: SelectedDataFrame(sel_name, sel_query, df.query(sel_query))
         for sel_name, sel_query in selections.items()
@@ -239,7 +253,7 @@ def specific_dataframe(
     weight_name: str = "weight_nominal",
     extra_branches: List[str] = [],
     to_ram: bool = False,
-    to_ram_kw: Dict[str, Any] = {},
+    to_ram_kw: Optional[Dict[str, Any]] = None,
 ) -> Union[SelectedDataFrame, DataFramesInMemory]:
     """Construct a dataframe based on specific predefined region selection
 
@@ -304,7 +318,10 @@ def specific_dataframe(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
     )
     if to_ram:
-        return sdf.to_ram(**to_ram_kw)
+        if to_ram_kw is None:
+            return sdf.to_ram()
+        else:
+            return sdf.to_ram(**to_ram_kw)
     return sdf
 
 
@@ -360,5 +377,5 @@ def stdregion_dataframes(
         selections,
         tree,
         use_branches,
-        delayed_dataframe_kw={"repartition_kw": repart_kw},
+        delayed_dataframe_kw={"repartition_kw": repart_kw, "experimental": False},
     )
