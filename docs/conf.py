@@ -68,6 +68,7 @@ html_theme_options = {
     "sidebar_width": "280px",
     "fixed_sidebar": True,
     "show_relbars": True,
+    "code_font_size": "1.0em",
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
