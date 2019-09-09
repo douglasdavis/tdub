@@ -42,7 +42,7 @@ class DataFramesInMemory:
     --------
     Manually constructing in memory dataframes from a dask dataframe:
 
-    >>> from tdub import DataFramesInMemory, delayed_dataframe, quick_files
+    >>> from tdub.frames import DataFramesInMemory, delayed_dataframe, quick_files
     >>> ttbar_files = quick_files("/path/to/data")["ttbar"]
     >>> branches = ["pT_lep1", "met", "mass_lep1jet1"]
     >>> ddf = delayed_dataframe(ttbar_files, branches=branches)
@@ -50,7 +50,7 @@ class DataFramesInMemory:
 
     Having the legwork done by other module features (see :py:func:`specific_dataframe`):
 
-    >>> from tdub import specific_dataframe
+    >>> from tdub.frames import specific_dataframe
     >>> dfim = specific_dataframe(ttbar_files, "2j2b", to_ram=True)
     """
 
@@ -122,7 +122,7 @@ class SelectedDataFrame:
 
         Examples
         --------
-        >>> from tdub import specific_dataframe, quick_files
+        >>> from tdub.frames import specific_dataframe, quick_files
         >>> files = quick_files("/path/to/data")["ttbar"]
         >>> sdf = specific_dataframe(files, "2j2b", name="ttbar_2j2b")
         >>> dfim = sdf.to_ram(dropnonkin=False)
@@ -165,7 +165,7 @@ def delayed_dataframe(
 
     Examples
     --------
-    >>> from tdub import delayed_dataframe, quick_files
+    >>> from tdub.frames import delayed_dataframe, quick_files
     >>> files = quick_files("/path/to/files")["tW_DR"]
     >>> ddf = delayed_dataframe(files, branches=["branch_a", "branch_b"])
 
@@ -229,7 +229,7 @@ def selected_dataframes(
 
     Examples
     --------
-    >>> from tdub import selected_dataframes, quick_files
+    >>> from tdub.frames import selected_dataframes, quick_files
     >>> files = quick_files("/path/to/files")["tW_DS"]
     >>> selections = {"r2j2b": "(reg2j2b == True) & (OS == True)",
     ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
@@ -287,7 +287,7 @@ def specific_dataframe(
 
     Examples
     --------
-    >>> from tdub import specific_dataframe, quick_files
+    >>> from tdub.frames import specific_dataframe, quick_files
     >>> files = quick_files("/path/to/files")["ttbar"]
     >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, extra_branches=["pT_lep1"])
     >>> frame_2j2b = specific_dataframe(files, "2j2b", extra_branches=["met"])
@@ -355,7 +355,7 @@ def stdregion_dataframes(
 
     Examples
     --------
-    >>> from tdub import stdregion_dataframes, quick_files
+    >>> from tdub.frames import stdregion_dataframes, quick_files
     >>> files = quick_files("/path/to/files")["tW_DR"]
     >>> standard_regions = stdregion_dataframes(files)
 

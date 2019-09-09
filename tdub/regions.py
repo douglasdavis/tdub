@@ -33,7 +33,7 @@ class Region(Enum):
     Using this enum for grabing the ``2j2b`` region from a set of
     files:
 
-    >>> from tdub import Region, specific_dataframe
+    >>> from tdub.regions import Region, specific_dataframe
     >>> sdf = specific_dataframe(files, Region.r2j2b)
 
     """

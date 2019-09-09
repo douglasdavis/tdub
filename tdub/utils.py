@@ -25,7 +25,7 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
 
     Examples
     --------
-    >>> from tdub import categorize_branches
+    >>> from tdub.utils import categorize_branches
     >>> branches = ["pT_lep1", "pT_lep2", "weight_nominal", "weight_sys_jvt", "reg2j2b"]
     >>> cated = categorize_branches(branches)
     >>> cated["weights"]
@@ -88,7 +88,7 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
     Examples
     --------
     >>> from pprint import pprint
-    >>> from tdub import quick_files
+    >>> from tdub.utils import quick_files
     >>> qf = quick_files("/path/to/some_files") ## has 410472 ttbar samples
     >>> pprint(qf["ttbar"])
     ['/path/to/some/files/ttbar_410472_FS_MC16d_nominal.root',

@@ -1,10 +1,46 @@
 import argparse
+import logging
+
 import dask
-from tdub.frames import stdregion_dataframes
 from dask.distributed import Client, Lock
 from dask.utils import SerializableLock
 from dask.dataframe import to_parquet
-import logging
+
+from tdub.frames import stdregion_dataframes
+from tdub.art import run_pulls, run_stacks
+
+
+def parse_args():
+    # fmt: off
+    parser = argparse.ArgumentParser(prog="tdub", description="tee-double-you CLI")
+    subparsers = parser.add_subparsers(dest="action", help="Action")
+
+    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser.add_argument("--debug", action="store_true", help="set logging level to debug")
+
+    regions2parquet = subparsers.add_parser("regions2parquet", help="generate parquet output for individual regions", parents=[common_parser])
+    regions2parquet.add_argument("files", type=str, nargs="+", help="input ROOT files")
+    regions2parquet.add_argument("prefix", type=str, help="output file name prefix")
+    regions2parquet.add_argument("-b","--branches", type=str, nargs="+", default=None, help="Branches")
+    regions2parquet.add_argument("-t","--tree-name", type=str, default="WtLoop_nominal", help="ROOT tree name")
+
+    stacks = subparsers.add_parser("stacks", help="Generate matplotlib stack plots using TRExFitter output", parents=[common_parser])
+    stacks.add_argument("workspace", type=str, help="TRExFitter workspace")
+    stacks.add_argument("-o", "--out-dir", type=str, help="output directory for plots")
+    stacks.add_argument("--lumi", type=str, default="139", help="Integrated lumi. for text")
+    stacks.add_argument("--do-postfit", action="store_true", help="produce post fit plots as well")
+    stacks.add_argument("--skip-regions", type=str, default=None, help="skip regions based on regex")
+    stacks.add_argument("--band-style", type=str, choices=["hatch", "shade"], default="hatch", help="band art")
+    stacks.add_argument("--legend-ncol", type=int, choices=[1, 2], default=1, help="number of legend columns")
+
+    pulls = subparsers.add_parser("pulls", help="Generate matplotlib pull plots using TRExFitter output", parents=[common_parser])
+    pulls.add_argument("workspace", type=str, help="TRExFitter workspace")
+    pulls.add_argument("config", type=str, help="TRExFitter config")
+    pulls.add_argument("-o", "--out-dir", type=str, help="output directory")
+    pulls.add_argument("--no-text", action="store_true", help="don't print values on plots")
+
+    # fmt: on
+    return (parser.parse_args(), parser)
 
 
 def _parquet_regions(args, log):
@@ -19,20 +55,6 @@ def _parquet_regions(args, log):
         log.info(f"saving one at a time ({output_name})")
         to_parquet(frame.df, output_name, engine="auto")
     return 0
-
-
-def parse_args():
-    # fmt: off
-    parser = argparse.ArgumentParser(prog="tdub", description="tee-double-you CLI")
-    subparsers = parser.add_subparsers(dest="action", help="Action")
-
-    regions2parquet = subparsers.add_parser("regions2parquet", help="generate parquet output for individual regions")
-    regions2parquet.add_argument("files", type=str, nargs="+", help="input ROOT files")
-    regions2parquet.add_argument("prefix", type=str, help="output file name prefix")
-    regions2parquet.add_argument("-b","--branches", type=str, nargs="+", default=None, help="Branches")
-    regions2parquet.add_argument("-t","--tree-name", type=str, default="WtLoop_nominal", help="ROOT tree name")
-    # fmt: on
-    return (parser.parse_args(), parser)
 
 
 def cli():
@@ -52,5 +74,9 @@ def cli():
 
     if args.action == "regions2parquet":
         return _parquet_regions(args, log)
+    elif args.action == "stacks":
+        return run_stacks(args)
+    elif args.action == "pulls":
+        return run_pulls(args)
     else:
         parser.print_help()
