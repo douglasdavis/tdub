@@ -18,13 +18,13 @@ def parse_args():
     common_parser = argparse.ArgumentParser(add_help=False)
     common_parser.add_argument("--debug", action="store_true", help="set logging level to debug")
 
-    regions2parquet = subparsers.add_parser("regions2parquet", help="generate parquet output for individual regions", parents=[common_parser])
+    regions2parquet = subparsers.add_parser("regions2parquet", help="create parquet output for individual regions", parents=[common_parser])
     regions2parquet.add_argument("files", type=str, nargs="+", help="input ROOT files")
     regions2parquet.add_argument("prefix", type=str, help="output file name prefix")
     regions2parquet.add_argument("-b","--branches", type=str, nargs="+", default=None, help="Branches")
     regions2parquet.add_argument("-t","--tree-name", type=str, default="WtLoop_nominal", help="ROOT tree name")
 
-    stacks = subparsers.add_parser("stacks", help="Generate matplotlib stack plots using TRExFitter output", parents=[common_parser])
+    stacks = subparsers.add_parser("stacks", help="create matplotlib stack plots from TRExFitter output", parents=[common_parser])
     stacks.add_argument("workspace", type=str, help="TRExFitter workspace")
     stacks.add_argument("-o", "--out-dir", type=str, help="output directory for plots")
     stacks.add_argument("--lumi", type=str, default="139", help="Integrated lumi. for text")
@@ -33,7 +33,7 @@ def parse_args():
     stacks.add_argument("--band-style", type=str, choices=["hatch", "shade"], default="hatch", help="band art")
     stacks.add_argument("--legend-ncol", type=int, choices=[1, 2], default=1, help="number of legend columns")
 
-    pulls = subparsers.add_parser("pulls", help="Generate matplotlib pull plots using TRExFitter output", parents=[common_parser])
+    pulls = subparsers.add_parser("pulls", help="create matplotlib pull plots from TRExFitter output", parents=[common_parser])
     pulls.add_argument("workspace", type=str, help="TRExFitter workspace")
     pulls.add_argument("config", type=str, help="TRExFitter config")
     pulls.add_argument("-o", "--out-dir", type=str, help="output directory")

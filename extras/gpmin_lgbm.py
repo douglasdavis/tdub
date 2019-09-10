@@ -10,7 +10,7 @@ from skopt.space import Real, Integer, Categorical
 from skopt.utils import use_named_args
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
-import xgboost as xgb
+import lightgbm as lgbm
 import joblib
 
 import numpy as np
@@ -48,80 +48,87 @@ X = np.concatenate([dfim_tW_DR.df.to_numpy(), dfim_ttbar.df.to_numpy()])
 pprint(dfim_tW_DR.df.columns.to_list())
 
 X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-    X, y, w, train_size=0.22, random_state=414, shuffle=True
+    X, y, w, train_size=0.33, random_state=414, shuffle=True
 )
 
 validation_data = [(X_test, y_test)]
 validation_w = w_test
 
 dimensions = [
-    Integer(low=3, high=7, name="max_depth"),
-    Real(low=0.001, high=0.2, prior="log-uniform", name="learning_rate"),
-    Integer(low=20, high=1000, name="n_estimators"),
-    Real(low=0, high=0.9, prior="uniform", name="gamma"),
-    Real(low=1, high=100, prior="uniform", name="min_child_weight"),
-    Integer(low=0, high=10, name="max_delta_step"),
+    Integer(low=30, high=150, name="num_leaves"),
+    Real(low=1e-3, high=2e-1, prior="log-uniform", name="learning_rate"),
+    Integer(low=20000, high=300000, name="subsample_for_bin"),
+    Integer(low=20, high=500, name="min_child_samples"),
     Real(low=0, high=1, prior="uniform", name="reg_alpha"),
     Real(low=0, high=1, prior="uniform", name="reg_lambda"),
+    Real(low=0.6, high=1, prior="uniform", name="colsample_bytree"),
+    Integer(low=20, high=1000, name="n_estimators"),
+    Integer(low=3, high=8, name="max_depth"),
 ]
 
-default_parameters = [3, 0.1, 100, 0, 1, 0, 0, 1]
+default_parameters = [42, 1e-1, 180000, 40, 0.4, 0.5, 0.8, 200, 5]
 
+best_fit = 0
 best_auc = 0.0
 best_parameters = [{"teste": 1}]
 ifit = 0
 
 @use_named_args(dimensions=dimensions)
 def afit(
-    max_depth,
+    num_leaves,
     learning_rate,
-    n_estimators,
-    gamma,
-    min_child_weight,
-    max_delta_step,
+    subsample_for_bin,
+    min_child_samples,
     reg_alpha,
     reg_lambda,
+    colsample_bytree,
+    n_estimators,
+    max_depth,
 ):
     global ifit
+    global best_fit
     global best_auc
     global best_parameters
 
-    print(f"max_depth: {max_depth}")
+    ########## FIX EVERYTHING BELOW
+
+    print(f"num_leaves: {num_leaves}")
     print(f"learning_rate: {learning_rate}")
-    print(f"n_estimators: {n_estimators}")
-    print(f"gamma: {gamma}")
-    print(f"min_child_weight: {min_child_weight}")
-    print(f"max_delta_step: {max_delta_step}")
+    print(f"subsample_for_bin: {subsample_for_bin}")
+    print(f"min_child_samples: {min_child_samples}")
     print(f"reg_alpha: {reg_alpha}")
     print(f"reg_lambda: {reg_lambda}")
+    print(f"colsample_bytree: {colsample_bytree}")
+    print(f"n_estimators: {n_estimators}")
+    print(f"max_depth: {max_depth}")
 
     curdir = os.getcwd()
     p = PosixPath(f"training_{ifit}")
     p.mkdir(exist_ok=False)
     os.chdir(p.resolve())
 
-    model = xgb.XGBClassifier(
-        max_depth=max_depth,
+    model = lgbm.LGBMClassifier(
+        boosting_type="gbdt",
+        num_leaves=num_leaves,
         learning_rate=learning_rate,
-        n_estimators=n_estimators,
-        gamma=gamma,
-        min_child_weight=min_child_weight,
-        max_delta_step=max_delta_step,
+        subsample_for_bin=subsample_for_bin,
+        min_child_samples=min_child_samples,
         reg_alpha=reg_alpha,
         reg_lambda=reg_lambda,
-        n_jobs=12,
-        objective="binary:logistic",
-        booster="gbtree",
+        colsample_bytree=colsample_bytree,
+        n_estimators=n_estimators,
+        max_depth=max_depth,
+        is_unbalance=True,
     )
+
     fitted_model = model.fit(
         X_train,
         y_train,
-        sample_weight=w_train,
         eval_set=validation_data,
         eval_metric="auc",
-        verbose=20,
+        verbose=15,
         early_stopping_rounds=5,
-        sample_weight_eval_set=[validation_w],
+        eval_sample_weight=[validation_w],
     )
 
     pred = fitted_model.predict_proba(X_test)[:, 1]
@@ -139,23 +146,23 @@ def afit(
     plt.close(fig)
     os.chdir(curdir)
 
-
-    ifit += 1
-
     if score > best_auc:
         best_parameters[0] = model.get_params()
         best_auc = score
+        best_fit = ifit
+
+    ifit += 1
 
     del model
     return -score
 
 
 search_result = gp_minimize(
-    func=afit, dimensions=dimensions, acq_func="EI", n_calls=15, x0=default_parameters
+    func=afit, dimensions=dimensions, acq_func="EI", n_calls=12, x0=default_parameters
 )
 
 print()
-print(best_accuracy)
+print(best_auc)
 print()
 
 print()
