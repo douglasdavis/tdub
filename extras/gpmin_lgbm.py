@@ -18,12 +18,14 @@ import pandas as pd
 import dask.dataframe as dd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+
 mpl.use("pdf")
 
 from tdub import DataFramesInMemory
 from tdub.regions import FSET_2j2b
 
-datadir = "/Users/ddavis/ATLAS/data"
+# datadir = "/Users/ddavis/ATLAS/data"
+datadir = "/home/drd25/ATLAS/analysis/run/pqs"
 
 branches = list(set(FSET_2j2b) | {"weight_nominal"})
 
@@ -73,6 +75,7 @@ best_auc = 0.0
 best_parameters = [{"teste": 1}]
 ifit = 0
 
+
 @use_named_args(dimensions=dimensions)
 def afit(
     num_leaves,
@@ -89,8 +92,6 @@ def afit(
     global best_fit
     global best_auc
     global best_parameters
-
-    ########## FIX EVERYTHING BELOW
 
     print(f"num_leaves: {num_leaves}")
     print(f"learning_rate: {learning_rate}")
@@ -137,10 +138,22 @@ def afit(
     train_pred = fitted_model.predict_proba(X_train)[:, 1]
     fig, ax = plt.subplots()
     bins = np.linspace(0.0, 1.0, 26)
-    ax.hist(train_pred[y_train==0], bins=bins, label="train bkg", density=True, histtype='step')
-    ax.hist(train_pred[y_train==1], bins=bins, label="train sig", density=True, histtype='step')
-    ax.hist(pred[y_test==0], bins=bins, label="test bkg", density=True, histtype='step')
-    ax.hist(pred[y_test==1], bins=bins, label="test sig", density=True, histtype='step')
+    ax.hist(
+        train_pred[y_train == 0],
+        bins=bins,
+        label="train bkg",
+        density=True,
+        histtype="step",
+    )
+    ax.hist(
+        train_pred[y_train == 1],
+        bins=bins,
+        label="train sig",
+        density=True,
+        histtype="step",
+    )
+    ax.hist(pred[y_test == 0], bins=bins, label="test bkg", density=True, histtype="step")
+    ax.hist(pred[y_test == 1], bins=bins, label="test sig", density=True, histtype="step")
     ax.legend()
     fig.savefig("histograms.pdf")
     plt.close(fig)
@@ -158,7 +171,7 @@ def afit(
 
 
 search_result = gp_minimize(
-    func=afit, dimensions=dimensions, acq_func="EI", n_calls=12, x0=default_parameters
+    func=afit, dimensions=dimensions, acq_func="EI", n_calls=50, x0=default_parameters
 )
 
 print()
