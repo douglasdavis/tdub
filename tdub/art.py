@@ -323,9 +323,9 @@ def draw_atlas_label(
     internal: bool = True,
     extra_lines: Optional[List[str]] = None,
     x: float = 0.050,
-    float: y = 0.905,
-    int: s1 = 14,
-    int: s2 = 12,
+    y: float = 0.905,
+    s1: int = 14,
+    s2: int = 12,
 ) -> None:
     """ draw the ATLAS label on the plot, with extra lines if desired """
     ax.text(
