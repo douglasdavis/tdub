@@ -311,9 +311,6 @@ def specific_dataframe(
     elif r == Region.r2j2b:
         branches = list(set(FSET_2j2b) | set(extra_branches) | {"reg2j2b", "OS"})
         q = SEL_2j2b
-    elif r == Region.r3j:
-        branches = list(set(FSET_3j) | set(extra_branches) | {"reg3j", "OS"})
-        q = SEL_3j
     sdf = SelectedDataFrame(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
     )
@@ -334,7 +331,7 @@ def stdregion_dataframes(
     """Prepare our standard regions (selections) from a master dataframe
 
     This is just a call of :meth:`selected_dataframes` with hardcoded
-    selections (using our standard regions): 1j1b, 2j1b, 2j2b, 3j.
+    selections (using our standard regions): 1j1b, 2j1b, 2j2b.
 
     Parameters
     ----------
@@ -361,11 +358,11 @@ def stdregion_dataframes(
 
     """
 
-    selections = {"r1j1b": SEL_1j1b, "r2j1b": SEL_2j1b, "r2j2b": SEL_2j2b, "r3j": SEL_3j}
+    selections = {"r1j1b": SEL_1j1b, "r2j1b": SEL_2j1b, "r2j2b": SEL_2j2b}
     use_branches = None
     if branches is not None:
         use_branches = list(
-            set(branches) | set(["reg1j1b", "reg2j1b", "reg2j2b", "reg3j", "OS"])
+            set(branches) | set(["reg1j1b", "reg2j1b", "reg2j2b", "OS"])
         )
     repart_kw = None
     if isinstance(partitioning, str):
