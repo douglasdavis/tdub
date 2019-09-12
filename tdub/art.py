@@ -357,7 +357,7 @@ def stackem(args, region, data, histograms, template_var, band=None, figsize=(6,
 
     Parameters
     ----------
-    args : argparse.ArgumentParser
+    args : argparse.Namespace
        command line arguments
     region : str
        region from TRExFitter
@@ -445,7 +445,7 @@ def prefit_histograms(args, fit_name, region, samples):
 
     Parameters
     ---------
-    args : argparse.ArgumentParser
+    args : argparse.Namespace
        command line arguments
     fit_name : str
        TRExFitter fit name
@@ -476,7 +476,7 @@ def postfit_histograms(args, fit_name, region, samples):
 
     Parameters
     ---------
-    args : argparse.ArgumentParser
+    args : argparse.Namespace
        command line arguments
     fit_name : str
        TRExFitter fit name
@@ -515,7 +515,7 @@ def run_stacks(args):
 
     Parameters
     ----------
-    args : argparse.ArgumentParser
+    args : argparse.Namespace
 
     """
     samples = _get_plot_samples()
@@ -604,7 +604,7 @@ def draw_pulls(args, nps):
 
     Parameters
     ----------
-    args : argparse.ArgumentParser
+    args : argparse.Namespace
        command line arguments
     nps : list
        list of nuisance parameters to draw
@@ -658,7 +658,7 @@ def run_pulls(args):
 
     Parameters
     ----------
-    args : argparse.ArgumentParser
+    args : argparse.Namespace
 
     """
     systematics, categories = get_blank_systematics(args.config)
