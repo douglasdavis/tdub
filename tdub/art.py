@@ -206,7 +206,7 @@ class Histogram:
         return self.uproothist.variances
 
     @property
-    def error(self):
+    def error(self) -> np.ndarray:
         """np.ndarray: the uncertainty in each bin (sqrt of sumw2)"""
         return np.sqrt(self.sumw2)
 
@@ -225,8 +225,14 @@ class Histogram:
         """np.ndarray: the bin widths"""
         return round(self.bins[-1] - self.bins[-2], 2)
 
-    def has_uniform_bins(self):
-        """determines if the histogram has uniform bin widths"""
+    def has_uniform_bins(self) -> bool
+        """determines if the histogram has uniform bin widths
+
+        Returns
+        -------
+        bool
+           whether or not bin widthds are uniform.
+        """
         diffs = np.ediff1d(self.bins)
         return np.allclose(diffs, diffs[0])
 
@@ -539,7 +545,7 @@ def split_region_str(region: str) -> Tuple[str, str]:
         return (splits[0], "_".join(splits[1:]))
 
 
-def run_stacks(args: argparse.Namespace) -> int:
+def run_stacks(args: argparse.Namespace) -> None:
     """Given command line arguments generate stack plots
 
     Parameters
@@ -595,7 +601,6 @@ def run_stacks(args: argparse.Namespace) -> int:
             fig.savefig(out_name)
             plt.close(fig)
             log.info(f"Done with {region} postfit")
-    return 0
 
 
 def get_blank_systematics(config_file: str) -> Tuple[List[NuisPar], Set[str]]:
@@ -688,7 +693,7 @@ def draw_pulls(
     return fig, ax
 
 
-def run_pulls(args: argparse.Namespace) -> int:
+def run_pulls(args: argparse.Namespace) -> None:
     """Given command line arguments generate pull plots
 
     Parameters
@@ -723,4 +728,3 @@ def run_pulls(args: argparse.Namespace) -> int:
         out_name = f"{outd}/pulls_{category}.pdf"
         fig.savefig(out_name, bbox_inches="tight")
         log.info(f"Done with {category}")
-    return 0
