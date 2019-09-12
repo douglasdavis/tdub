@@ -11,8 +11,11 @@ import dask
 import dask.dataframe as dd
 from typing import List, Union, Optional, Dict, Any
 from dataclasses import dataclass, field
-from tdub.regions import *
 from tdub.utils import categorize_branches
+from tdub.regions import SELECTIONS
+from tdub.regions import Region
+from tdub.regions import FEATURESET_1j1b, FEATURESET_2j1b, FEATURESET_2j2b
+
 
 log = logging.getLogger(__name__)
 
@@ -303,14 +306,14 @@ def specific_dataframe(
     else:
         raise TypeError("region argument must be tdub.regions.Region or str")
     if r == Region.r1j1b:
-        branches = list(set(FSET_1j1b) | set(extra_branches) | {"reg1j1b", "OS"})
-        q = SEL_1j1b
+        branches = list(set(FEATURESET_1j1b) | set(extra_branches) | {"reg1j1b", "OS"})
+        q = SELECTION_1j1b
     elif r == Region.r2j1b:
-        branches = list(set(FSET_2j1b) | set(extra_branches) | {"reg2j1b", "OS"})
-        q = SEL_2j1b
+        branches = list(set(FEATURESET_2j1b) | set(extra_branches) | {"reg2j1b", "OS"})
+        q = SELECTION_2j1b
     elif r == Region.r2j2b:
-        branches = list(set(FSET_2j2b) | set(extra_branches) | {"reg2j2b", "OS"})
-        q = SEL_2j2b
+        branches = list(set(FEATURESET_2j2b) | set(extra_branches) | {"reg2j2b", "OS"})
+        q = SELECTION_2j2b
     sdf = SelectedDataFrame(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
     )
@@ -358,12 +361,9 @@ def stdregion_dataframes(
 
     """
 
-    selections = {"r1j1b": SEL_1j1b, "r2j1b": SEL_2j1b, "r2j2b": SEL_2j2b}
     use_branches = None
     if branches is not None:
-        use_branches = list(
-            set(branches) | set(["reg1j1b", "reg2j1b", "reg2j2b", "OS"])
-        )
+        use_branches = list(set(branches) | set(["reg1j1b", "reg2j1b", "reg2j2b", "OS"]))
     repart_kw = None
     if isinstance(partitioning, str):
         repart_kw = {"partition_size": partitioning}
@@ -371,7 +371,7 @@ def stdregion_dataframes(
         repart_kw = {"npartitions": partitioning}
     return selected_dataframes(
         files,
-        selections,
+        SELECTIONS,
         tree,
         use_branches,
         delayed_dataframe_kw={"repartition_kw": repart_kw, "experimental": False},

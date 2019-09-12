@@ -50,7 +50,8 @@ def _parquet_regions(args, log):
     log.info("Executing queries:")
     for k, v in frames.items():
         log.info(f"  - {v.name}: {v.selection}")
-    for name, frame in frames.items():
+    for region, frame in frames.items():
+        name = region.name
         output_name = f"{args.prefix}_{name}.parquet"
         log.info(f"saving one at a time ({output_name})")
         to_parquet(frame.df, output_name, engine="auto")

@@ -2,12 +2,14 @@ from enum import Enum
 
 __all__ = [
     "Region",
-    "SEL_1j1b",
-    "SEL_2j1b",
-    "SEL_2j2b",
-    "FSET_1j1b",
-    "FSET_2j1b",
-    "FSET_2j2b",
+    "SELECTION_1j1b",
+    "SELECTION_2j1b",
+    "SELECTION_2j2b",
+    "SELECTIONS",
+    "FEATURESET_1j1b",
+    "FEATURESET_2j1b",
+    "FEATURESET_2j2b",
+    "FEATURESETS",
 ]
 
 
@@ -34,16 +36,39 @@ class Region(Enum):
     >>> sdf = specific_dataframe(files, Region.r2j2b)
 
     """
+
     r1j1b = 0
     r2j1b = 1
     r2j2b = 2
 
 
-SEL_1j1b = "(reg1j1b == True) & (OS == True)"
-SEL_2j1b = "(reg2j1b == True) & (OS == True)"
-SEL_2j2b = "(reg2j2b == True) & (OS == True)"
+SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
+"""
+str: The pandas flavor selection string for the 1j1b region
+"""
 
-FSET_1j1b = [
+SELECTION_2j1b = "(reg2j1b == True) & (OS == True)"
+"""
+str: The pandas flavor selection string for the 2j1b region
+"""
+
+SELECTION_2j2b = "(reg2j2b == True) & (OS == True)"
+"""
+str: The pandas flavor selection string for the 2j2b region
+"""
+
+
+SELECTIONS = {
+    Region.r1j1b: SELECTION_1j1b,
+    Region.r2j1b: SELECTION_2j1b,
+    Region.r2j2b: SELECTION_2j2b,
+}
+"""
+dict(Region, str): key-value pairs for regions to their selection string
+"""
+
+
+FEATURESET_1j1b = [
     "pTsys_lep1lep2jet1met",
     "mass_lep2jet1",
     "mass_lep1jet1",
@@ -57,8 +82,11 @@ FSET_1j1b = [
     "cent_lep1lep2",
     "pTsys_lep1lep2jet1",
 ]
+"""
+list(str): list of features we use for classifiers in the 1j1b region
+"""
 
-FSET_2j1b = [
+FEATURESET_2j1b = [
     "mass_lep1jet2",
     "psuedoContTagBin_jet1",
     "mass_lep1jet1",
@@ -68,8 +96,12 @@ FSET_2j1b = [
     "psuedoContTagBin_jet2",
     "pT_jet2",
 ]
+"""
+list(str): list of features we use for classifiers in the 2j1b region
+"""
 
-FSET_2j2b = [
+
+FEATURESET_2j2b = [
     "mass_lep1jet2",
     "mass_lep1jet1",
     "deltaR_lep1_jet1",
@@ -78,3 +110,16 @@ FSET_2j2b = [
     "pT_jet2",
     "mass_lep2jet2",
 ]
+"""
+list(str): list of features we use for classifiers in the 2j2b region
+"""
+
+
+FEATURESETS = {
+    Region.r1j1b: FEATURESET_1j1b,
+    Region.r2j1b: FEATURESET_2j1b,
+    Region.r2j2b: FEATURESET_2j2b,
+}
+"""
+dict(Region, list(str)): key-value pairs for regions to their feature set
+"""
