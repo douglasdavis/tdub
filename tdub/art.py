@@ -76,6 +76,7 @@ class Sample:
     tex : str
        LaTeX label
     """
+
     name: str = "none"
     signature: str = "none"
     color: str = "black"
@@ -101,6 +102,7 @@ class NuisPar:
     title : str
        a title for the plots
     """
+
     name: str = "none"
     mean: float = 0
     minus: float = 0
@@ -136,6 +138,7 @@ class Template:
     unit : str
        unit as a string (e.g. GeV)
     """
+
     var: str = ""
     regions: List[str] = field(default_factory=list)
     xmin: float = 0
@@ -169,6 +172,7 @@ class Histogram:
     postfit : bool
        whether or not the histogram is a postfit histogram
     """
+
     hfile: str
     region: str
     sample: Sample
@@ -240,13 +244,13 @@ class RegionMeta:
     logy: bool
        for plotting with a log scale on the y-axis.
     """
+
     title: str = ""
     unit: str = ""
     logy: bool = False
 
 
-# fmt: off
-def _get_plot_samples():
+def _get_plot_samples() -> List[Sample]:
     plot_samples = [
         Sample(name="tW", signature="tW", color="#1f77b4", tex="$tW$"),
         Sample(name="ttbar", signature="ttbar", color="#d62728", tex="$t\\bar{t}$"),
@@ -258,20 +262,18 @@ def _get_plot_samples():
     return plot_samples
 
 
+# fmt: off
 _region_meta = {
     "bdt_response": RegionMeta("Classifier Response", ""),
     "cent_lep1lep2": RegionMeta("Centrality($\\ell_1\\ell_2$)", ""),
     "mT_lep2met": RegionMeta("$m_{\\mathrm{T}}(\\ell_2E_\\mathrm{T}^{\\mathrm{miss}})$", "GeV"),
     "nloosejets": RegionMeta("$N_j^{\\mathrm{soft}}$", "", True),
     "nloosebjets": RegionMeta("$N_b^{\\mathrm{soft}}$", "", True),
-    "deltapT_lep1lep2_jet3": RegionMeta("$\\Delta p_{\\mathrm{T}}(\\ell_1\\ell_2, j_3)$", "GeV"),
     "deltapT_lep1_jet1": RegionMeta("$\\Delta p_{\\mathrm{T}}(\\ell_1, j_1)$", "GeV"),
     "mass_lep2jet1": RegionMeta("$m_{\\ell_2 j_1}$", "GeV"),
     "mass_lep1jet2": RegionMeta("$m_{\\ell_1 j_2}$", "GeV"),
     "mass_lep1jet1": RegionMeta("$m_{\\ell_1 j_1}$", "GeV"),
-    "mass_lep1jet3": RegionMeta("$m_{\\ell_1 j_3}$", "GeV"),
     "mass_lep2jet2": RegionMeta("$m_{\\ell_2 j_2}$", "GeV"),
-    "psuedoContTagBin_jet3": RegionMeta("$b$-tag bin ($j_3$)", ""),
     "psuedoContTagBin_jet2": RegionMeta("$b$-tag bin ($j_2$)", ""),
     "psuedoContTagBin_jet1": RegionMeta("$b$-tag bin ($j_1$)", ""),
     "pTsys_lep1lep2jet1": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2 j_1)$", "GeV"),
@@ -279,26 +281,30 @@ _region_meta = {
     "pTsys_lep1lep2jet1met": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2 j_1 E_{\\mathrm{T}}^{\\mathrm{miss}})$", "GeV"),
     "pTsys_lep1lep2": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2)$", "GeV"),
     "pTsys_lep1lep2met": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2 E_{\\mathrm{T}}^{\\mathrm{miss}})$", "GeV"),
-    "pTsys_lep1lep2jet1jet2jet3met": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2 j_1 j_2 j_3 E_{\\mathrm{T}}^{\\mathrm{miss}})$", "GeV"),
     "deltaR_lep2_jet1": RegionMeta("$\\Delta R(\\ell_2, j_1)$", ""),
-    "deltaR_jet1_jet3": RegionMeta("$\\Delta R(j_1, j_3)$", ""),
     "deltaR_lep1_jet1": RegionMeta("$\\Delta R(\\ell_1, j_1)$", ""),
     "deltaR_lep1_lep2": RegionMeta("$\\Delta R(\\ell_1, \\ell_2)$", ""),
     "pT_lep1": RegionMeta("$p_{\\mathrm{T}}(\\ell_1)$", "GeV"),
     "pT_lep2": RegionMeta("$p_{\\mathrm{T}}(\\ell_2)$", "GeV"),
     "pT_jet1": RegionMeta("$p_{\\mathrm{T}}(j_1)$", "GeV"),
     "pT_jet2": RegionMeta("$p_{\\mathrm{T}}(j_2)$", "GeV"),
-    "pT_jet3": RegionMeta("$p_{\\mathrm{T}}(j_3)$", "GeV"),
     "eta_lep1": RegionMeta("$\\eta(\\ell_1)$", ""),
     "eta_lep2": RegionMeta("$\\eta(\\ell_2)$", ""),
     "eta_jet1": RegionMeta("$\\eta(j_1)$", ""),
     "eta_jet2": RegionMeta("$\\eta(j_2)$", ""),
-    "eta_jet3": RegionMeta("$\\eta(j_3)$", ""),
     "met": RegionMeta("$E_{\\mathrm{T}}^{\\mathrm{miss}}$", "GeV"),
 }
 # fmt: on
 
-def draw_ratio_with_line(ax, data, mc_sum, mc_err, yline=1.0, autoxscale=True):
+
+def draw_ratio_with_line(
+    ax: matplotlib.axes.Axis,
+    data: Histogram,
+    mc_sum: np.ndarray,
+    mc_err: np.ndarray,
+    yline: float = 1.0,
+    autoxscale: bool = True,
+) -> None:
     """ draw the ratio with a horizontal line on the axis """
     x1 = data.bins[0]
     x2 = data.bins[-1]
@@ -310,32 +316,44 @@ def draw_ratio_with_line(ax, data, mc_sum, mc_err, yline=1.0, autoxscale=True):
     ax.set_ylabel("Data / MC")
     if autoxscale:
         ax.autoscale(enable=True, axis="x", tight=True)
-    return 0
 
 
-def draw_atlas_label(ax, internal=True, extra_lines=[], x=0.050, y=0.905, s1=14, s2=12):
+def draw_atlas_label(
+    ax: matplotlib.axes.Axis,
+    internal: bool = True,
+    extra_lines: Optional[List[str]] = None,
+    x: float = 0.050,
+    float: y = 0.905,
+    int: s1 = 14,
+    int: s2 = 12,
+) -> None:
     """ draw the ATLAS label on the plot, with extra lines if desired """
-    # fmt: off
-    ax.text(x, y, "ATLAS", fontstyle="italic", fontweight="bold", transform=ax.transAxes, size=s1)
+    ax.text(
+        x,
+        y,
+        "ATLAS",
+        fontstyle="italic",
+        fontweight="bold",
+        transform=ax.transAxes,
+        size=s1,
+    )
     if internal:
         ax.text(x + 0.15, y, r"Internal", transform=ax.transAxes, size=s1)
-    for i, exline in enumerate(extra_lines):
-        ax.text(x, y - (i + 1) * 0.06, exline, transform=ax.transAxes, size=s2)
-    # fmt: on
-    return 0
+    if extra_lines is not None:
+        for i, exline in enumerate(extra_lines):
+            ax.text(x, y - (i + 1) * 0.06, exline, transform=ax.transAxes, size=s2)
 
 
-def set_labels(ax, histogram):
+def set_labels(ax: matplotlib.axes.Axes, histogram: Histogram) -> None:
     """ define the axis labels """
     if histogram.has_uniform_bins():
         ylabel_suffix = f" / {histogram.bin_width} {histogram.unit}"
     else:
         ylabel_suffix = f" / bin"
     ax.set_ylabel(f"Events{ylabel_suffix}", horizontalalignment="right", y=1.0)
-    return 0
 
 
-def shrink_pdf(file_path):
+def shrink_pdf(file_path: str) -> None:
     """ shrink pdf file using ghostscript """
     command = (
         "gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 "
@@ -349,10 +367,17 @@ def shrink_pdf(file_path):
     proc.wait()
     os.remove(in_file)
     os.rename("temp.pdf", in_name)
-    return 0
 
 
-def stackem(args, region, data, histograms, template_var, band=None, figsize=(6, 5.25)):
+def stackem(
+    args: argparse.Namespace,
+    region: str,
+    data: Sample,
+    histograms: List[Sample],
+    template_var: str,
+    band: Optional[uproot_methods.classes.TGraphAasymmErrors] = None,
+    figsize: Tuple[float, float] = (6, 5.25),
+) -> Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axis, matplotlib.axes.Axis]]:
     """Create a stack plot
 
     Parameters
@@ -363,7 +388,7 @@ def stackem(args, region, data, histograms, template_var, band=None, figsize=(6,
        region from TRExFitter
     data : Sample
        data sample
-    histograms : List[Sample]
+    histograms : list(Sample)
        list of MC samples to stack
     template_var : str
        name of the template variable
@@ -440,7 +465,9 @@ def stackem(args, region, data, histograms, template_var, band=None, figsize=(6,
     return fig, (ax, axr)
 
 
-def prefit_histograms(args, fit_name, region, samples):
+def prefit_histograms(
+    args: argparse.Namespace, fit_name: str, region: str, samples: List[Sample]
+) -> Tuple[Histogram, List[Histogram], uproot_methods.classes.TGraphAsymmErrors]:
     """Prepare prefit histogram objects
 
     Parameters
@@ -451,7 +478,7 @@ def prefit_histograms(args, fit_name, region, samples):
        TRExFitter fit name
     region : str
        TRExFitter region
-    samples : List[Sample]
+    samples : list(Sample)
        list of MC samples
 
     Returns
@@ -471,7 +498,9 @@ def prefit_histograms(args, fit_name, region, samples):
     return data, histograms, band
 
 
-def postfit_histograms(args, fit_name, region, samples):
+def postfit_histograms(
+    args: argparse.Namespace, fit_name: str, region: str, samples: List[Samples]
+) -> Tuple[Histogram, List[Histogram], uproot_methods.classes.TGraphAsymmErrors]:
     """Prepare postfit histogram objects
 
     Parameters
@@ -502,7 +531,7 @@ def postfit_histograms(args, fit_name, region, samples):
     return histograms, band
 
 
-def split_region_str(region):
+def split_region_str(region: str) -> Tuple[str, str]:
     splits = region.split("_")
     if len(splits) == 1:
         return (region, "bdt_response")
@@ -510,7 +539,7 @@ def split_region_str(region):
         return (splits[0], "_".join(splits[1:]))
 
 
-def run_stacks(args):
+def run_stacks(args: argparse.Namespace) -> int:
     """Given command line arguments generate stack plots
 
     Parameters
@@ -547,7 +576,9 @@ def run_stacks(args):
         data, histograms, band = prefit_histograms(args, fit_name, region, samples)
         data.unit = _region_meta[template_variable].unit
         data.mpl_title = _region_meta[template_variable].title
-        fig, (ax, axr) = stackem(args, region, data, histograms, template_variable, band=band)
+        fig, (ax, axr) = stackem(
+            args, region, data, histograms, template_variable, band=band
+        )
         out_name = f"{outd}/preFit_{region}.pdf"
         fig.savefig(out_name)
         plt.close(fig)
@@ -555,7 +586,9 @@ def run_stacks(args):
 
         if args.do_postfit:
             histograms, band = postfit_histograms(args, fit_name, region, samples)
-            fig, (ax, axr) = stackem(args, region, data, histograms, template_variable, band=band)
+            fig, (ax, axr) = stackem(
+                args, region, data, histograms, template_variable, band=band
+            )
             axr.set_ylim([0.925, 1.075])
             axr.set_yticks([0.95, 1.0, 1.05])
             out_name = f"{outd}/postFit_{region}.pdf"
@@ -565,7 +598,7 @@ def run_stacks(args):
     return 0
 
 
-def get_blank_systematics(config_file):
+def get_blank_systematics(config_file: str) -> Tuple[List[NuisPar], Set[str]]:
     """Get list of NPs and categories from TRExFitter config file
 
     Parameters
@@ -575,9 +608,9 @@ def get_blank_systematics(config_file):
 
     Returns
     -------
-    nps : list
+    nps : list(NuisPar)
         list of nuisance parameters
-    categories: set
+    categories: set(str)
         all categories that were found
     """
     trex_config = PosixPath(config_file)
@@ -599,7 +632,9 @@ def get_blank_systematics(config_file):
     return nps, categories
 
 
-def draw_pulls(args, nps):
+def draw_pulls(
+    args: argparse.Namespace, nps: List[NuisPar]
+) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
     """Draw pulls from command line arguments and nuisance parameters
 
     Parameters
@@ -653,7 +688,7 @@ def draw_pulls(args, nps):
     return fig, ax
 
 
-def run_pulls(args):
+def run_pulls(args: argparse.Namespace) -> int:
     """Given command line arguments generate pull plots
 
     Parameters
