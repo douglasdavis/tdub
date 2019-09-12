@@ -5,7 +5,6 @@ import subprocess
 import logging
 from pathlib import PosixPath
 from dataclasses import dataclass, field
-from typing import List
 import re
 import yaml
 import uproot

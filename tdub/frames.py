@@ -9,7 +9,6 @@ import logging
 import cachetools
 import dask
 import dask.dataframe as dd
-from typing import List, Union, Optional, Dict, Any
 from dataclasses import dataclass, field
 from tdub.utils import categorize_branches
 from tdub.regions import SELECTIONS

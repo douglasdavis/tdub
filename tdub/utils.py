@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from glob import glob
 from pathlib import PosixPath
-from typing import Dict, List
 import re
 
 
