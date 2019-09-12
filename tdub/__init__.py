@@ -2,7 +2,7 @@
 tW analysis tools
 """
 
-__version__ = "0.0.1.dev4"
+__version__ = "0.0.1.dev5"
 
 from tdub.frames import DataFramesInMemory
 from tdub.frames import SelectedDataFrame
