@@ -225,7 +225,7 @@ class Histogram:
         """np.ndarray: the bin widths"""
         return round(self.bins[-1] - self.bins[-2], 2)
 
-    def has_uniform_bins(self) -> bool
+    def has_uniform_bins(self) -> bool:
         """determines if the histogram has uniform bin widths
 
         Returns
