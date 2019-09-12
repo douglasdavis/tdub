@@ -15,7 +15,7 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
 
     Parameters
     ----------
-    branches : List[str]
+    branches : list(str)
        whole set of branches (columns from dataframes)
 
     Returns
