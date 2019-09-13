@@ -308,13 +308,11 @@ def specific_dataframe(
         extra_branches = []
     if r == Region.r1j1b:
         branches = list(set(FEATURESET_1j1b) | set(extra_branches) | {"reg1j1b", "OS"})
-        q = SELECTION_1j1b
     elif r == Region.r2j1b:
         branches = list(set(FEATURESET_2j1b) | set(extra_branches) | {"reg2j1b", "OS"})
-        q = SELECTION_2j1b
     elif r == Region.r2j2b:
         branches = list(set(FEATURESET_2j2b) | set(extra_branches) | {"reg2j2b", "OS"})
-        q = SELECTION_2j2b
+    q = SELECTIONS[r]
     sdf = SelectedDataFrame(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
     )
