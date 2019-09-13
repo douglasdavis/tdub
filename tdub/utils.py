@@ -5,7 +5,7 @@ from pathlib import PosixPath
 import re
 
 
-def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
+def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
     """categorize branches into a separate lists
 
     The categories:
@@ -16,7 +16,7 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
 
     Parameters
     ----------
-    branches : list(str)
+    branches : Iterable(str)
        whole set of branches (columns from dataframes)
 
     Returns
@@ -49,16 +49,14 @@ def categorize_branches(branches: List[str]) -> Dict[str, List[str]]:
         "elel",
         "mumu",
         "runNumber",
+        "randomRunNumber",
         "eventNumber",
-        "tptrw_tool",
     }
-    has_tptrw_tool = "tptrw_tool" in branches
+    bset = set(branches)
     weight_re = re.compile(r"(^weight_\w+)|(\w+_weight$)")
-    weights = set(filter(weight_re.match, branches))
-    metas = metas & set(branches)
-    kins = (set(branches) ^ weights) ^ metas
-    if has_tptrw_tool:
-        weights.add("tptrw_tool")
+    weights = set(filter(weight_re.match, bset))
+    metas = metas & set(bset)
+    kins = (set(bset) ^ weights) ^ metas
     return {"weights": list(weights), "kin": list(kins), "meta": list(metas)}
 
 

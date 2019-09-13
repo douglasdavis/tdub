@@ -1,3 +1,4 @@
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -50,6 +51,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # syntax highlighting style
 pygments_style = "default"
+
+autodoc_typehints = "none"
 
 # -- Options for HTML output -------------------------------------------------
 

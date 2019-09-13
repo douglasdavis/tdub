@@ -253,7 +253,7 @@ def specific_dataframe(
     name: str = "nameless",
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
-    extra_branches: List[str] = [],
+    extra_branches: Optional[List[str]] = None,
     to_ram: bool = False,
     to_ram_kw: Optional[Dict[str, Any]] = None,
 ) -> Union[SelectedDataFrame, DataFramesInMemory]:
@@ -304,6 +304,8 @@ def specific_dataframe(
         r = region
     else:
         raise TypeError("region argument must be tdub.regions.Region or str")
+    if extra_branches is None:
+        extra_branches = []
     if r == Region.r1j1b:
         branches = list(set(FEATURESET_1j1b) | set(extra_branches) | {"reg1j1b", "OS"})
         q = SELECTION_1j1b
