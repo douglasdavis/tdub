@@ -187,7 +187,10 @@ def delayed_dataframe(
         def get_frame(f, tn):
             t = uproot.open(f)[tn]
             return t.pandas.df(branches=bs)
-        dfs = [get_frame(f, tree) for f in files]
+        if isinstance(files, str):
+            dfs = [get_frame(files, tree)]
+        else:
+            dfs = [get_frame(f, tree) for f in files]
         ddf = dd.from_delayed(dfs)
     # fmt: on
 
