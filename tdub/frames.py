@@ -4,16 +4,18 @@ Module for handling dataframes
 
 from __future__ import annotations
 
-import uproot
 import logging
+from dataclasses import dataclass, field
+
 import cachetools
+import uproot
 import dask
 import dask.dataframe as dd
-from dataclasses import dataclass, field
+
+
 from tdub.utils import categorize_branches
-from tdub.regions import SELECTIONS
+from tdub.regions import SELECTIONS, FEATURESETS
 from tdub.regions import Region
-from tdub.regions import FEATURESET_1j1b, FEATURESET_2j1b, FEATURESET_2j2b
 
 
 log = logging.getLogger(__name__)
@@ -299,23 +301,26 @@ def specific_dataframe(
 
     """
     if isinstance(region, str):
-        if region.startswith("r"):
-            r = Region[region]
+        if region.startswith("reg"):
+            rsuff = region.split("reg")[-1]
+            reg = Region[f"r{rsuff}"]
+        elif region.startswith("r"):
+            reg = Region[region]
         else:
-            r = Region[f"r{region}"]
+            reg = Region[f"r{region}"]
     elif isinstance(region, Region):
-        r = region
+        reg = region
     else:
         raise TypeError("region argument must be tdub.regions.Region or str")
     if extra_branches is None:
         extra_branches = []
-    if r == Region.r1j1b:
-        branches = list(set(FEATURESET_1j1b) | set(extra_branches) | {"reg1j1b", "OS"})
-    elif r == Region.r2j1b:
-        branches = list(set(FEATURESET_2j1b) | set(extra_branches) | {"reg2j1b", "OS"})
-    elif r == Region.r2j2b:
-        branches = list(set(FEATURESET_2j2b) | set(extra_branches) | {"reg2j2b", "OS"})
-    q = SELECTIONS[r]
+    if reg == Region.r1j1b:
+        branches = list(set(FEATURESETS[reg]) | set(extra_branches) | {"reg1j1b", "OS"})
+    elif reg == Region.r2j1b:
+        branches = list(set(FEATURESETS[reg]) | set(extra_branches) | {"reg2j1b", "OS"})
+    elif reg == Region.r2j2b:
+        branches = list(set(FEATURESETS[reg]) | set(extra_branches) | {"reg2j2b", "OS"})
+    q = SELECTIONS[reg]
     sdf = SelectedDataFrame(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
     )

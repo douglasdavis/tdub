@@ -45,6 +45,7 @@ def parse_args():
 
 def _parquet_regions(args, log):
     import numexpr
+
     numexpr.set_num_threads(1)
     frames = stdregion_dataframes(args.files, args.tree_name, args.branches)
     log.info("Executing queries:")

@@ -6,6 +6,7 @@ import logging
 from pathlib import PosixPath
 from dataclasses import dataclass, field
 import re
+
 import yaml
 import uproot
 import numpy as np
@@ -673,7 +674,15 @@ def draw_pulls(
     ax.fill_betweenx([-50, 500], -1, 1, color="limegreen")
     ax.set_yticks(yval)
     ax.set_yticklabels(ylabels)
-    ax.errorbar(xval, yval, xerr=[abs(xerr_lo), xerr_hi], fmt="ko", capsize=3.5, lw=2, elinewidth=2.25)
+    ax.errorbar(
+        xval,
+        yval,
+        xerr=[abs(xerr_lo), xerr_hi],
+        fmt="ko",
+        capsize=3.5,
+        lw=2,
+        elinewidth=2.25,
+    )
     ax.set_xlim([-2.2, 2.2])
     ax.set_ylim([0.0, len(yval) + 1])
     ax.grid(color="black", alpha=0.15)
@@ -691,7 +700,7 @@ def draw_pulls(
 
     fig.subplots_adjust(left=0.45)
     if nnps < 10:
-        fig.subplots_adjust(bottom=(0.225 + 0.25/nnps))
+        fig.subplots_adjust(bottom=(0.225 + 0.25 / nnps))
     ax.set_xlabel(r"$\left(\hat\theta - \theta_0\right) / \Delta \theta$")
     return fig, ax
 
