@@ -660,18 +660,20 @@ def draw_pulls(
     Y_OFFSET_TEXT_MEAN = 0.165
     X_OFFSET_TEXT = 0.035
 
+    nnps = len(nps)
     xval = np.array([np.mean for np in nps])
     yval = np.array([(i + 1) for i in range(len(xval))])
     xerr_lo = np.array([np.minus for np in nps])
     xerr_hi = np.array([np.plus for np in nps])
     ylabels = [np.title.replace("ttbar", "$t\\bar{t}$").replace("tW", "$tW$") for np in nps]
 
-    fig, ax = plt.subplots(figsize=(10, len(yval) * 0.5))
+    fig, ax = plt.subplots(figsize=(7, 1.0 + len(yval) * 0.38))
+    fig.subplots_adjust(left=0.5, right=0.95)
     ax.fill_betweenx([-50, 500], -2, 2, color="yellow")
     ax.fill_betweenx([-50, 500], -1, 1, color="limegreen")
     ax.set_yticks(yval)
     ax.set_yticklabels(ylabels)
-    ax.errorbar(xval, yval, xerr=[abs(xerr_lo), xerr_hi], fmt="ko", capsize=3)
+    ax.errorbar(xval, yval, xerr=[abs(xerr_lo), xerr_hi], fmt="ko", capsize=3.5, lw=2, elinewidth=2.25)
     ax.set_xlim([-2.2, 2.2])
     ax.set_ylim([0.0, len(yval) + 1])
     ax.grid(color="black", alpha=0.15)
@@ -687,7 +689,9 @@ def draw_pulls(
                     color="blue", size=10)
     # fmt: on
 
-    fig.subplots_adjust(left=0.5)
+    fig.subplots_adjust(left=0.45)
+    if nnps < 10:
+        fig.subplots_adjust(bottom=(0.225 + 0.25/nnps))
     ax.set_xlabel(r"$\left(\hat\theta - \theta_0\right) / \Delta \theta$")
     return fig, ax
 
@@ -725,5 +729,5 @@ def run_pulls(args: argparse.Namespace) -> None:
     for category, nps in np_by_cat.items():
         fig, ax = draw_pulls(args, nps)
         out_name = f"{outd}/pulls_{category}.pdf"
-        fig.savefig(out_name, bbox_inches="tight")
+        fig.savefig(out_name)
         log.info(f"Done with {category}")
