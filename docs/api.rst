@@ -8,3 +8,4 @@ API Reference
    api_regions.rst
    api_utils.rst
    api_art.rst
+   api_train.rst

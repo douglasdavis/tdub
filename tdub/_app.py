@@ -45,7 +45,6 @@ def parse_args():
 
 def _parquet_regions(args, log):
     import numexpr
-
     numexpr.set_num_threads(1)
     frames = stdregion_dataframes(args.files, args.tree_name, args.branches)
     log.info("Executing queries:")
@@ -65,14 +64,7 @@ def cli():
         parser.print_help()
         return 0
 
-    # fmt: off
-    logging.basicConfig(level=logging.INFO, format="{:20}  %(levelname)s  %(message)s".format("[%(name)s]"))
-    logging.addLevelName(logging.WARNING, "\033[1;31m{:8}\033[1;0m".format(logging.getLevelName(logging.WARNING)))
-    logging.addLevelName(logging.ERROR, "\033[1;35m{:8}\033[1;0m".format(logging.getLevelName(logging.ERROR)))
-    logging.addLevelName(logging.INFO, "\033[1;32m{:8}\033[1;0m".format(logging.getLevelName(logging.INFO)))
-    logging.addLevelName(logging.DEBUG, "\033[1;34m{:8}\033[1;0m".format(logging.getLevelName(logging.DEBUG)))
     log = logging.getLogger("tdub.cli")
-    # fmt: on
 
     if args.action == "regions2parquet":
         return _parquet_regions(args, log)

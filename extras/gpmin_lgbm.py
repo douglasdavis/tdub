@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-from pprint import pprint
+from pprint import pprint, pformat
 from pathlib import PosixPath
 import os
-
+import glob
+import json
+import yaml
 
 from skopt import gp_minimize
 from skopt.space import Real, Integer, Categorical
@@ -14,43 +16,21 @@ import lightgbm as lgbm
 import joblib
 
 import numpy as np
-import pandas as pd
-import dask.dataframe as dd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 mpl.use("pdf")
 
-from tdub import DataFramesInMemory
-from tdub.regions import FSET_2j2b
+from tdub.train import prepare_from_root
 
-# datadir = "/Users/ddavis/ATLAS/data"
-datadir = "/home/drd25/ATLAS/analysis/run/pqs"
-
-branches = list(set(FSET_2j2b) | {"weight_nominal"})
-
-ddf_ttbar = dd.read_parquet(f"{datadir}/ttbar_r2j2b.parquet")[branches]
-ddf_tW_DR = dd.read_parquet(f"{datadir}/tW_DR_r2j2b.parquet")[branches]
-
-dfim_ttbar = DataFramesInMemory("ttbar", ddf_ttbar)
-dfim_tW_DR = DataFramesInMemory("tW_DR", ddf_tW_DR)
-
-w_ttbar = dfim_ttbar.weights.weight_nominal.to_numpy()
-w_tW_DR = dfim_tW_DR.weights.weight_nominal.to_numpy()
-w_ttbar[w_ttbar < 0] = 0.0
-w_tW_DR[w_tW_DR < 0] = 0.0
-w_tW_DR *= w_ttbar.sum() / w_tW_DR.sum()
-w_tW_DR *= 1.0e5 / w_tW_DR.sum()
-w_ttbar *= 1.0e5 / w_ttbar.sum()
-
-y = np.concatenate([np.ones_like(w_tW_DR), np.zeros_like(w_ttbar)])
-w = np.concatenate([w_tW_DR, w_ttbar])
-X = np.concatenate([dfim_tW_DR.df.to_numpy(), dfim_ttbar.df.to_numpy()])
-
-pprint(dfim_tW_DR.df.columns.to_list())
+X, y, w, cols = prepare_from_root(
+    glob.glob("/home/ddavis/ATLAS/data/wtloop/v29_20190913/tW_DR_41064*FS*nominal.root"),
+    glob.glob("/home/ddavis/ATLAS/data/wtloop/v29_20190913/ttbar_410472*FS*nominal.root"),
+    "2j2b",
+)
 
 X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-    X, y, w, train_size=0.33, random_state=414, shuffle=True
+    X, y, w, train_size=0.333, random_state=414, shuffle=True
 )
 
 validation_data = [(X_test, y_test)]
@@ -127,8 +107,8 @@ def afit(
         y_train,
         eval_set=validation_data,
         eval_metric="auc",
-        verbose=15,
-        early_stopping_rounds=5,
+        verbose=20,
+        early_stopping_rounds=20,
         eval_sample_weight=[validation_w],
     )
 
@@ -144,6 +124,7 @@ def afit(
         label="train bkg",
         density=True,
         histtype="step",
+        weights=w_train[y_train == 0],
     )
     ax.hist(
         train_pred[y_train == 1],
@@ -151,12 +132,46 @@ def afit(
         label="train sig",
         density=True,
         histtype="step",
+        weights=w_train[y_train == 1],
     )
-    ax.hist(pred[y_test == 0], bins=bins, label="test bkg", density=True, histtype="step")
-    ax.hist(pred[y_test == 1], bins=bins, label="test sig", density=True, histtype="step")
+    ax.hist(
+        pred[y_test == 0],
+        bins=bins,
+        label="test bkg",
+        density=True,
+        histtype="step",
+        weights=w_test[y_test == 0],
+    )
+    ax.hist(
+        pred[y_test == 1],
+        bins=bins,
+        label="test sig",
+        density=True,
+        histtype="step",
+        weights=w_test[y_test == 1],
+    )
     ax.legend()
     fig.savefig("histograms.pdf")
     plt.close(fig)
+
+    curp = pformat(model.get_params())
+    curp = eval(curp)
+    #curp = dict(
+    #    boosting_type="gbdt",
+    #    num_leaves=int(num_leaves),
+    #    learning_rate=float(learning_rate),
+    #    subsample_for_bin=int(subsample_for_bin),
+    #    min_child_samples=int(min_child_samples),
+    #    reg_alpha=float(reg_alpha),
+    #    reg_lambda=float(reg_lambda),
+    #    colsample_bytree=int(colsample_bytree),
+    #    n_estimators=int(n_estimators),
+    #    max_depth=int(max_depth),
+    #    is_unbalance=True,
+    #)
+    with open("params.json", "w") as f:
+        json.dump(curp, f)
+
     os.chdir(curdir)
 
     if score > best_auc:
@@ -171,11 +186,19 @@ def afit(
 
 
 search_result = gp_minimize(
-    func=afit, dimensions=dimensions, acq_func="EI", n_calls=50, x0=default_parameters
+    func=afit, dimensions=dimensions, acq_func="EI", n_calls=25, x0=default_parameters
 )
 
 print()
 print(best_auc)
+print()
+
+print()
+print(best_fit)
+print()
+
+print()
+print(pformat(best_parameters[0]))
 print()
 
 print()
