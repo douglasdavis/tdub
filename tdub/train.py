@@ -61,7 +61,7 @@ def prepare_from_root(
     >>> from tdub.utils import quick_files
     >>> from tdub.train import prepare_from_root
     >>> qfiles = quick_files("/path/to/data")
-    >>> X, y, w = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
+    >>> X, y, w, cols = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
 
     """
     log.info("preparing training data")
@@ -155,7 +155,7 @@ def folded_training(
     >>> from tdub.train import prepare_from_root
     >>> from tdub.train import folded_training
     >>> qfiles = quick_files("/path/to/data")
-    >>> X, y, w = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
+    >>> X, y, w, cols = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
     >>> params = dict(
     ...     boosting_type="gbdt",
     ...     num_leaves=42,
@@ -169,7 +169,7 @@ def folded_training(
     ...     max_depth=5,
     ...     is_unbalance=True,
     ... )
-    >>> folded_training(X, y, w, params, output_dir="/path/to/train/output",
+    >>> folded_training(X, y, w, cols, params, output_dir="/path/to/train/output",
     ...                 KFold_kw={"n_splits": 5, "shuffle": True, "random_state": 17})
 
     """
