@@ -65,9 +65,12 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
 
     These types of samples are currently tested:
 
-    - ``ttbar``
-    - ``tW_DR``
-    - ``tW_DS``
+    - ``ttbar`` (nominal 410472)
+    - ``tW_DR`` (nominal 410648, 410649)
+    - ``tW_DS`` (nominal 410656, 410657)
+    - ``Diboson``
+    - ``Zjets``
+    - ``MCNP``
 
     Parameters
     ----------
@@ -91,7 +94,17 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
 
     """
     path = str(PosixPath(datapath).resolve())
-    ttbar_files = glob(f"{path}/ttbar_410472_FS*nominal.root")
-    tW_DR_files = glob(f"{path}/tW_DR_41064*FS*nominal.root")
-    tW_DS_files = glob(f"{path}/tW_DS_41065*FS*nominal.root")
-    return {"ttbar": ttbar_files, "tW_DR": tW_DR_files, "tW_DS": tW_DS_files}
+    ttbar_files = sorted(glob(f"{path}/ttbar_410472_FS*nominal.root"))
+    tW_DR_files = sorted(glob(f"{path}/tW_DR_41064*FS*nominal.root"))
+    tW_DS_files = sorted(glob(f"{path}/tW_DS_41065*FS*nominal.root"))
+    Diboson_files = sorted(glob(f"{path}/Diboson_*FS*nominal.root"))
+    Zjets_files = sorted(glob(f"{path}/Zjets_*FS*nominal.root"))
+    MCNP_files = sorted(glob(f"{path}/MCNP_*FS*nominal.root"))
+    return {
+        "ttbar": ttbar_files,
+        "tW_DR": tW_DR_files,
+        "tW_DS": tW_DS_files,
+        "Diboson": Diboson_files,
+        "Zjets": Zjets_files,
+        "MCNP": MCNP_files,
+    }
