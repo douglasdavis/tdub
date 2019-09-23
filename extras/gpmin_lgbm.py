@@ -28,11 +28,12 @@ from tdub.train import prepare_from_root
 from tdub.utils import quick_files
 
 
-def minimize_auc(
-    data_dir: str, output_dir: Union[str, os.PathLike] = "_unnamed_optimization"
+def gpmin_auc(
+    data_dir: str,
+    output_dir: Union[str, os.PathLike] = "_unnamed_optimization",
+    n_calls: int = 15,
 ):
-    """
-    Hyperparameter optimization via gaussian process minimization of AUC.
+    """Hyperparameter optimization via gaussian process AUC minimization
 
     Parameters
     ----------
@@ -40,6 +41,8 @@ def minimize_auc(
        path containing ROOT files
     output_dir: str or os.PathLike
        path to save optimization output
+    n_calls:
+       number of times to train during the minimization procedure
     """
     run_from_dir = os.getcwd()
     save_dir = PosixPath(output_dir)
@@ -49,7 +52,7 @@ def minimize_auc(
     qfiles = quick_files(f"{data_dir}")
     X, y, w, cols = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
     X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-        X, y, w, train_size=0.15, random_state=414, shuffle=True
+        X, y, w, train_size=0.333, random_state=414, shuffle=True
     )
     validation_data = [(X_test, y_test)]
     validation_w = w_test
@@ -141,7 +144,9 @@ def minimize_auc(
 
         train_pred = fitted_model.predict_proba(X_train)[:, 1]
         fig, ax = plt.subplots()
-        bins = np.linspace(0.0, 1.0, 26)
+        xmin = np.min(pred[y_test == 0])
+        xmax = np.max(pred[y_test == 1])
+        bins = np.linspace(xmin, xmax, 26)
         ax.hist(
             train_pred[y_train == 0],
             bins=bins,
@@ -184,6 +189,9 @@ def minimize_auc(
         with open("params.json", "w") as f:
             json.dump(curp, f)
 
+        with open("auc.txt", "w") as f:
+            print(f"{score}", file=f)
+
         os.chdir(curdir)
 
         if score > best_auc:
@@ -197,7 +205,11 @@ def minimize_auc(
         return -score
 
     search_result = gp_minimize(
-        func=afit, dimensions=dimensions, acq_func="EI", n_calls=14, x0=default_parameters
+        func=afit,
+        dimensions=dimensions,
+        acq_func="EI",
+        n_calls=n_calls,
+        x0=default_parameters,
     )
 
     with open("best.txt", "w") as f:
@@ -217,4 +229,4 @@ def minimize_auc(
 
 
 if __name__ == "__main__":
-    minimize_auc("/Users/ddavis/ATLAS/data/wtloop/v29_20190913")
+    gpmin_auc("/var/phy/project/hep/atlas/users/drd25/data/wtloop/v29_20190913", n_calls=30)
