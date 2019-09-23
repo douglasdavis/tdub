@@ -70,7 +70,7 @@ dict(Region, str): key-value pairs for regions to their selection string
 """
 
 
-FEATURESET_1j1b = [
+FEATURESET_1j1b = sorted([
     "pTsys_lep1lep2jet1met",
     "mass_lep2jet1",
     "mass_lep1jet1",
@@ -83,12 +83,12 @@ FEATURESET_1j1b = [
     "nloosebjets",
     "cent_lep1lep2",
     "pTsys_lep1lep2jet1",
-]
+])
 """
 list(str): list of features we use for classifiers in the 1j1b region
 """
 
-FEATURESET_2j1b = [
+FEATURESET_2j1b = sorted([
     "mass_lep1jet2",
     "psuedoContTagBin_jet1",
     "mass_lep1jet1",
@@ -97,13 +97,13 @@ FEATURESET_2j1b = [
     "pTsys_lep1lep2jet1jet2met",
     "psuedoContTagBin_jet2",
     "pT_jet2",
-]
+])
 """
 list(str): list of features we use for classifiers in the 2j1b region
 """
 
 
-FEATURESET_2j2b = [
+FEATURESET_2j2b = sorted([
     "mass_lep1jet2",
     "mass_lep1jet1",
     "deltaR_lep1_jet1",
@@ -111,7 +111,7 @@ FEATURESET_2j2b = [
     "pTsys_lep1lep2met",
     "pT_jet2",
     "mass_lep2jet2",
-]
+])
 """
 list(str): list of features we use for classifiers in the 2j2b region
 """

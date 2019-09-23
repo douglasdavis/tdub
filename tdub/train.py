@@ -178,7 +178,9 @@ def folded_training(
     output_path.mkdir(exist_ok=True, parents=True)
     os.chdir(output_path)
 
-    joblib.dump(cols, "columns.joblib")
+    with open("features.txt", "w") as f:
+        for c in cols:
+            print(c, file=f)
 
     fig_hists, ax_hists = plt.subplots()
     fig_rocs, ax_rocs = plt.subplots()
