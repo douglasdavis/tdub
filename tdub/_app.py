@@ -12,7 +12,7 @@ from tdub.art import run_pulls, run_stacks
 
 def parse_args():
     # fmt: off
-    parser = argparse.ArgumentParser(prog="tdub", description="tee-double-you CLI")
+    parser = argparse.ArgumentParser(prog="tdub", description="tdub CLI")
     subparsers = parser.add_subparsers(dest="action", help="Action")
 
     common_parser = argparse.ArgumentParser(add_help=False)
@@ -39,6 +39,14 @@ def parse_args():
     pulls.add_argument("-o", "--out-dir", type=str, help="output directory")
     pulls.add_argument("--no-text", action="store_true", help="don't print values on plots")
 
+    gpmin = subparsers.add_parser("gpmin", help="via Gaussian processes minimization from skopt for HP optimization")
+    gpmin.add_argument("region", type=str, help="Region to train")
+    gpmin.add_argument("nlomethod", type=str, help="NLO method samples to use", choices=["DR", "DS"])
+    gpmin.add_argument("datadir", type=str, help="Directory with ROOT files")
+    gpmin.add_argument("-o", "--out-dir", type=str, default="_optim", help="output directory for saving optimizatin results")
+    gpmin.add_argument("-n", "--n-calls", type=int, default=15, help="number of calls for the optimization procedure")
+    gpmin.add_argument("-r", "--esr", type=int, default=20, help="early stopping rounds for the training")
+
     # fmt: on
     return (parser.parse_args(), parser)
 
@@ -58,6 +66,18 @@ def _parquet_regions(args, log):
     return 0
 
 
+def _gpmin(args):
+    from tdub.train import gp_minimize_auc
+    return gp_minimize_auc(
+        args.region,
+        args.nlomethod,
+        args.datadir,
+        output_dir=args.out_dir,
+        n_calls=args.n_calls,
+        esr=args.esr,
+    )
+
+
 def cli():
     args, parser = parse_args()
     if args.action is None:
@@ -72,5 +92,7 @@ def cli():
         return run_stacks(args)
     elif args.action == "pulls":
         return run_pulls(args)
+    elif args.action == "gpmin":
+        return _gpmin(args)
     else:
         parser.print_help()
