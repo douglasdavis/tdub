@@ -184,7 +184,8 @@ def folded_training(
         for c in cols:
             print(c, file=f)
 
-    fig_hists, ax_hists = plt.subplots()
+    fig_proba_hists, ax_proba_hists = plt.subplots()
+    fig_pred_hists, ax_pred_hists = plt.subplots()
     fig_rocs, ax_rocs = plt.subplots()
 
     tprs = []
@@ -223,42 +224,68 @@ def folded_training(
 
         joblib.dump(fitted_model, f"model_fold{fold_number}.joblib")
 
+        fold_fig_proba, fold_ax_proba = plt.subplots()
+        fold_fig_pred, fold_ax_pred = plt.subplots()
+
         test_proba = fitted_model.predict_proba(X_test)[:, 1]
         train_proba = fitted_model.predict_proba(X_train)[:, 1]
+        test_pred = fitted_model.predict(X_test, raw_score=True)
+        train_pred = fitted_model.predict(X_train, raw_score=True)
 
-        bins = np.linspace(0, 1, 26)
-        ax_hists.hist(
-            test_proba[y_test == 1],
-            bins=bins,
-            label=f"f{fold_number} s (test)",
-            density=True,
-            histtype="step",
-            weights=w_test[y_test == 1],
-        )
-        ax_hists.hist(
-            test_proba[y_test == 0],
-            bins=bins,
-            label=f"f{fold_number} b (test)",
-            density=True,
-            histtype="step",
-            weights=w_test[y_test == 0],
-        )
-        ax_hists.hist(
-            train_proba[y_train == 1],
-            bins=bins,
-            label=f"f{fold_number} s (train)",
-            density=True,
-            histtype="step",
-            weights=w_train[y_train == 1],
-        )
-        ax_hists.hist(
-            train_proba[y_train == 0],
-            bins=bins,
-            label=f"f{fold_number} b (train)",
-            density=True,
-            histtype="step",
-            weights=w_train[y_train == 0],
-        )
+        proba_sig_test = test_proba[y_test == 1]
+        proba_bkg_test = test_proba[y_test == 0]
+        proba_sig_train = train_proba[y_train == 1]
+        proba_bkg_train = train_proba[y_train == 0]
+        pred_sig_test = test_pred[y_test == 1]
+        pred_bkg_test = test_pred[y_test == 0]
+        pred_sig_train = train_pred[y_train == 1]
+        pred_bkg_train = train_pred[y_train == 0]
+        w_sig_test = w_test[y_test == 1]
+        w_bkg_test = w_test[y_test == 0]
+        w_sig_train = w_train[y_train == 1]
+        w_bkg_train = w_train[y_train == 0]
+
+        proba_bins = np.linspace(proba_bkg_test.min(), proba_sig_test.max(), 26)
+        pred_bins = np.linspace(pred_bkg_test.min(), pred_sig_test.max(), 26)
+        # fmt: off
+        ax_proba_hists.hist(proba_sig_test, bins=proba_bins, label=f"f{fold_number} s (test)",
+                            density=True, histtype="step", weights=w_sig_test)
+        ax_proba_hists.hist(proba_bkg_test, bins=proba_bins, label=f"f{fold_number} b (test)",
+                            density=True, histtype="step", weights=w_bkg_test)
+        ax_proba_hists.hist(proba_sig_train, bins=proba_bins, label=f"f{fold_number} s (train)",
+                            density=True, histtype="step", weights=w_sig_train)
+        ax_proba_hists.hist(proba_bkg_train, bins=proba_bins, label=f"f{fold_number} b (train)",
+                            density=True, histtype="step", weights=w_bkg_train)
+
+        fold_ax_proba.hist(proba_sig_test, bins=proba_bins, label=f"f{fold_number} s (test)",
+                            density=True, histtype="step", weights=w_sig_test)
+        fold_ax_proba.hist(proba_bkg_test, bins=proba_bins, label=f"f{fold_number} b (test)",
+                            density=True, histtype="step", weights=w_bkg_test)
+        fold_ax_proba.hist(proba_sig_train, bins=proba_bins, label=f"f{fold_number} s (train)",
+                            density=True, histtype="step", weights=w_sig_train)
+        fold_ax_proba.hist(proba_bkg_train, bins=proba_bins, label=f"f{fold_number} b (train)",
+                            density=True, histtype="step", weights=w_bkg_train)
+        fold_ax_proba.set_ylim([0, 1.5 * fold_ax_proba.get_ylim()[1]])
+
+        ax_pred_hists.hist(pred_sig_test, bins=pred_bins, label=f"f{fold_number} s (test)",
+                           density=True, histtype="step", weights=w_sig_test)
+        ax_pred_hists.hist(pred_bkg_test, bins=pred_bins, label=f"f{fold_number} b (test)",
+                           density=True, histtype="step", weights=w_bkg_test)
+        ax_pred_hists.hist(pred_sig_train, bins=pred_bins, label=f"f{fold_number} s (train)",
+                           density=True, histtype="step", weights=w_sig_train)
+        ax_pred_hists.hist(pred_bkg_train, bins=pred_bins, label=f"f{fold_number} b (train)",
+                           density=True, histtype="step", weights=w_bkg_train)
+
+        fold_ax_pred.hist(pred_sig_test, bins=pred_bins, label=f"f{fold_number} s (test)",
+                           density=True, histtype="step", weights=w_sig_test)
+        fold_ax_pred.hist(pred_bkg_test, bins=pred_bins, label=f"f{fold_number} b (test)",
+                           density=True, histtype="step", weights=w_bkg_test)
+        fold_ax_pred.hist(pred_sig_train, bins=pred_bins, label=f"f{fold_number} s (train)",
+                           density=True, histtype="step", weights=w_sig_train)
+        fold_ax_pred.hist(pred_bkg_train, bins=pred_bins, label=f"f{fold_number} b (train)",
+                           density=True, histtype="step", weights=w_bkg_train)
+        fold_ax_pred.set_ylim([0, 1.5 * fold_ax_pred.get_ylim()[1]])
+        # fmt: on
 
         fpr, tpr, thresholds = roc_curve(y_test, test_proba, sample_weight=w_test)
         tprs.append(interp(mean_fpr, fpr, tpr))
@@ -268,6 +295,14 @@ def folded_training(
         ax_rocs.plot(
             fpr, tpr, lw=1, alpha=0.45, label=f"fold {fold_number}, AUC = {roc_auc:0.3}"
         )
+
+        fold_ax_proba.legend(ncol=2)
+        fold_ax_pred.legend(ncol=2)
+        fold_fig_proba.savefig(f"fold{fold_number}_histograms_proba.pdf")
+        fold_fig_pred.savefig(f"fold{fold_number}_histograms_pred.pdf")
+
+        plt.close(fold_fig_proba)
+        plt.close(fold_fig_pred)
 
         fold_number += 1
 
@@ -284,9 +319,13 @@ def folded_training(
         alpha=0.8,
     )
 
+    ax_proba_hists.legend(ncol=3, loc="upper center")
+    ax_proba_hists.set_ylim([0, 1.5 * ax_proba_hists.get_ylim()[1]])
+    fig_proba_hists.savefig("histograms_proba.pdf")
 
-    ax_hists.legend(ncol=3)
-    fig_hists.savefig("histograms.pdf")
+    ax_pred_hists.legend(ncol=3, loc="upper center")
+    ax_pred_hists.set_ylim([0, 1.5 * ax_pred_hists.get_ylim()[1]])
+    fig_pred_hists.savefig("histograms_pred.pdf")
 
     ax_rocs.legend(ncol=2)
     fig_rocs.savefig("roc.pdf")
