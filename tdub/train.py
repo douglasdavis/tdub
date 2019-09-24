@@ -140,7 +140,7 @@ def folded_training(
        directory to save results of training
     use_sample_weights : bool
        if ``True``, use the sample weights in training instead of the
-       ``is_unbalanced=True`` (which is the default case when this
+       ``is_unbalance=True`` (which is the default case when this
        argument is ``False``)
     KFold_kw : optional dict(str, Any)
        arguments fed to :obj:`sklearn.model_selection.KFold`
@@ -200,7 +200,7 @@ def folded_training(
         validation_w = w_test
 
         if use_sample_weights:
-            params["is_unbalanced"] = False
+            params["is_unbalance"] = False
             model = lgbm.LGBMClassifier(**params)
             fitted_model = model.fit(
                 X_train,
@@ -211,7 +211,7 @@ def folded_training(
                 **fit_kw,
             )
         else:
-            params["is_unbalanced"] = True
+            params["is_unbalance"] = True
             model = lgbm.LGBMClassifier(**params)
             fitted_model = model.fit(
                 X_train,
