@@ -439,6 +439,7 @@ def gp_minimize_auc(
         global best_fit
         global best_auc
         global best_parameters
+        global best_paramdict
 
         log.info(f"num_leaves: {num_leaves}")
         log.info(f"learning_rate: {learning_rate}")
@@ -537,6 +538,9 @@ def gp_minimize_auc(
     )
 
     summary = {
+        "region": region,
+        "nlo_method": nlo_method,
+        "features": cols,
         "best_iteration": best_fit,
         "best_auc": best_auc,
         "best_params": best_paramdict,
