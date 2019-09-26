@@ -12,6 +12,8 @@ import uproot
 import numpy as np
 import matplotlib.pyplot as plt
 
+import tdub.utils
+
 # fmt: off
 import matplotlib
 matplotlib.use("pdf")
@@ -218,7 +220,7 @@ class Histogram:
     @property
     def bin_centers(self) -> np.ndarray:
         """np.ndarray: the bin centers"""
-        return (self.bins[1:] + self.bins[:-1]) * 0.5
+        return tdub.utils.bin_centers(self.bins)
 
     @property
     def bin_width(self) -> np.ndarray:

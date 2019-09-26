@@ -12,6 +12,7 @@ Function Summary
 
    categorize_branches
    quick_files
+   bin_centers
 
 Reference
 ^^^^^^^^^
@@ -19,3 +20,5 @@ Reference
 .. autofunction:: categorize_branches
 
 .. autofunction:: quick_files
+
+.. autofunction:: bin_centers

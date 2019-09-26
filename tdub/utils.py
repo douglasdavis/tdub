@@ -61,9 +61,10 @@ def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
 
 
 def quick_files(datapath: str) -> Dict[str, List[str]]:
-    """get a dictionary of ``{sample_str : file_list}`` for quick file access
+    """get a dictionary of ``{sample_str : file_list}`` for quick file access.
 
-    These types of samples are currently tested:
+    The lists of files are sorted alphabetically. These types of
+    samples are currently tested:
 
     - ``ttbar`` (nominal 410472)
     - ``tW_DR`` (nominal 410648, 410649)
@@ -88,9 +89,9 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
     >>> from tdub.utils import quick_files
     >>> qf = quick_files("/path/to/some_files") ## has 410472 ttbar samples
     >>> pprint(qf["ttbar"])
-    ['/path/to/some/files/ttbar_410472_FS_MC16d_nominal.root',
-     '/path/to/some/files/ttbar_410472_FS_MC16e_nominal.root',
-     '/path/to/some/files/ttbar_410472_FS_MC16a_nominal.root']
+    ['/path/to/some/files/ttbar_410472_FS_MC16a_nominal.root',
+     '/path/to/some/files/ttbar_410472_FS_MC16d_nominal.root',
+     '/path/to/some/files/ttbar_410472_FS_MC16e_nominal.root']
 
     """
     path = str(PosixPath(datapath).resolve())
@@ -108,3 +109,19 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
         "Zjets": Zjets_files,
         "MCNP": MCNP_files,
     }
+
+
+def bin_centers(bin_edges: numpy.ndarray) -> numpy.ndarray:
+    """get bin centers given bin edges
+
+    Parameters
+    ----------
+    bin_edges : numpy.ndarray
+       edges defining binning
+
+    Returns
+    -------
+    numpy.ndarray
+       the centers associated with the edges
+    """
+    return (bin_edges[1:] + bin_edges[:-1]) * 0.5

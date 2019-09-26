@@ -56,6 +56,7 @@ class DataFramesInMemory:
 
     >>> from tdub.frames import specific_dataframe
     >>> dfim = specific_dataframe(ttbar_files, "2j2b", to_ram=True)
+
     """
 
     def __init__(
@@ -169,6 +170,7 @@ def delayed_dataframe(
 
     Examples
     --------
+
     >>> from tdub.frames import delayed_dataframe, quick_files
     >>> files = quick_files("/path/to/files")["tW_DR"]
     >>> ddf = delayed_dataframe(files, branches=["branch_a", "branch_b"])
@@ -236,11 +238,13 @@ def selected_dataframes(
 
     Examples
     --------
+
     >>> from tdub.frames import selected_dataframes, quick_files
     >>> files = quick_files("/path/to/files")["tW_DS"]
     >>> selections = {"r2j2b": "(reg2j2b == True) & (OS == True)",
     ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
     >>> frames = selected_dataframes(files, selections=selections)
+
     """
     if delayed_dataframe_kw is None:
         df = delayed_dataframe(files, tree, weight_name, branches)
@@ -294,7 +298,9 @@ def specific_dataframe(
 
     Examples
     --------
-    >>> from tdub.frames import specific_dataframe, quick_files
+
+    >>> from tdub.frames import specific_dataframe
+    >>> from tdub.utils import quick_files
     >>> files = quick_files("/path/to/files")["ttbar"]
     >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, extra_branches=["pT_lep1"])
     >>> frame_2j2b = specific_dataframe(files, "2j2b", extra_branches=["met"])
