@@ -178,7 +178,7 @@ def delayed_dataframe(
     """
     bs = branches
     if branches is not None:
-        bs = list(set(branches) | set([weight_name]))
+        bs = sorted(set(branches) | set([weight_name]), key=str.lower)
 
     # fmt: off
     if experimental:
@@ -321,11 +321,17 @@ def specific_dataframe(
     if extra_branches is None:
         extra_branches = []
     if reg == Region.r1j1b:
-        branches = list(set(FEATURESETS[reg]) | set(extra_branches) | {"reg1j1b", "OS"})
+        branches = sorted(
+            set(FEATURESETS[reg]) | set(extra_branches) | {"reg1j1b", "OS"}, key=str.lower
+        )
     elif reg == Region.r2j1b:
-        branches = list(set(FEATURESETS[reg]) | set(extra_branches) | {"reg2j1b", "OS"})
+        branches = sorted(
+            set(FEATURESETS[reg]) | set(extra_branches) | {"reg2j1b", "OS"}, key=str.lower
+        )
     elif reg == Region.r2j2b:
-        branches = list(set(FEATURESETS[reg]) | set(extra_branches) | {"reg2j2b", "OS"})
+        branches = sorted(
+            set(FEATURESETS[reg]) | set(extra_branches) | {"reg2j2b", "OS"}, key=str.lower
+        )
     q = SELECTIONS[reg]
     sdf = SelectedDataFrame(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
@@ -376,7 +382,9 @@ def stdregion_dataframes(
 
     use_branches = None
     if branches is not None:
-        use_branches = list(set(branches) | set(["reg1j1b", "reg2j1b", "reg2j2b", "OS"]))
+        use_branches = sorted(
+            set(branches) | set(["reg1j1b", "reg2j1b", "reg2j2b", "OS"]), key=str.lower
+        )
     repart_kw = None
     if isinstance(partitioning, str):
         repart_kw = {"partition_size": partitioning}
