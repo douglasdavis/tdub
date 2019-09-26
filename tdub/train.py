@@ -319,11 +319,11 @@ def folded_training(
         alpha=0.8,
     )
 
-    ax_proba_hists.legend(ncol=3, loc="upper center")
+    ax_proba_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_proba_hists.set_ylim([0, 1.5 * ax_proba_hists.get_ylim()[1]])
     fig_proba_hists.savefig("histograms_proba.pdf")
 
-    ax_pred_hists.legend(ncol=3, loc="upper center")
+    ax_pred_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_pred_hists.set_ylim([0, 1.5 * ax_pred_hists.get_ylim()[1]])
     fig_pred_hists.savefig("histograms_pred.pdf")
 

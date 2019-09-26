@@ -98,14 +98,14 @@ def _foldedtraining(args):
     X, y, w, cols = prepare_from_root(
         qfiles[f"tW_{args.nlomethod}"], qfiles["ttbar"], args.region
     )
-    with open(f"{args.optimdir}/params.json", "r") as f:
-        params = json.load(f)
+    with open(f"{args.optimdir}/summary.json", "r") as f:
+        summary = json.load(f)
     folded_training(
         X,
         y,
         w,
         cols,
-        params,
+        summary["best_params"],
         {"verbose": 20},
         args.out_dir,
         KFold_kw={"n_splits": args.n_splits, "shuffle": True, "random_state": args.seed},
