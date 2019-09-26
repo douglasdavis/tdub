@@ -171,7 +171,8 @@ def delayed_dataframe(
     Examples
     --------
 
-    >>> from tdub.frames import delayed_dataframe, quick_files
+    >>> from tdub.frames import delayed_dataframe
+    >>> from tdub.utils import quick_files
     >>> files = quick_files("/path/to/files")["tW_DR"]
     >>> ddf = delayed_dataframe(files, branches=["branch_a", "branch_b"])
 
@@ -239,7 +240,8 @@ def selected_dataframes(
     Examples
     --------
 
-    >>> from tdub.frames import selected_dataframes, quick_files
+    >>> from tdub.frames import selected_dataframes
+    >>> from tdub.utils import quick_files
     >>> files = quick_files("/path/to/files")["tW_DS"]
     >>> selections = {"r2j2b": "(reg2j2b == True) & (OS == True)",
     ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
@@ -374,7 +376,8 @@ def stdregion_dataframes(
 
     Examples
     --------
-    >>> from tdub.frames import stdregion_dataframes, quick_files
+    >>> from tdub.frames import stdregion_dataframes
+    >>> from tdub.utils import quick_files
     >>> files = quick_files("/path/to/files")["tW_DR"]
     >>> standard_regions = stdregion_dataframes(files)
 
