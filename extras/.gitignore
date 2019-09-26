@@ -1,3 +1,4 @@
 training_*
-_unnamed_optimization*
+optim_*
+fold_*
 _*
