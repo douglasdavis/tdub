@@ -108,13 +108,13 @@ def folded_training(
     fit_kw: Dict[str, Any],
     output_dir: Union[str, os.PathLike],
     use_sample_weights: bool = False,
-    KFold_kw: Dict[str, Any] = None,
+    kfold_kw: Dict[str, Any] = None,
 ) -> float:
     """Train a :obj:`lightgbm.LGBMClassifier` model using :math:`k`-fold
     cross validation using the given input data and parameters.  The
     models resulting from the training (and other important training
     information) are saved to ``output_dir``. The entries in the
-    ``KFold_kw`` argument are forwarded to the
+    ``kfold_kw`` argument are forwarded to the
     :obj:`sklearn.model_selection.KFold` class for data
     preprocessing. The default arguments that we use are:
 
@@ -142,7 +142,7 @@ def folded_training(
        if ``True``, use the sample weights in training instead of the
        ``is_unbalance=True`` (which is the default case when this
        argument is ``False``)
-    KFold_kw : optional dict(str, Any)
+    kfold_kw : optional dict(str, Any)
        arguments fed to :obj:`sklearn.model_selection.KFold`
 
     Returns
@@ -172,7 +172,7 @@ def folded_training(
     ...     is_unbalance=True,
     ... )
     >>> folded_training(X, y, w, cols, params, output_dir="/path/to/train/output",
-    ...                 KFold_kw={"n_splits": 5, "shuffle": True, "random_state": 17})
+    ...                 kfold_kw={"n_splits": 5, "shuffle": True, "random_state": 17})
 
     """
     starting_dir = os.getcwd()
@@ -191,7 +191,7 @@ def folded_training(
     tprs = []
     aucs = []
     mean_fpr = np.linspace(0, 1, 100)
-    folder = KFold(**KFold_kw)
+    folder = KFold(**kfold_kw)
     fold_number = 0
     for train_idx, test_idx in folder.split(X):
         X_train, X_test = X[train_idx], X[test_idx]
@@ -331,7 +331,7 @@ def folded_training(
     fig_rocs.savefig("roc.pdf")
 
     with open("kfold.json", "w") as f:
-        json.dump(KFold_kw, f, indent=4)
+        json.dump(kfold_kw, f, indent=4)
 
     os.chdir(starting_dir)
     neg_roc_score = -1.0 * np.mean(aucs)
@@ -356,7 +356,7 @@ def gp_minimize_auc(
     region : Region or str
        the region where we're going to perform the training
     nlo_method : str
-       which tW NLO method sample ('DR' or 'DS')
+       which tW NLO method sample ('DR' or 'DS' or 'Both')
     data_dir : str
        path containing ROOT files
     output_dir : str or os.PathLike
@@ -390,8 +390,11 @@ def gp_minimize_auc(
         tW_files = qfiles["tW_DR"]
     elif nlo_method == "DS":
         tW_files = qfiles["tW_DS"]
+    elif nlo_method == "Both":
+        tW_files = qfiles["tW_DR"] + qfiles["tW_DS"]
+        tW_files.sort()
     else:
-        raise ValueError("nlo_method must be 'DR' or 'DS'")
+        raise ValueError("nlo_method must be 'DR' or 'DS' or 'Both'")
     X, y, w, cols = prepare_from_root(tW_files, qfiles["ttbar"], region)
     X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
         X, y, w, train_size=0.333, random_state=414, shuffle=True

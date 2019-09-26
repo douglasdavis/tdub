@@ -42,15 +42,13 @@ def parse_args():
 
     gpmin = subparsers.add_parser("gpmin", help="Gaussian processes minimization for HP optimization")
     gpmin.add_argument("region", type=str, help="Region to train")
-    gpmin.add_argument("nlomethod", type=str, help="NLO method samples to use", choices=["DR", "DS"])
+    gpmin.add_argument("nlomethod", type=str, help="NLO method samples to use", choices=["DR", "DS", "Both"])
     gpmin.add_argument("datadir", type=str, help="Directory with ROOT files")
     gpmin.add_argument("-o", "--out-dir", type=str, default="_optim", help="output directory for saving optimizatin results")
     gpmin.add_argument("-n", "--n-calls", type=int, default=15, help="number of calls for the optimization procedure")
     gpmin.add_argument("-r", "--esr", type=int, default=20, help="early stopping rounds for the training")
 
     fold = subparsers.add_parser("fold", help="Perform a folded training")
-    fold.add_argument("region", type=str, help="Region to train")
-    fold.add_argument("nlomethod", type=str, help="NLO method samples to use", choices=["DR", "DS"])
     fold.add_argument("optimdir", type=str, help="directory containing optimization information")
     fold.add_argument("datadir", type=str, help="Directory with ROOT files")
     fold.add_argument("-o", "--out-dir", type=str, default="_folded", help="output directory for saving optimizatin results")
@@ -94,12 +92,21 @@ def _foldedtraining(args):
     from tdub.train import folded_training, prepare_from_root
     from tdub.utils import quick_files
 
-    qfiles = quick_files(args.datadir)
-    X, y, w, cols = prepare_from_root(
-        qfiles[f"tW_{args.nlomethod}"], qfiles["ttbar"], args.region
-    )
     with open(f"{args.optimdir}/summary.json", "r") as f:
         summary = json.load(f)
+    nlo_method = summary["nlo_method"]
+    qfiles = quick_files(f"{args.datadir}")
+    if nlo_method == "DR":
+        tW_files = qfiles["tW_DR"]
+    elif nlo_method == "DS":
+        tW_files = qfiles["tW_DS"]
+    elif nlo_method == "Both":
+        tW_files = qfiles["tW_DR"] + qfiles["tW_DS"]
+        tW_files.sort()
+    else:
+        raise ValueError("nlo_method must be 'DR' or 'DS' or 'Both'")
+
+    X, y, w, cols = prepare_from_root(tW_files, qfiles["ttbar"], summary["region"])
     folded_training(
         X,
         y,
@@ -108,7 +115,7 @@ def _foldedtraining(args):
         summary["best_params"],
         {"verbose": 20},
         args.out_dir,
-        KFold_kw={"n_splits": args.n_splits, "shuffle": True, "random_state": args.seed},
+        kfold_kw={"n_splits": args.n_splits, "shuffle": True, "random_state": args.seed},
     )
     return 0
 
