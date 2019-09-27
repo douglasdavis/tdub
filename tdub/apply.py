@@ -159,16 +159,16 @@ class FoldedResult:
             out_dict["OS"] = OS_branch
             out_dict[weight_name] = weight_branch
             out_dict[f"bdt_response_{reg}"] = y
-            out_types = {}
             for c in list(dfim.df.columns):
                 out_dict[c] = dfim.df[c].to_numpy()
 
+            out_types = {}
             for c, a in out_dict.items():
                 if a.dtype == np.uint32:
                     out_dict[c] = out_dict[c].astype(np.int32)
-                out_types[c] = out_dict[c].dtype
+                out_types[c] = uproot.newbranch(out_dict[c].dtype)
                 log.info(f"Saving branch {c} with dtype {out_types[c]}")
 
             with uproot.recreate(outfile) as f:
-                f[tree] = uproot.newtree(out_types, title="applied tree")
-                f[tree].extend(out_dict, flush=True)
+                f[tree] = uproot.newtree(out_types, flushsize="10 MB")
+                f[tree].extend(out_dict, flush=False)
