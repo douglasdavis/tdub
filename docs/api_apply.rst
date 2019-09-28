@@ -12,8 +12,17 @@ Class Summary
 
    FoldedResult
 
+Function Summary
+^^^^^^^^^^^^^^^^
+
+.. autosummary::
+
+   to_minorbkg
+
 Reference
 ^^^^^^^^^
 
 .. autoclass:: FoldedResult
    :members:
+
+.. autofunction:: to_minorbkg

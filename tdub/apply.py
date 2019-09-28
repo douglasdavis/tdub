@@ -109,8 +109,8 @@ def to_minorbkg(
     ----------
     folded_result : FoldedResult
        folded training class holding models to apply
-    files : str or os.PathLike
-       the input file to open and apply to
+    files : str or list(str)
+       the input file(s) to open and apply to
     tree : str
        the name of the tree to extract data from
     weight_name : str
