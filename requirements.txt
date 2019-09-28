@@ -11,3 +11,4 @@ scikit-optimize >= 0.5.2
 joblib >= 0.13.2
 pyyaml >= 5.1
 lightgbm >= 2.2.3
+pygram11 >= 0.5.2
