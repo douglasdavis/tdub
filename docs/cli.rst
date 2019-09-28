@@ -20,12 +20,12 @@ Generate matplotlib pull plots using TRExFitter output
 
 .. command-output:: tdub pulls --help
 
-gpmin
-^^^^^
+optimize
+^^^^^^^^
 
 Run a round of hyperparameter optimiziation using Gaussian Processes
 
-.. command-output:: tdub gpmin --help
+.. command-output:: tdub optimize --help
 
 fold
 ^^^^
