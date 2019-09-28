@@ -14,8 +14,8 @@ standard analysis tasks including:
 
 For potentially finer-grained tasks the API is fully documented. The
 API mainly provides quick and easy access to pythonic representations
-of our datasets (which of course originate from `ROOT
-<https://root.cern/>`_ files.
+(i.e. dataframes or NumPy arrays) of our datasets (which of course
+originate from `ROOT <https://root.cern/>`_ files).
 
 Navigation
 ----------
