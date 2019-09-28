@@ -26,8 +26,8 @@ class FoldedResult:
 
     Parameters
     ----------
-    datadir : str
-       the directory with the training output
+    fold_output : str
+       the directory with the folded training output
     region : Region or str
        the region where the training was performed
 
@@ -48,14 +48,14 @@ class FoldedResult:
 
     """
 
-    def __init__(self, datadir: str, region: Union[Region, str]) -> FoldedResult:
-        data_path = PosixPath(datadir)
-        if not data_path.exists():
-            raise ValueError(f"{datadir} does not exit")
-        data_path = data_path.resolve()
-        self._model0 = joblib.load(data_path / "model_fold0.joblib")
-        self._model1 = joblib.load(data_path / "model_fold1.joblib")
-        self._model2 = joblib.load(data_path / "model_fold2.joblib")
+    def __init__(self, fold_output: str, region: Union[Region, str]) -> FoldedResult:
+        fold_path = PosixPath(fold_output)
+        if not fold_path.exists():
+            raise ValueError(f"{fold_output} does not exit")
+        fold_path = fold_path.resolve()
+        self._model0 = joblib.load(fold_path / "model_fold0.joblib")
+        self._model1 = joblib.load(fold_path / "model_fold1.joblib")
+        self._model2 = joblib.load(fold_path / "model_fold2.joblib")
 
         if isinstance(region, str):
             if not region.startswith("r"):
@@ -65,10 +65,10 @@ class FoldedResult:
         else:
             self._region = region
 
-        feature_file = data_path / "features.txt"
+        feature_file = fold_path / "features.txt"
         self._features = feature_file.read_text().split("\n")[:-1]
 
-        fold_file = data_path / "kfold.json"
+        fold_file = fold_path / "kfold.json"
         self._folder = KFold(**(json.loads(fold_file.read_text())))
 
     @property
