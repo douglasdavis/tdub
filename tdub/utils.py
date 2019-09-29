@@ -3,6 +3,7 @@ from __future__ import annotations
 from glob import glob
 from pathlib import PosixPath
 import re
+import uproot
 
 
 def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
@@ -125,3 +126,42 @@ def bin_centers(bin_edges: numpy.ndarray) -> numpy.ndarray:
        the centers associated with the edges
     """
     return (bin_edges[1:] + bin_edges[:-1]) * 0.5
+
+
+def get_branches(
+    file_name: str,
+    tree: str = "WtLoop_nominal",
+    ignore_weights: bool = False,
+    sort: bool = False,
+) -> List[str]:
+    """get list of branches in a ROOT TTree
+
+    Parameters
+    ----------
+    file_name : str
+       the ROOT file name
+    tree : str
+       the ROOT tree name
+    ignore_weights : bool
+       ignore all branches which start with ``weight_``.
+    sort : bool
+       sort the resulting branch list before returning
+
+    Returns
+    -------
+    list(str)
+       list of branches
+
+    """
+    t = uproot.open(file_name).get(tree)
+    bs = [b.decode("utf-8") for b in t.allkeys()]
+    if not ignore_weights:
+        if sort:
+            return sorted(bs)
+        return bs
+
+    weight_re = re.compile(r"(^weight_\w+)")
+    weights = set(filter(weight_re.match, bs))
+    if sort:
+        return sorted(set(bs) ^ weights, key=str.lower)
+    return list(set(bs) ^ weights)
