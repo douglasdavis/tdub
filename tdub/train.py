@@ -29,7 +29,7 @@ def prepare_from_root(
     region: Union[Region, str],
     weight_scale: float = 1.0e3,
     scale_sum_weights: bool = True,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
     """Prepare the data for training in a region with signal and
     background ROOT files
 
@@ -100,9 +100,9 @@ def prepare_from_root(
 
 
 def folded_training(
-    X: np.ndarray,
-    y: np.ndarray,
-    w: np.ndarray,
+    X: numpy.ndarray,
+    y: numpy.ndarray,
+    w: numpy.ndarray,
     cols: List[str],
     params: Dict[str, Any],
     fit_kw: Dict[str, Any],
