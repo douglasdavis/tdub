@@ -106,102 +106,56 @@ class FoldedResult:
         return self._folder
 
 
-def to_minorbkg(
-    folded_result: FoldedResult,
-    files: Union[str, List[str]],
-    tree: str = "WtLoop_nominal",
-    weight_name: str = "weight_nominal",
-    outfile: Optional[str] = None,
-    use_root_pandas: bool = False,
-) -> None:
-    """apply the folded result to a single minor background file
+def to_files(
+    fr: FoldedResult, files: Union[str, List[str]], tree: str = "WtLoop_nominal"
+) -> numpy.ndarray:
+    """apply the folded result to a set of files
 
     Parameters
     ----------
-    folded_result : FoldedResult
+    fr : FoldedResult
        folded training class holding models to apply
     files : str or list(str)
        the input file(s) to open and apply to
     tree : str
        the name of the tree to extract data from
-    weight_name : str
-       name of the weight branch
-    outfile : str (optional)
-       output file name
-    use_root_pandas : bool
-       use root_pandas instead of uproot for writing the file (uproot's
-       TTree writing is pretty new and has some kinks to iron out)
+
+    Returns
+    -------
+    numpy.ndarray
+       the classifier output for the region associated
+       with the ``fr``
 
     """
-    dfim = specific_dataframe(
-        files, folded_result.region, tree=tree, weight_name=weight_name, to_ram=True
-    )
-    dfim._df = dfim.df[folded_result.features]
+    dfim = specific_dataframe(files, fr.region, tree=tree, to_ram=True)
+    dfim._df = dfim.df[fr.features]
 
     X = dfim.df.to_numpy()
-    y0 = folded_result.model0.predict_proba(X)[:, 1]
-    y1 = folded_result.model1.predict_proba(X)[:, 1]
-    y2 = folded_result.model2.predict_proba(X)[:, 1]
+    y0 = fr.model0.predict_proba(X)[:, 1]
+    y1 = fr.model1.predict_proba(X)[:, 1]
+    y2 = fr.model2.predict_proba(X)[:, 1]
     y = np.mean([y0, y1, y2], axis=0)
 
-    if folded_result.region == Region.r1j1b:
-        reg = "reg1j1b"
-    elif folded_result.region == Region.r2j1b:
-        reg = "reg2j1b"
-    elif folded_result.region == Region.r2j2b:
-        reg = "reg2j2b"
-
-    reg_branch = np.array([1 for _ in range(dfim.df.shape[0])], dtype=np.int32)
-    OS_branch = reg_branch
-    weight_branch = dfim.weights.to_numpy()
-
-    if outfile is None:
-        outfile = "_applied.root"
-
-    if use_root_pandas:
-        if not _has_root_pandas:
-            raise ValueError("cannot use root_pandas, not available")
-        dfim._df[weight_name] = weight_branch
-        dfim._df[reg] = reg_branch
-        dfim._df["OS"] = OS_branch
-        dfim._df[f"bdt_reponse_{reg}"] = y
-        root_pandas.to_root(dfim._df, outfile, key=tree)
-
-    else:
-        out_dict = {}
-        out_dict[reg] = reg_branch
-        out_dict["OS"] = OS_branch
-        out_dict[weight_name] = weight_branch
-        out_dict[f"bdt_response_{reg}"] = y
-        for c in list(dfim.df.columns):
-            out_dict[c] = dfim.df[c].to_numpy()
-
-        out_types = {}
-        for c, a in out_dict.items():
-            if a.dtype == np.uint32:
-                out_dict[c] = out_dict[c].astype(np.int32)
-            out_types[c] = uproot.newbranch(out_dict[c].dtype)
-            log.info(f"Saving branch {c} with dtype {out_dict[c].dtype}")
-
-        with uproot.recreate(outfile) as f:
-            f[tree] = uproot.newtree(out_types, flushsize="10 MB")
-            f[tree].extend(out_dict, flush=False)
+    return y
 
 
-def to_dataframe(
-    folded_result: FoldedResult, df: pandas.DataFrame, query: bool = False
-) -> None:
-    """apply trained models to an arbitrary dataframe
+def to_dataframe(fr: FoldedResult, df: pandas.DataFrame, query: bool = False) -> None:
+    """apply trained models to an arbitrary dataframe.
+
+    This function will augment the dataframe with a ``bdt_response``
+    column if it doesn't already exist.
 
     Parameters
     ----------
-    folded_result : FoldedResult
+    fr : FoldedResult
        folded training class holding models to apply
     df : pandas.DataFrame
        the dataframe to read and augment
     query : bool
-       perform query on the dataframe to select proper region,
-       necessary if the dataframe hasn't been pre-filtered
+       perform a query on the dataframe to select events belonging to
+       the region associated with ``fr`` necessary if the dataframe
+       hasn't been pre-filtered
+
     """
 
     if "bdt_response" not in df.columns:
@@ -209,15 +163,15 @@ def to_dataframe(
         df["bdt_response"] = -999.0
 
     if query:
-        log.info(f"applying selection filter {SELECTIONS[folded_result.region]}")
-        mask = df.eval(SELECTIONS[folded_result.region])
-        X = df[folded_result.features].to_numpy()[mask]
+        log.info(f"applying selection filter {SELECTIONS[fr.region]}")
+        mask = df.eval(SELECTIONS[fr.region])
+        X = df[fr.features].to_numpy()[mask]
     else:
-        X = df[folded_result.features].to_numpy()
+        X = df[fr.features].to_numpy()
 
-    y0 = folded_result.model0.predict_proba(X)[:, 1]
-    y1 = folded_result.model1.predict_proba(X)[:, 1]
-    y2 = folded_result.model2.predict_proba(X)[:, 1]
+    y0 = fr.model0.predict_proba(X)[:, 1]
+    y1 = fr.model1.predict_proba(X)[:, 1]
+    y2 = fr.model2.predict_proba(X)[:, 1]
     y = np.mean([y0, y1, y2], axis=0)
 
     if query:

@@ -203,28 +203,28 @@ class Histogram:
         return self.uproothist
 
     @property
-    def sumw2(self) -> np.ndarray:
-        """np.ndarray: the sum of weights squared in each bin"""
+    def sumw2(self) -> numpy.ndarray:
+        """numpy.ndarray: the sum of weights squared in each bin"""
         return self.uproothist.variances
 
     @property
-    def error(self) -> np.ndarray:
-        """np.ndarray: the uncertainty in each bin (sqrt of sumw2)"""
+    def error(self) -> numpy.ndarray:
+        """numpy.ndarray: the uncertainty in each bin (sqrt of sumw2)"""
         return np.sqrt(self.sumw2)
 
     @property
-    def bins(self) -> np.ndarray:
-        """np.ndarray: the bin edges"""
+    def bins(self) -> numpy.ndarray:
+        """numpy.ndarray: the bin edges"""
         return self.uproothist.edges
 
     @property
-    def bin_centers(self) -> np.ndarray:
-        """np.ndarray: the bin centers"""
+    def bin_centers(self) -> numpy.ndarray:
+        """numpy.ndarray: the bin centers"""
         return tdub.utils.bin_centers(self.bins)
 
     @property
-    def bin_width(self) -> np.ndarray:
-        """np.ndarray: the bin widths"""
+    def bin_width(self) -> numpy.ndarray:
+        """numpy.ndarray: the bin widths"""
         return round(self.bins[-1] - self.bins[-2], 2)
 
     def has_uniform_bins(self) -> bool:
@@ -308,8 +308,8 @@ _region_meta = {
 def draw_ratio_with_line(
     ax: matplotlib.axes.Axis,
     data: Histogram,
-    mc_sum: np.ndarray,
-    mc_err: np.ndarray,
+    mc_sum: numpy.ndarray,
+    mc_err: numpy.ndarray,
     yline: float = 1.0,
     autoxscale: bool = True,
 ) -> None:

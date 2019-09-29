@@ -17,7 +17,7 @@ Function Summary
 
 .. autosummary::
 
-   to_minorbkg
+   to_files
    to_dataframe
 
 Reference
@@ -26,6 +26,6 @@ Reference
 .. autoclass:: FoldedResult
    :members:
 
-.. autofunction:: to_minorbkg
+.. autofunction:: to_files
 
 .. autofunction:: to_dataframe
