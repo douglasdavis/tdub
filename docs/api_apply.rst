@@ -18,6 +18,7 @@ Function Summary
 .. autosummary::
 
    to_minorbkg
+   to_dataframe
 
 Reference
 ^^^^^^^^^
@@ -26,3 +27,5 @@ Reference
    :members:
 
 .. autofunction:: to_minorbkg
+
+.. autofunction:: to_dataframe

@@ -11,7 +11,7 @@ import cachetools
 import uproot
 import dask
 import dask.dataframe as dd
-
+import pandas as pd
 
 from tdub.utils import categorize_branches
 from tdub.regions import SELECTIONS, FEATURESETS
@@ -133,6 +133,55 @@ class SelectedDataFrame:
         >>> dfim = sdf.to_ram(dropnonkin=False)
         """
         return DataFramesInMemory(self.name, self.df, **kwargs)
+
+
+def raw_dataframe(
+    files: Union[str, List[str]],
+    tree: str = "WtLoop_nominal",
+    weight_name: str = "weight_nominal",
+    branches: Optional[List[str]] = None,
+    entrysteps: Optional[Any] = None,
+) -> pd.DataFrame:
+    """Construct a raw pandas flavored Dataframe with help from uproot
+
+    We call this dataframe "raw" because it hasn't been parsed by any
+    other tdub.frames functionality (no selection performed, kinematic
+    and weight branches won't be separated, etc.) -- just a pure raw
+    dataframe from some ROOT files.
+
+    Parameters
+    ----------
+    files : list(str) or str
+       a single ROOT file or list of ROOT files
+    tree : str
+       the tree name to turn into a dataframe
+    weight_name: str
+       weight branch (we make sure to grab it if you give something
+       other than ``None`` to ``branches``).
+    branches : list(str), optional
+       a list of branches to include as columns in the dataframe,
+       default is ``None``, includes all branches.
+    entrysteps : Any, optional
+       see the ``entrysteps`` keyword for ``uproot.iterate``
+
+    Returns
+    -------
+    :obj:`pd.DataFrame`
+       the pandas flavored DataFrame with all requested branches
+
+    Examples
+    --------
+
+    >>> from tdub.frames import raw_dataframe
+    >>> from tdub.utils import quick_files
+    >>> files = quick_files("/path/to/files")["ttbar"]
+    >>> df = raw_dataframe(files)
+
+    """
+    bs = branches
+    if branches is not None:
+        bs = sorted(set(branches) | set([weight_name]), key=str.lower)
+    return pd.concat([d for d in uproot.pandas.iterate(files, tree, branches=bs)])
 
 
 def delayed_dataframe(

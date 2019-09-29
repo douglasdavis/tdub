@@ -18,6 +18,7 @@ Function Summary
 
 .. autosummary::
 
+   raw_dataframe
    delayed_dataframe
    selected_dataframes
    specific_dataframe
@@ -31,6 +32,8 @@ Reference
 
 .. autoclass:: SelectedDataFrame
    :members:
+
+.. autofunction:: raw_dataframe
 
 .. autofunction:: delayed_dataframe
 

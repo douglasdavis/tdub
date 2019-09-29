@@ -15,8 +15,18 @@ import joblib
 from lightgbm import LGBMClassifier
 from sklearn.model_selection import KFold
 
-from tdub.regions import Region
+from tdub.regions import Region, SELECTIONS
 from tdub.frames import specific_dataframe
+
+# fmt: off
+
+try:
+    import root_pandas
+    _has_root_pandas = True
+except ImportError:
+    _has_root_pandas = False
+
+# fmt: on
 
 log = logging.getLogger(__name__)
 
@@ -95,13 +105,14 @@ class FoldedResult:
     def folder(self) -> KFold:
         return self._folder
 
+
 def to_minorbkg(
     folded_result: FoldedResult,
     files: Union[str, List[str]],
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     outfile: Optional[str] = None,
-    use_root_pandas = False,
+    use_root_pandas: bool = False,
 ) -> None:
     """apply the folded result to a single minor background file
 
@@ -148,7 +159,8 @@ def to_minorbkg(
         outfile = "_applied.root"
 
     if use_root_pandas:
-        import root_pandas
+        if not _has_root_pandas:
+            raise ValueError("cannot use root_pandas, not available")
         dfim._df[weight_name] = weight_branch
         dfim._df[reg] = reg_branch
         dfim._df["OS"] = OS_branch
@@ -176,4 +188,39 @@ def to_minorbkg(
             f[tree].extend(out_dict, flush=False)
 
 
-FoldedResult.to_minorbkg = to_minorbkg
+def to_dataframe(
+    folded_result: FoldedResult, df: pandas.DataFrame, query: bool = False
+) -> None:
+    """apply trained models to an arbitrary dataframe
+
+    Parameters
+    ----------
+    folded_result : FoldedResult
+       folded training class holding models to apply
+    df : pandas.DataFrame
+       the dataframe to read and augment
+    query : bool
+       perform query on the dataframe to select proper region,
+       necessary if the dataframe hasn't been pre-filtered
+    """
+
+    if "bdt_response" not in df.columns:
+        log.info("creating bdt_response column")
+        df["bdt_response"] = -999.0
+
+    if query:
+        log.info(f"applying selection filter {SELECTIONS[folded_result.region]}")
+        mask = df.eval(SELECTIONS[folded_result.region])
+        X = df[folded_result.features].to_numpy()[mask]
+    else:
+        X = df[folded_result.features].to_numpy()
+
+    y0 = folded_result.model0.predict_proba(X)[:, 1]
+    y1 = folded_result.model1.predict_proba(X)[:, 1]
+    y2 = folded_result.model2.predict_proba(X)[:, 1]
+    y = np.mean([y0, y1, y2], axis=0)
+
+    if query:
+        df.loc[mask, "bdt_response"] = y
+    else:
+        df["bdt_response"] = y
