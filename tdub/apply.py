@@ -123,8 +123,7 @@ def to_files(
     Returns
     -------
     numpy.ndarray
-       the classifier output for the region associated
-       with the ``fr``
+       the classifier output for the region associated with ``fr``
 
     """
     dfim = specific_dataframe(files, fr.region, tree=tree, to_ram=True)
