@@ -7,7 +7,6 @@ from dask.distributed import Client, Lock
 from dask.utils import SerializableLock
 from dask.dataframe import to_parquet
 
-from tdub.frames import stdregion_dataframes
 from tdub.art import run_pulls, run_stacks
 from tdub import setup_logging
 
@@ -54,6 +53,12 @@ def parse_args():
     fold.add_argument("-o", "--out-dir", type=str, default="_folded", help="output directory for saving optimizatin results")
     fold.add_argument("-s", "--seed", type=int, default=414, help="random seed for folding")
     fold.add_argument("-n", "--n-splits", type=int, default=3, help="number of splits for folding")
+
+    gennpy = subparsers.add_parser("gen-npy", help="generate .npy result for a ROOT file")
+    gennpy.add_argument("infile", type=str, help="input ROOT file")
+    gennpy.add_argument("--tree", type=str, default="WtLoop_nominal", help="tree name to use")
+    gennpy.add_argument("--folds", type=str, nargs="+", help="directories with outputs from folded trainings", required=True)
+    gennpy.add_argument("--arr-name", type=str, default="pbdt_response", help="name for the array")
 
     # fmt: on
     return (parser.parse_args(), parser)
@@ -115,8 +120,21 @@ def _foldedtraining(args):
         summary["best_params"],
         {"verbose": 20},
         args.out_dir,
+        summary["region"],
         kfold_kw={"n_splits": args.n_splits, "shuffle": True, "random_state": args.seed},
     )
+    return 0
+
+
+def _gennpy(args):
+    from tdub.apply import FoldedResult, generate_npy
+    from tdub.frames import conservative_dataframe
+
+    frs = [FoldedResult(p) for p in args.folds]
+    df = conservative_dataframe(args.infile)
+    stem = args.infile.split(".root")[0]
+    npyfilename = f"{stem}.{args.arr_name}.npy"
+    generate_npy(frs, df, output_name=npyfilename)
     return 0
 
 
@@ -139,5 +157,7 @@ def cli():
         return _optimize(args)
     elif args.action == "fold":
         return _foldedtraining(args)
+    elif args.action == "gen-npy":
+        return _gennpy(args)
     else:
         parser.print_help()

@@ -43,6 +43,52 @@ class Region(Enum):
     r2j1b = 1
     r2j2b = 2
 
+    @staticmethod
+    def from_str(s: str) -> Region:
+        """get enum value for the given string
+
+        This function supports three ways to define a region; prefixed
+        with "r", prefixed with "reg", or no prefix at all. For
+        example, ``Region.r2j2b`` can be retrieved like so:
+
+        - ``Region.from_str("r2j2b")``
+        - ``Region.from_str("reg2j2b")``
+        - ``Region.from_str("2j2b")``
+
+        Parameters
+        ----------
+        s : str
+           string representation of the desired region
+
+        Returns
+        -------
+        Region
+           the enum version
+
+        Examples
+        --------
+
+        >>> from tdub.regions import Region
+        >>> Region.from_str("1j1b")
+        <Region.r1j1b: 0>
+
+        """
+        if s.startswith("reg"):
+            rsuff = region.split("reg")[-1]
+            return Region.from_str(rsuff)
+        elif s.startswith("r"):
+            return Region[s]
+        else:
+            if s == "2j2b":
+                return Region.r2j2b
+            elif s == "2j1b":
+                return Region.r2j1b
+            elif s == "1j1b":
+                return Region.r1j1b
+            else:
+                raise ValueError(f"{s} doesn't correspond to a Region")
+
+
 
 SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
 """

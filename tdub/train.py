@@ -77,6 +77,10 @@ def prepare_from_root(
     sig_dfim = specific_dataframe(sig_files, region, "train_sig", to_ram=True)
     bkg_dfim = specific_dataframe(bkg_files, region, "train_bkg", to_ram=True)
 
+    sorted_cols = sorted(sig_dfim.df.columns.to_list(), key=str.lower)
+    sig_dfim._df = sig_dfim._df[sorted_cols]
+    bkg_dfim._df = bkg_dfim._df[sorted_cols]
+
     cols = sig_dfim.df.columns.to_list()
     assert cols == bkg_dfim.df.columns.to_list(), "sig/bkg columns are different. bad."
     log.info("features used:")
@@ -107,6 +111,7 @@ def folded_training(
     params: Dict[str, Any],
     fit_kw: Dict[str, Any],
     output_dir: Union[str, os.PathLike],
+    region: str,
     use_sample_weights: bool = False,
     kfold_kw: Dict[str, Any] = None,
 ) -> float:
@@ -138,6 +143,8 @@ def folded_training(
        dictionary of arguments forwarded to :py:func:`lightgbm.LGBMClassifier.fit`.
     output_dir : str or os.PathLike
        directory to save results of training
+    region : str
+        string representing the region
     use_sample_weights : bool
        if ``True``, use the sample weights in training instead of the
        ``is_unbalance=True`` (which is the default case when this
@@ -171,18 +178,23 @@ def folded_training(
     ...     max_depth=5,
     ...     is_unbalance=True,
     ... )
-    >>> folded_training(X, y, w, cols, params, output_dir="/path/to/train/output",
-    ...                 kfold_kw={"n_splits": 5, "shuffle": True, "random_state": 17})
+    >>> folded_training(
+    ...     X,
+    ...     y,
+    ...     w,
+    ...     cols,
+    ...     params,
+    ...     {"verbose": 20},
+    ...     "/path/to/train/output",
+    ...     "2j2b",
+    ...     kfold_kw={"n_splits": 5, "shuffle": True, "random_state": 17}
+    ... )
 
     """
     starting_dir = os.getcwd()
     output_path = PosixPath(output_dir)
     output_path.mkdir(exist_ok=True, parents=True)
     os.chdir(output_path)
-
-    with open("features.txt", "w") as f:
-        for c in cols:
-            print(c, file=f)
 
     fig_proba_hists, ax_proba_hists = plt.subplots()
     fig_pred_hists, ax_pred_hists = plt.subplots()
@@ -445,19 +457,19 @@ def folded_training(
     ax_rocs.legend(ncol=2, loc="lower right")
     fig_rocs.savefig("roc.pdf")
 
-    with open("kfold.json", "w") as f:
-        json.dump(kfold_kw, f, indent=4)
-    with open("roc.json", "w") as f:
-        json.dump(
-            {
-                "auc": mean_auc,
-                "std": std_auc,
-                "mean_fpr": list(mean_fpr),
-                "mean_tpr": list(mean_tpr),
-            },
-            f,
-            indent=4,
-        )
+    summary = {}
+    summary["region"] = region
+    summary["features"] = [str(c) for c in cols]
+    summary["kfold"] = kfold_kw
+    summary["roc"] = {
+        "auc" : mean_auc,
+        "std" : std_auc,
+        "mean_fpr": list(mean_fpr),
+        "mean_tpr": list(mean_tpr),
+    }
+
+    with open("summary.json", "w") as f:
+        json.dump(summary, f, indent=4)
 
     os.chdir(starting_dir)
     neg_roc_score = -1.0 * np.mean(aucs)

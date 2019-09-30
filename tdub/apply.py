@@ -38,8 +38,6 @@ class FoldedResult:
     ----------
     fold_output : str
        the directory with the folded training output
-    region : Region or str
-       the region where the training was performed
 
     Attributes
     ----------
@@ -58,7 +56,7 @@ class FoldedResult:
 
     """
 
-    def __init__(self, fold_output: str, region: Union[Region, str]) -> FoldedResult:
+    def __init__(self, fold_output: str) -> FoldedResult:
         fold_path = PosixPath(fold_output)
         if not fold_path.exists():
             raise ValueError(f"{fold_output} does not exit")
@@ -67,19 +65,11 @@ class FoldedResult:
         self._model1 = joblib.load(fold_path / "model_fold1.joblib")
         self._model2 = joblib.load(fold_path / "model_fold2.joblib")
 
-        if isinstance(region, str):
-            if not region.startswith("r"):
-                self._region = Region[f"r{region}"]
-            else:
-                self._region = Region[region]
-        else:
-            self._region = region
-
-        feature_file = fold_path / "features.txt"
-        self._features = feature_file.read_text().split("\n")[:-1]
-
-        fold_file = fold_path / "kfold.json"
-        self._folder = KFold(**(json.loads(fold_file.read_text())))
+        summary_file = fold_path / "summary.json"
+        summary = json.loads(summary_file.read_text())
+        self._features = summary["features"]
+        self._folder = KFold(**(summary["kfold"]))
+        self._region = Region.from_str(summary["region"])
 
     @property
     def model0(self) -> lightgbm.LGBMClassifier:

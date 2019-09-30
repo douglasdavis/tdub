@@ -31,6 +31,9 @@ Reference
 ^^^^^^^^^
 
 .. autoclass:: Region
+   :inherited-members:
+
+.. autofunction:: tdub.regions.Region.from_str
 
 .. autodata:: SELECTION_1j1b
    :annotation:

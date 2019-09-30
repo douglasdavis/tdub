@@ -408,13 +408,7 @@ def specific_dataframe(
 
     """
     if isinstance(region, str):
-        if region.startswith("reg"):
-            rsuff = region.split("reg")[-1]
-            reg = Region[f"r{rsuff}"]
-        elif region.startswith("r"):
-            reg = Region[region]
-        else:
-            reg = Region[f"r{region}"]
+        reg = Region.from_str(region)
     elif isinstance(region, Region):
         reg = region
     else:
