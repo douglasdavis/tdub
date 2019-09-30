@@ -105,75 +105,74 @@ class FoldedResult:
     def folder(self) -> KFold:
         return self._folder
 
+    def to_files(
+        self, files: Union[str, List[str]], tree: str = "WtLoop_nominal"
+    ) -> numpy.ndarray:
+        """apply the folded result to a set of files
 
-def to_files(
-    fr: FoldedResult, files: Union[str, List[str]], tree: str = "WtLoop_nominal"
-) -> numpy.ndarray:
-    """apply the folded result to a set of files
+        Parameters
+        ----------
+        files : str or list(str)
+          the input file(s) to open and apply to
+        tree : str
+          the name of the tree to extract data from
 
-    Parameters
-    ----------
-    fr : FoldedResult
-       folded training class holding models to apply
-    files : str or list(str)
-       the input file(s) to open and apply to
-    tree : str
-       the name of the tree to extract data from
+        Returns
+        -------
+        numpy.ndarray
+          the classifier output for the region associated with ``fr``
 
-    Returns
-    -------
-    numpy.ndarray
-       the classifier output for the region associated with ``fr``
+        """
+        dfim = specific_dataframe(files, self.region, tree=tree, to_ram=True)
+        dfim._df = dfim.df[self.features]
 
-    """
-    dfim = specific_dataframe(files, fr.region, tree=tree, to_ram=True)
-    dfim._df = dfim.df[fr.features]
+        X = dfim.df.to_numpy()
+        y0 = self.model0.predict_proba(X)[:, 1]
+        y1 = self.model1.predict_proba(X)[:, 1]
+        y2 = self.model2.predict_proba(X)[:, 1]
+        y = np.mean([y0, y1, y2], axis=0)
 
-    X = dfim.df.to_numpy()
-    y0 = fr.model0.predict_proba(X)[:, 1]
-    y1 = fr.model1.predict_proba(X)[:, 1]
-    y2 = fr.model2.predict_proba(X)[:, 1]
-    y = np.mean([y0, y1, y2], axis=0)
+        return y
 
-    return y
+    def to_dataframe(
+        self, df: pandas.DataFrame, column_name: str = "bdt_response", query: bool = False
+    ) -> None:
+        """apply trained models to an arbitrary dataframe.
 
+        This function will augment the dataframe with a new column
+        (with a name given by the ``column_name`` argument) if it
+        doesn't already exist.
 
-def to_dataframe(fr: FoldedResult, df: pandas.DataFrame, query: bool = False) -> None:
-    """apply trained models to an arbitrary dataframe.
+        Parameters
+        ----------
+        df : pandas.DataFrame
+           the dataframe to read and augment
+        column_name : str
+           name to give the BDT response variable
+        query : bool
+           perform a query on the dataframe to select events belonging to
+           the region associated with ``fr`` necessary if the dataframe
+           hasn't been pre-filtered
 
-    This function will augment the dataframe with a ``bdt_response``
-    column if it doesn't already exist.
+        """
 
-    Parameters
-    ----------
-    fr : FoldedResult
-       folded training class holding models to apply
-    df : pandas.DataFrame
-       the dataframe to read and augment
-    query : bool
-       perform a query on the dataframe to select events belonging to
-       the region associated with ``fr`` necessary if the dataframe
-       hasn't been pre-filtered
+        if column_name not in df.columns:
+            log.info(f"creating {column_name} column")
+            df[column_name] = -9999.0
 
-    """
+        if query:
+            log.info(f"applying selection filter {SELECTIONS[self.region]}")
+            mask = df.eval(SELECTIONS[self.region])
+            X = df[self.features].to_numpy()[mask]
+        else:
+            X = df[self.features].to_numpy()
 
-    if "bdt_response" not in df.columns:
-        log.info("creating bdt_response column")
-        df["bdt_response"] = -999.0
+        y0 = self.model0.predict_proba(X)[:, 1]
+        y1 = self.model1.predict_proba(X)[:, 1]
+        y2 = self.model2.predict_proba(X)[:, 1]
+        y = np.mean([y0, y1, y2], axis=0)
 
-    if query:
-        log.info(f"applying selection filter {SELECTIONS[fr.region]}")
-        mask = df.eval(SELECTIONS[fr.region])
-        X = df[fr.features].to_numpy()[mask]
-    else:
-        X = df[fr.features].to_numpy()
-
-    y0 = fr.model0.predict_proba(X)[:, 1]
-    y1 = fr.model1.predict_proba(X)[:, 1]
-    y2 = fr.model2.predict_proba(X)[:, 1]
-    y = np.mean([y0, y1, y2], axis=0)
-
-    if query:
-        df.loc[mask, "bdt_response"] = y
-    else:
-        df["bdt_response"] = y
+        if query:
+            df.loc[mask, column_name] = y
+        else:
+            df[column_name] = y

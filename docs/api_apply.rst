@@ -12,20 +12,8 @@ Class Summary
 
    FoldedResult
 
-Function Summary
-^^^^^^^^^^^^^^^^
-
-.. autosummary::
-
-   to_files
-   to_dataframe
-
 Reference
 ^^^^^^^^^
 
 .. autoclass:: FoldedResult
    :members:
-
-.. autofunction:: to_files
-
-.. autofunction:: to_dataframe
