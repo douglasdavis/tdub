@@ -157,11 +157,11 @@ class FoldedResult:
         """
 
         if column_name not in df.columns:
-            log.info(f"creating {column_name} column")
+            log.info(f"Creating {column_name} column")
             df[column_name] = -9999.0
 
         if query:
-            log.info(f"applying selection filter {SELECTIONS[self.region]}")
+            log.info(f"applying selection filter [ {SELECTIONS[self.region]} ]")
             mask = df.eval(SELECTIONS[self.region])
             X = df[self.features].to_numpy()[mask]
         else:
@@ -197,7 +197,10 @@ def generate_npy(frs: List[FoldedResult], df: pandas.DataFrame, output_name: str
     """
 
     colname = "_temp_col"
+    log.info(f"The {colname} column will be deleted at the end of this function")
     for fr in frs:
         fr.to_dataframe(df, column_name=colname, query=True)
-    np.save(output_name, df["_temp_col"].to_numpy())
-    df.drop(columns=["_temp_col"], inplace=True)
+    np.save(output_name, df[colname].to_numpy())
+    log.info(f"Saved output to {output_name}")
+    df.drop(columns=[colname], inplace=True)
+    log.info(f"Temporary column '{colname}' deleted")
