@@ -22,7 +22,7 @@ Run a round of hyperparameter optimiziation using Gaussian Processes
 pred2npy
 ^^^^^^^^
 
-Save a sample BDT predictions to .npy file(s)
+Save sample BDT predictions to .npy file(s)
 
 .. command-output:: tdub pred2npy --help
 
