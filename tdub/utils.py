@@ -5,6 +5,17 @@ from pathlib import PosixPath
 import re
 import uproot
 
+import tdub.regions
+
+
+__all__ = [
+    "categorize_branches",
+    "quick_files",
+    "bin_centers",
+    "get_branches",
+    "conservative_branches",
+]
+
 
 def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
     """categorize branches into a separate lists
@@ -124,6 +135,19 @@ def bin_centers(bin_edges: numpy.ndarray) -> numpy.ndarray:
     -------
     numpy.ndarray
        the centers associated with the edges
+
+    Examples
+    --------
+
+    >>> import numpy as np
+    >>> from tdub.utils import bin_centers
+    >>> bin_edges = np.linspace(25, 225, 11)
+    >>> centers = bin_centers(bin_edges)
+    >>> bin_edges
+    array([ 25.,  45.,  65.,  85., 105., 125., 145., 165., 185., 205., 225.])
+    >>> centers
+    array([ 35.,  55.,  75.,  95., 115., 135., 155., 175., 195., 215.])
+
     """
     return (bin_edges[1:] + bin_edges[:-1]) * 0.5
 
@@ -152,6 +176,17 @@ def get_branches(
     list(str)
        list of branches
 
+    Examples
+    --------
+
+    A file with two kinematic variables and two weights
+
+    >>> from tdub.utils import get_branches
+    >>> get_branches("/path/to/file.root", ignore_weights=True)
+    ["pT_lep1", "pT_lep2"]
+    >>> get_branches("/path/to/file.root")
+    ["pT_lep1", "pT_lep2", "weight_nominal", "weight_tptrw"]
+
     """
     t = uproot.open(file_name).get(tree)
     bs = [b.decode("utf-8") for b in t.allkeys()]
@@ -165,3 +200,60 @@ def get_branches(
     if sort:
         return sorted(set(bs) ^ weights, key=str.lower)
     return list(set(bs) ^ weights)
+
+
+def conservative_branches(
+    file_name: str, tree: str = "WtLoop_nominal", sort: bool = False
+) -> List[str]:
+    """get branches in a ROOT file that form a conservative minimum
+
+    we define "conservative minimum" as the branches necessary for
+    using our BDT infrastructure, so this conservative minimum
+    includes all of the features used by the BDTs as well as the
+    variables necessary for region selection.
+
+    Parameters
+    ----------
+    file_name : str
+       the ROOT file name
+    tree : str
+       the ROOT tree name
+    sort : bool
+       sort the resulting branch list before returning
+
+    Returns
+    -------
+    list(str)
+       list of branches
+
+    Examples
+    --------
+
+    Grab branches for a file that are relevant for applying BDT models
+    and do something useful
+
+    >>> from tdub.utils import conservative_branches
+    >>> from tdub.frames import raw_dataframe
+    >>> from tdub.apply import FoldedResult, to_dataframe
+    >>> cb = conservative_branches("/path/to/file.root")
+    >>> df = raw_dataframe("/path/to/file.root", branches=cb)
+    >>> fr_2j2b = FoldedResult("/path/to/trained/fold2j2b", "2j2b")
+    >>> fr_2j1b = FoldedResult("/path/to/trained/fold2j1b", "2j1b")
+    >>> to_dataframe(fr_2j2b, df, query=True)
+    >>> to_dataframe(fr_2j1b, df, query=True)
+
+    """
+    t = uproot.open(file_name).get(tree)
+    bs = set([b.decode("utf-8") for b in t.allkeys()])
+
+    good_branches = set(
+        {"reg1j1b", "reg2j1b", "reg2j2b", "OS"}
+        | set(tdub.regions.FEATURESET_1j1b)
+        | set(tdub.regions.FEATURESET_2j1b)
+        | set(tdub.regions.FEATURESET_2j2b)
+    )
+    good_branches = bs & good_branches
+
+    if sort:
+        return sorted(good_branches)
+    return list(good_branches)

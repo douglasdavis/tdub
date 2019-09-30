@@ -5,20 +5,12 @@ Top level CLI:
 
 .. command-output:: tdub --help
 
-stacks
-^^^^^^
+fold
+^^^^
 
-Generate matplotlib stacked histogram plots using TRExFitter output
+Run a :math:`k`-fold cross validation training
 
-.. command-output:: tdub stacks --help
-
-
-pulls
-^^^^^
-
-Generate matplotlib pull plots using TRExFitter output
-
-.. command-output:: tdub pulls --help
+.. command-output:: tdub fold --help
 
 optimize
 ^^^^^^^^
@@ -27,9 +19,16 @@ Run a round of hyperparameter optimiziation using Gaussian Processes
 
 .. command-output:: tdub optimize --help
 
-fold
-^^^^
+pulls
+^^^^^
 
-Run a :math:`k`-fold cross validation training
+Generate matplotlib pull plots using TRExFitter output
 
-.. command-output:: tdub fold --help
+.. command-output:: tdub pulls --help
+
+stacks
+^^^^^^
+
+Generate matplotlib stacked histogram plots using TRExFitter output
+
+.. command-output:: tdub stacks --help

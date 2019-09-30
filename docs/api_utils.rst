@@ -10,18 +10,17 @@ Function Summary
 
 .. autosummary::
 
-   categorize_branches
-   quick_files
    bin_centers
+   categorize_branches
+   conservative_branches
    get_branches
+   quick_files
 
 Reference
 ^^^^^^^^^
 
-.. autofunction:: categorize_branches
-
-.. autofunction:: quick_files
-
 .. autofunction:: bin_centers
-
+.. autofunction:: categorize_branches
+.. autofunction:: conservative_branches
 .. autofunction:: get_branches
+.. autofunction:: quick_files
