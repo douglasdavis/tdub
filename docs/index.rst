@@ -6,7 +6,7 @@ the ATLAS Run 2 :math:`tW` inclusive cross section analysis. The
 project provides a simple command line interface for performing
 standard analysis tasks including:
 
-- generating plots from `TRExFitter
+- generating plots from the output of `TRExFitter
   <https://gitlab.cern.ch/TRExStats/TRExFitter/>`_.
 - BDT hyperparameter optimization.
 - training BDT models on our Monte Carlo.
