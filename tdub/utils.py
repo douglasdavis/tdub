@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from glob import glob
 from pathlib import PosixPath
 import re
@@ -9,12 +10,79 @@ import tdub.regions
 
 
 __all__ = [
+    "SampleInfo",
     "categorize_branches",
     "quick_files",
     "bin_centers",
     "get_branches",
     "conservative_branches",
 ]
+
+
+_sample_info_re = re.compile(
+    r"(?P<phy_process>\w+)_(?P<dsid>[0-9]{6})_(?P<sim_type>(FS|AFII))_(?P<campaign>MC16(a|d|e))_(?P<tree>\w+)"
+)
+
+
+@dataclass
+class SampleInfo:
+    """Describes a sample's attritubes given it's name
+
+    Parameters
+    ----------
+    file_stem : str
+       the file stem containing the necessary groups to parse
+
+    Attributes
+    ----------
+    phy_process : str
+       physics process (e.g. ttbar or tW_DR or Zjets)
+    dsid : int
+       the dataset ID
+    sim_type : str
+       the simulation type, "FS" or "AFII"
+    campaign : str
+       the campaign, MC16{a,d,e}
+    tree : str
+       the original tree (e.g. "nominal" or "EG_SCALE_ALL__1up")
+
+    Examples
+    --------
+    >>> from tdub.utils import SampleInfo
+    >>> sampinfo = SampleInfo("ttbar_410472_AFII_MC16d_nominal.root")
+    >>> sampinfo.phy_process
+    ttbar
+    >>> sampinfo.dsid
+    410472
+    >>> sampinfo.sim_type
+    AFII
+    >>> sampinfo.campaign
+    MC16d
+    >>> sampinfo.tree
+    nominal
+
+    """
+
+    phy_process: str
+    dsid: int
+    sim_type: str
+    campaign: str
+    tree: str
+
+    def __init__(self, file_stem: str) -> SampleInfo:
+        if "Data_Data" in file_stem:
+            self.phy_process = "Data"
+            self.dsid = 0
+            self.sim_type = "Data"
+            self.campaign = "Data"
+            self.tree = "nominal"
+        else:
+            m = re.match(_sample_info_re, file_stem)
+            self.phy_process = m.group("phy_process")
+            self.dsid = int(m.group("dsid"))
+            self.sim_type = m.group("sim_type")
+            self.campaign = m.group("campaign")
+            self.tree = m.group("tree")
 
 
 def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:

@@ -1,14 +1,10 @@
 import argparse
 import logging
 import json
+import pathlib
 
-import dask
-from dask.distributed import Client, Lock
-from dask.utils import SerializableLock
-from dask.dataframe import to_parquet
-
-from tdub.art import run_pulls, run_stacks
 from tdub import setup_logging
+
 
 def parse_args():
     # fmt: off
@@ -17,12 +13,6 @@ def parse_args():
 
     common_parser = argparse.ArgumentParser(add_help=False)
     common_parser.add_argument("--debug", action="store_true", help="set logging level to debug")
-
-    # regions2parquet = subparsers.add_parser("regions2parquet", help="create parquet output for individual regions", parents=[common_parser])
-    # regions2parquet.add_argument("files", type=str, nargs="+", help="input ROOT files")
-    # regions2parquet.add_argument("prefix", type=str, help="output file name prefix")
-    # regions2parquet.add_argument("-b","--branches", type=str, nargs="+", default=None, help="Branches")
-    # regions2parquet.add_argument("-t","--tree-name", type=str, default="WtLoop_nominal", help="ROOT tree name")
 
     stacks = subparsers.add_parser("stacks", help="create matplotlib stack plots from TRExFitter output", parents=[common_parser])
     stacks.add_argument("workspace", type=str, help="TRExFitter workspace")
@@ -54,30 +44,14 @@ def parse_args():
     fold.add_argument("-s", "--seed", type=int, default=414, help="random seed for folding")
     fold.add_argument("-n", "--n-splits", type=int, default=3, help="number of splits for folding")
 
-    gennpy = subparsers.add_parser("gen-npy", help="generate .npy result for a ROOT file")
-    gennpy.add_argument("infile", type=str, help="input ROOT file")
-    gennpy.add_argument("--tree", type=str, default="WtLoop_nominal", help="tree name to use")
-    gennpy.add_argument("--folds", type=str, nargs="+", help="directories with outputs from folded trainings", required=True)
-    gennpy.add_argument("--arr-name", type=str, default="pbdt_response", help="name for the array")
+    pred2npy = subparsers.add_parser("pred2npy", help="Calculate samples BDT response and save to .npy file")
+    pred2npy.add_argument("--single-file", type=str, help="input ROOT file")
+    pred2npy.add_argument("--all-in-dir", type=str, help="Process all files in a directory")
+    pred2npy.add_argument("--folds", type=str, nargs="+", help="directories with outputs from folded trainings", required=True)
+    pred2npy.add_argument("--arr-name", type=str, default="pbdt_response", help="name for the array")
 
     # fmt: on
     return (parser.parse_args(), parser)
-
-
-# def _parquet_regions(args, log):
-#     import numexpr
-
-#     numexpr.set_num_threads(1)
-#     frames = stdregion_dataframes(args.files, args.tree_name, args.branches)
-#     log.info("Executing queries:")
-#     for k, v in frames.items():
-#         log.info(f"  - {v.name}: {v.selection}")
-#     for region, frame in frames.items():
-#         name = region.name
-#         output_name = f"{args.prefix}_{name}.parquet"
-#         log.info(f"saving one at a time ({output_name})")
-#         to_parquet(frame.df, output_name, engine="auto")
-#     return 0
 
 
 def _optimize(args):
@@ -126,16 +100,32 @@ def _foldedtraining(args):
     return 0
 
 
-def _gennpy(args):
+def _pred2npy(args):
     from tdub.apply import FoldedResult, generate_npy
     from tdub.frames import conservative_dataframe
+    from tdub.utils import SampleInfo
 
     frs = [FoldedResult(p) for p in args.folds]
-    df = conservative_dataframe(args.infile)
-    stem = args.infile.split(".root")[0]
-    npyfilename = f"{stem}.{args.arr_name}.npy"
-    generate_npy(frs, df, output_name=npyfilename)
-    return 0
+
+    def process_sample(sample_name):
+        stem = pathlib.PosixPath(sample_name).stem
+        sampinfo = SampleInfo(stem)
+        tree = f"WtLoop_{sampinfo.tree}"
+        df = conservative_dataframe(sample_name, tree=tree)
+        npyfilename = f"{stem}.{args.arr_name}.npy"
+        generate_npy(frs, df, output_name=npyfilename)
+
+    if args.single_file is not None and args.all_in_dir is not None:
+        raise ValueError("--single-file and --all-in-dir cannot be used together")
+
+    if args.single_file is not None:
+        process_sample(args.single_file)
+        return 0
+    elif args.all_in_dir is not None:
+        for child in pathlib.PosixPath(args.all_in_dir).iterdir():
+            if child.suffix == ".root":
+                process_sample(str(child.resolve()))
+        return 0
 
 
 def cli():
@@ -150,14 +140,18 @@ def cli():
     if args.action == "regions2parquet":
         return _parquet_regions(args, log)
     elif args.action == "stacks":
+        from tdub.art import run_stacks
+
         return run_stacks(args)
     elif args.action == "pulls":
+        from tdub.art import run_pulls
+
         return run_pulls(args)
     elif args.action == "optimize":
         return _optimize(args)
     elif args.action == "fold":
         return _foldedtraining(args)
-    elif args.action == "gen-npy":
-        return _gennpy(args)
+    elif args.action == "pred2npy":
+        return _pred2npy(args)
     else:
         parser.print_help()

@@ -145,6 +145,9 @@ class FoldedResult:
            hasn't been pre-filtered
 
         """
+        if df.shape[0] == 0:
+            log.info("Dataframe is empty, doing nothing")
+            return None
 
         if column_name not in df.columns:
             log.info(f"Creating {column_name} column")
@@ -156,6 +159,9 @@ class FoldedResult:
             X = df[self.features].to_numpy()[mask]
         else:
             X = df[self.features].to_numpy()
+
+        if X.shape[0] == 0:
+            return None
 
         y0 = self.model0.predict_proba(X)[:, 1]
         y1 = self.model1.predict_proba(X)[:, 1]
@@ -185,6 +191,11 @@ def generate_npy(frs: List[FoldedResult], df: pandas.DataFrame, output_name: str
        name of the output NumPy file
 
     """
+
+    if df.shape[0] == 0:
+        log.info(f"Saving empty array to {output_name}")
+        np.save(output_name, np.array([], dtype=np.float64))
+        return None
 
     colname = "_temp_col"
     log.info(f"The {colname} column will be deleted at the end of this function")

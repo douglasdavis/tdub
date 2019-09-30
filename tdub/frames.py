@@ -225,9 +225,9 @@ def conservative_dataframe(
 
     """
     if isinstance(files, str):
-        bs = conservative_branches(files)
+        bs = conservative_branches(files, tree)
     else:
-        bs = conservative_branches(files[0])
+        bs = conservative_branches(files[0], tree)
     bs = list(set(bs) | set([weight_name]))
     return raw_dataframe(
         files, tree=tree, weight_name=weight_name, entrysteps=entrysteps, branches=bs
