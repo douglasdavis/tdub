@@ -12,8 +12,17 @@ Class Summary
 
    FoldedResult
 
+Function Summary
+^^^^^^^^^^^^^^^^
+
+.. autosummary::
+
+   generate_npy
+
 Reference
 ^^^^^^^^^
 
 .. autoclass:: FoldedResult
    :members:
+
+.. autofunction:: generate_npy

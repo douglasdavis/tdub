@@ -176,3 +176,28 @@ class FoldedResult:
             df.loc[mask, column_name] = y
         else:
             df[column_name] = y
+
+
+def generate_npy(frs: List[FoldedResult], df: pandas.DataFrame, output_name: str) -> None:
+    """create a NumPy npy file which is the response for all events in a DataFrame
+
+    this will use all folds in the ``frs`` argument to get BDT
+    response any each region associated to a ``FoldedResult``. We
+    query the input df to ensure that we apply to the correct event.
+
+    Parameters
+    ----------
+    frs : list(FoldedResult)
+       the folded results to use
+    df : pandas.DataFrame
+       the dataframe of events to get the responses for
+    output_name : str
+       name of the output NumPy file
+
+    """
+
+    colname = "_temp_col"
+    for fr in frs:
+        fr.to_dataframe(df, column_name=colname, query=True)
+    np.save(output_name, df["_temp_col"].to_numpy())
+    df.drop(columns=["_temp_col"], inplace=True)
