@@ -131,7 +131,8 @@ class FoldedResult:
 
         This function will augment the dataframe with a new column
         (with a name given by the ``column_name`` argument) if it
-        doesn't already exist.
+        doesn't already exist. If the dataframe is empty this function
+        does nothing.
 
         Parameters
         ----------
@@ -179,7 +180,9 @@ def generate_npy(frs: List[FoldedResult], df: pandas.DataFrame, output_name: str
 
     this will use all folds in the ``frs`` argument to get BDT
     response any each region associated to a ``FoldedResult``. We
-    query the input df to ensure that we apply to the correct event.
+    query the input df to ensure that we apply to the correct
+    event. If the input dataframe is empty (no rows) then an empty
+    array is written to disk.
 
     Parameters
     ----------

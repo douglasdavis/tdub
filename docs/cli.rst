@@ -19,6 +19,13 @@ Run a round of hyperparameter optimiziation using Gaussian Processes
 
 .. command-output:: tdub optimize --help
 
+pred2npy
+^^^^^^^^
+
+Save a sample BDT predictions to .npy file(s)
+
+.. command-output:: tdub pred2npy --help
+
 pulls
 ^^^^^
 
