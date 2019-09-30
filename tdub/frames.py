@@ -13,7 +13,7 @@ import dask
 import dask.dataframe as dd
 import pandas as pd
 
-from tdub.utils import categorize_branches
+from tdub.utils import categorize_branches, conservative_branches
 from tdub.regions import SELECTIONS, FEATURESETS
 from tdub.regions import Region
 
@@ -141,7 +141,7 @@ def raw_dataframe(
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
     entrysteps: Optional[Any] = None,
-) -> pd.DataFrame:
+) -> pandas.DataFrame:
     """Construct a raw pandas flavored Dataframe with help from uproot
 
     We call this dataframe "raw" because it hasn't been parsed by any
@@ -166,7 +166,7 @@ def raw_dataframe(
 
     Returns
     -------
-    :obj:`pd.DataFrame`
+    :obj:`pandas.DataFrame`
        the pandas flavored DataFrame with all requested branches
 
     Examples
@@ -181,7 +181,57 @@ def raw_dataframe(
     bs = branches
     if branches is not None:
         bs = sorted(set(branches) | set([weight_name]), key=str.lower)
-    return pd.concat([d for d in uproot.pandas.iterate(files, tree, branches=bs)])
+    return pd.concat(
+        [d for d in uproot.pandas.iterate(files, tree, branches=bs, entrysteps=entrysteps)]
+    )
+
+
+def conservative_dataframe(
+    files: Union[str, List[str]],
+    tree: str = "WtLoop_nominal",
+    weight_name: str = "weight_nominal",
+    entrysteps: Optional[Any] = None,
+) -> pandas.DataFrame:
+    """Construct a raw pandas flavored dataframe with conservative branches
+
+    This function does some hand-holding and grabs a conservative set
+    of branches from the input file(s). The branches that will be
+    columns in the dataframe are determined by
+    :py:func:`tdub.utils.conservative_branches`.
+
+    Parameters
+    ----------
+    files : list(str) or str
+       a single ROOT file or list of ROOT files
+    tree : str
+       the tree name to turn into a dataframe
+    weight_name: str
+       weight branch (we make sure to grab it)
+    entrysteps : Any, optional
+       see the ``entrysteps`` keyword for ``uproot.iterate``
+
+    Returns
+    -------
+    :obj:`pandas.DataFrame`
+       the pandas flavored DataFrame with all requested branches
+
+    Examples
+    --------
+
+    >>> from tdub.frames import conservative_dataframe
+    >>> from tdub.utils import quick_files
+    >>> files = quick_files("/path/to/files")["ttbar"]
+    >>> df = conservative_dataframe(files)
+
+    """
+    if isinstance(files, str):
+        bs = conservative_branches(files)
+    else:
+        bs = conservative_branches(files[0])
+    bs = list(set(bs) | set([weight_name]))
+    return raw_dataframe(
+        files, tree=tree, weight_name=weight_name, entrysteps=entrysteps, branches=bs
+    )
 
 
 def delayed_dataframe(
@@ -191,7 +241,7 @@ def delayed_dataframe(
     branches: Optional[List[str]] = None,
     repartition_kw: Optional[Dict[str, Any]] = None,
     experimental: bool = False,
-) -> dd.DataFrame:
+) -> dask.dataframe.DataFrame:
     """Construct a dask flavored DataFrame with help from uproot
 
     Parameters

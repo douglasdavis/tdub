@@ -18,8 +18,9 @@ Function Summary
 
 .. autosummary::
 
-   raw_dataframe
+   conservative_dataframe
    delayed_dataframe
+   raw_dataframe
    selected_dataframes
    specific_dataframe
    stdregion_dataframes
@@ -33,9 +34,11 @@ Reference
 .. autoclass:: SelectedDataFrame
    :members:
 
-.. autofunction:: raw_dataframe
+.. autofunction:: conservative_dataframe
 
 .. autofunction:: delayed_dataframe
+
+.. autofunction:: raw_dataframe
 
 .. autofunction:: selected_dataframes
 

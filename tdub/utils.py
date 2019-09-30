@@ -239,8 +239,8 @@ def conservative_branches(
     >>> df = raw_dataframe("/path/to/file.root", branches=cb)
     >>> fr_2j2b = FoldedResult("/path/to/trained/fold2j2b", "2j2b")
     >>> fr_2j1b = FoldedResult("/path/to/trained/fold2j1b", "2j1b")
-    >>> to_dataframe(fr_2j2b, df, query=True)
-    >>> to_dataframe(fr_2j1b, df, query=True)
+    >>> fr_2j2b.to_dataframe(df, query=True)
+    >>> fr_2j1b.to_dataframe(df, query=True)
 
     """
     t = uproot.open(file_name).get(tree)
