@@ -5,6 +5,13 @@ A utility module
 
 .. currentmodule:: tdub.utils
 
+Class Summary
+^^^^^^^^^^^^^
+
+.. autosummary::
+
+   SampleInfo
+
 Function Summary
 ^^^^^^^^^^^^^^^^
 
@@ -18,6 +25,9 @@ Function Summary
 
 Reference
 ^^^^^^^^^
+
+.. autoclass:: SampleInfo
+   :members:
 
 .. autofunction:: bin_centers
 .. autofunction:: categorize_branches
