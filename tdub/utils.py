@@ -79,6 +79,8 @@ class SampleInfo:
         else:
             m = re.match(_sample_info_re, file_stem)
             self.phy_process = m.group("phy_process")
+            if self.phy_process.startswith("MCNP"):
+                self.phy_process = "MCNP"
             self.dsid = int(m.group("dsid"))
             self.sim_type = m.group("sim_type")
             self.campaign = m.group("campaign")
@@ -137,7 +139,11 @@ def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
     weights = set(filter(weight_re.match, bset))
     metas = metas & set(bset)
     kins = (set(bset) ^ weights) ^ metas
-    return {"weights": list(weights), "kin": list(kins), "meta": list(metas)}
+    return {
+        "weights": sorted(weights, key=str.lower),
+        "kin": sorted(kins, key=str.lower),
+        "meta": sorted(metas, key=str.lower),
+    }
 
 
 def quick_files(datapath: str) -> Dict[str, List[str]]:

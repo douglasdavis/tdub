@@ -74,7 +74,7 @@ class Region(Enum):
 
         """
         if s.startswith("reg"):
-            rsuff = region.split("reg")[-1]
+            rsuff = s.split("reg")[-1]
             return Region.from_str(rsuff)
         elif s.startswith("r"):
             return Region[s]
