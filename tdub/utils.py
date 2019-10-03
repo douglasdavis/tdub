@@ -19,8 +19,14 @@ __all__ = [
 ]
 
 
-_sample_info_re = re.compile(
-    r"(?P<phy_process>\w+)_(?P<dsid>[0-9]{6})_(?P<sim_type>(FS|AFII))_(?P<campaign>MC16(a|d|e))_(?P<tree>\w+)"
+_detail_sample_info_re = re.compile(
+    r"""(?P<phy_process>\w+)_
+        (?P<dsid>[0-9]{6})_
+        (?P<sim_type>(FS|AFII))_
+        (?P<campaign>MC16(a|d|e))_
+        (?P<tree>\w+)
+        (\.\w+|$)""",
+    re.X,
 )
 
 
@@ -30,7 +36,7 @@ class SampleInfo:
 
     Parameters
     ----------
-    file_stem : str
+    input_file : str
        the file stem containing the necessary groups to parse
 
     Attributes
@@ -69,15 +75,17 @@ class SampleInfo:
     campaign: str
     tree: str
 
-    def __init__(self, file_stem: str) -> SampleInfo:
-        if "Data_Data" in file_stem:
+    def __init__(self, input_file: str) -> SampleInfo:
+        if "Data_Data" in input_file:
             self.phy_process = "Data"
             self.dsid = 0
             self.sim_type = "Data"
             self.campaign = "Data"
             self.tree = "nominal"
         else:
-            m = re.match(_sample_info_re, file_stem)
+            m = _detail_sample_info_re.match(input_file)
+            if not m:
+                raise ValueError(f"{input_file} cannot be parsed by SampleInfo regex")
             self.phy_process = m.group("phy_process")
             if self.phy_process.startswith("MCNP"):
                 self.phy_process = "MCNP"
@@ -158,6 +166,7 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
     - ``Diboson``
     - ``Zjets``
     - ``MCNP``
+    - ``Data``
 
     Parameters
     ----------
@@ -187,6 +196,7 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
     Diboson_files = sorted(glob(f"{path}/Diboson_*FS*nominal.root"))
     Zjets_files = sorted(glob(f"{path}/Zjets_*FS*nominal.root"))
     MCNP_files = sorted(glob(f"{path}/MCNP_*FS*nominal.root"))
+    Data_files = sorted(glob(f"{path}/Data_data*.root"))
     return {
         "ttbar": ttbar_files,
         "tW_DR": tW_DR_files,
@@ -194,6 +204,7 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
         "Diboson": Diboson_files,
         "Zjets": Zjets_files,
         "MCNP": MCNP_files,
+        "Data": Data_files,
     }
 
 

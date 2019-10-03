@@ -1,4 +1,5 @@
 from tdub.utils import *
+import pytest
 
 
 def test_sample_info():
@@ -8,6 +9,7 @@ def test_sample_info():
     s4 = "Diboson_364255_FS_MC16e_nominal.root"
     s5 = "Data17_data17_Data_Data_nominal.root"
     s6 = "MCNP_Zjets_364137_FS_MC16a_nominal.root"
+    s7 = "tW_DR_410648_AFII_MC16d_nominal.bdtresp.npy"
 
     si1 = SampleInfo(s1)
     si2 = SampleInfo(s2)
@@ -15,6 +17,7 @@ def test_sample_info():
     si4 = SampleInfo(s4)
     si5 = SampleInfo(s5)
     si6 = SampleInfo(s6)
+    si7 = SampleInfo(s7)
 
     assert si1.phy_process == "ttbar"
     assert si1.dsid == 410472
@@ -51,6 +54,19 @@ def test_sample_info():
     assert si6.sim_type == "FS"
     assert si6.campaign == "MC16a"
     assert si6.tree == "nominal"
+
+    assert si7.phy_process == "tW_DR"
+    assert si7.dsid == 410648
+    assert si7.sim_type == "AFII"
+    assert si7.campaign == "MC16d"
+    assert si7.tree == "nominal"
+
+
+def test_bad_sample_info():
+    bad = "tW_DR_410_bad"
+    with pytest.raises(ValueError) as err:
+        sib = SampleInfo(bad)
+    assert str(err.value) == "tW_DR_410_bad cannot be parsed by SampleInfo regex"
 
 
 def test_categorize_branches():
