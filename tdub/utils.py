@@ -196,7 +196,7 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
     Diboson_files = sorted(glob(f"{path}/Diboson_*FS*nominal.root"))
     Zjets_files = sorted(glob(f"{path}/Zjets_*FS*nominal.root"))
     MCNP_files = sorted(glob(f"{path}/MCNP_*FS*nominal.root"))
-    Data_files = sorted(glob(f"{path}/Data_data*.root"))
+    Data_files = sorted(glob(f"{path}/*Data_Data_nominal.root"))
     return {
         "ttbar": ttbar_files,
         "tW_DR": tW_DR_files,
