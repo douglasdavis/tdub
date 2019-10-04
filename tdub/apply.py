@@ -61,9 +61,9 @@ class FoldedResult:
         if not fold_path.exists():
             raise ValueError(f"{fold_output} does not exit")
         fold_path = fold_path.resolve()
-        self._model0 = joblib.load(fold_path / "model_fold0.joblib")
-        self._model1 = joblib.load(fold_path / "model_fold1.joblib")
-        self._model2 = joblib.load(fold_path / "model_fold2.joblib")
+        self._model0 = joblib.load(fold_path / "model_fold0.joblib.gz")
+        self._model1 = joblib.load(fold_path / "model_fold1.joblib.gz")
+        self._model2 = joblib.load(fold_path / "model_fold2.joblib.gz")
 
         summary_file = fold_path / "summary.json"
         summary = json.loads(summary_file.read_text())

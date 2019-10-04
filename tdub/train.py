@@ -74,7 +74,9 @@ def prepare_from_root(
     for f in bkg_files:
         log.info(f"  - {f}")
 
-    sig_dfim = specific_dataframe(sig_files, region, "train_sig", to_ram=True)
+    ## signal pretty much always be tW, no need for dask
+    sig_dfim = specific_dataframe(sig_files, region, "train_sig", bypass_dask=True)
+    ## bkg is pretty much always ttbar, so lets use daks to be careful
     bkg_dfim = specific_dataframe(bkg_files, region, "train_bkg", to_ram=True)
 
     sorted_cols = sorted(sig_dfim.df.columns.to_list(), key=str.lower)
@@ -234,7 +236,9 @@ def folded_training(
                 **fit_kw,
             )
 
-        joblib.dump(fitted_model, f"model_fold{fold_number}.joblib")
+        joblib.dump(
+            fitted_model, f"model_fold{fold_number}.joblib.gz", compress=("gzip", 3)
+        )
 
         fold_fig_proba, fold_ax_proba = plt.subplots()
         fold_fig_pred, fold_ax_pred = plt.subplots()
@@ -462,8 +466,8 @@ def folded_training(
     summary["features"] = [str(c) for c in cols]
     summary["kfold"] = kfold_kw
     summary["roc"] = {
-        "auc" : mean_auc,
-        "std" : std_auc,
+        "auc": mean_auc,
+        "std": std_auc,
         "mean_fpr": list(mean_fpr),
         "mean_tpr": list(mean_tpr),
     }
