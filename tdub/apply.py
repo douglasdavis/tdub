@@ -18,15 +18,6 @@ from sklearn.model_selection import KFold
 from tdub.regions import Region, SELECTIONS
 from tdub.frames import specific_dataframe
 
-# fmt: off
-
-try:
-    import root_pandas
-    _has_root_pandas = True
-except ImportError:
-    _has_root_pandas = False
-
-# fmt: on
 
 log = logging.getLogger(__name__)
 
