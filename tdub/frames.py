@@ -29,9 +29,13 @@ class DataFramesInMemory:
     name : str
         dataset name
     ddf : :obj:`dask.dataframe.DataFrame`
-        dask dataframe with all information (normal payload and weights)
+        dask dataframe with all information (normal payload and
+        weights)
     dropnonkin : bool
-        drop columns that are not kinematic information (e.g. ``OS`` or ``reg2j1b``)
+        drop columns that are not kinematic information (e.g. ``OS``
+        or ``reg2j1b``)
+    skeleton : bool
+        initialize class with empty dataframes, ddf is ignored if ``True``.
 
     Attributes
     ----------
@@ -52,7 +56,8 @@ class DataFramesInMemory:
     >>> ddf = delayed_dataframe(ttbar_files, branches=branches)
     >>> dfim = DataFramesInMemory("ttbar", ddf)
 
-    Having the legwork done by other module features (see :py:func:`specific_dataframe`):
+    Having the legwork done by other module features (see
+    :py:func:`specific_dataframe`):
 
     >>> from tdub.frames import specific_dataframe
     >>> dfim = specific_dataframe(ttbar_files, "2j2b", to_ram=True)
@@ -60,16 +65,27 @@ class DataFramesInMemory:
     """
 
     def __init__(
-        self, name: str, ddf: dd.DataFrame, dropnonkin: bool = True
+        self,
+        name: str = "",
+        ddf: Optional[dask.dataframe.DataFrame] = None,
+        dropnonkin: bool = True,
+        skeleton: bool = False,
     ) -> DataFramesInMemory:
-        self.name = name
-        all_columns = list(ddf.columns)
-        categorized = categorize_branches(all_columns)
-        nonweights = categorized["kin"]
-        if not dropnonkin:
-            nonweights += categorized["meta"]
-        self._df = ddf[nonweights].compute()
-        self._weights = ddf[categorized["weights"]].compute()
+        if skeleton:
+            self.name = name
+            self._df = pd.DataFrame()
+            self._weights = pd.DataFrame()
+        else:
+            if ddf is None:
+                raise ValueError("if skeleton=False, a dask dataframe is required")
+            self.name = name
+            all_columns = list(ddf.columns)
+            categorized = categorize_branches(all_columns)
+            nonweights = categorized["kin"]
+            if not dropnonkin:
+                nonweights += categorized["meta"]
+            self._df = ddf[sorted(nonweights)].compute()
+            self._weights = ddf[categorized["weights"]].compute()
 
     @property
     def df(self):
@@ -366,6 +382,7 @@ def specific_dataframe(
     extra_branches: Optional[List[str]] = None,
     to_ram: bool = False,
     to_ram_kw: Optional[Dict[str, Any]] = None,
+    bypass_dask: bool = False,
 ) -> Union[SelectedDataFrame, DataFramesInMemory]:
     """Construct a dataframe based on specific predefined region selection
 
@@ -386,16 +403,22 @@ def specific_dataframe(
        associated as features for the region you selected will be
        included by default).
     to_ram : bool
-       automatically send dataset to memory via :py:func:`SelectedDataFrame.to_ram`
-    to_ram_kw: dict(str, Any)
-       keywords to send to :py:func:`SelectedDataFrame.to_ram` function
-
+       automatically send dataset to memory via
+       :py:func:`SelectedDataFrame.to_ram`
+    to_ram_kw : dict(str, Any)
+       keywords to send to :py:func:`SelectedDataFrame.to_ram`
+       function
+    bypass_dask: bool
+       bypass going through a delayed dataframe, just use pandas; this
+       will cause the function to return a :obj:`DataFramesInMemory`
+       instance (``to_ram`` and ``to_ram_kw`` are ignored)
 
     Returns
     -------
     :obj:`SelectedDataFrame` or :obj:`DataFramesInMemory`
        if ``to_ram`` is ``False``, we return the dask-backed ``SelectedDataFrame``,
-       if ``to_ram`` is ``True``, we return the pandas-backed ``DataFrameseInMemory``.
+       if ``to_ram`` is ``True``, we return the pandas-backed ``DataFramesInMemory``.
+       if ``pybass_dask`` is ``True``, we return the pandas-backed ``DataFramesInMemory``.
 
     Examples
     --------
@@ -405,6 +428,12 @@ def specific_dataframe(
     >>> files = quick_files("/path/to/files")["ttbar"]
     >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, extra_branches=["pT_lep1"])
     >>> frame_2j2b = specific_dataframe(files, "2j2b", extra_branches=["met"])
+
+    Here we bypass dask for converting the ROOT files to a dataframe
+    (this is faster for smaller dataframes, for large dataframes
+    (i.e. ttbar samples) we should stick to dask.
+
+    >>> frame_2j2b = specific_dataframe(files, "2j2b", bypass_dask=True)
 
     """
     if isinstance(region, str):
@@ -427,7 +456,19 @@ def specific_dataframe(
         branches = sorted(
             set(FEATURESETS[reg]) | set(extra_branches) | {"reg2j2b", "OS"}, key=str.lower
         )
+
     q = SELECTIONS[reg]
+
+    if bypass_dask:
+        raw_df = raw_dataframe(files, tree, weight_name, branches=branches)
+        weight_df = pd.DataFrame(raw_df.pop(weight_name))
+        sel = raw_df.eval(q)
+        dfim = DataFramesInMemory(name=name, skeleton=True)
+        kin_branches = sorted(categorize_branches(raw_df)["kin"])
+        dfim._df = raw_df[sel][kin_branches]
+        dfim._weights = weight_df[sel]
+        return dfim
+
     sdf = SelectedDataFrame(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
     )
