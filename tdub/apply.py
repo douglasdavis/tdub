@@ -166,7 +166,11 @@ class FoldedResult:
             df[column_name] = y
 
 
-def generate_npy(frs: List[FoldedResult], df: pandas.DataFrame, output_name: str) -> None:
+def generate_npy(
+    frs: List[FoldedResult],
+    df: pandas.DataFrame,
+    output_file: Union[str, os.PathLike],
+) -> None:
     """create a NumPy npy file which is the response for all events in a DataFrame
 
     this will use all folds in the ``frs`` argument to get BDT
@@ -181,21 +185,24 @@ def generate_npy(frs: List[FoldedResult], df: pandas.DataFrame, output_name: str
        the folded results to use
     df : pandas.DataFrame
        the dataframe of events to get the responses for
-    output_name : str
+    output_file : str or os.PathLike
        name of the output NumPy file
 
     """
 
     if df.shape[0] == 0:
-        log.info(f"Saving empty array to {output_name}")
-        np.save(output_name, np.array([], dtype=np.float64))
+        log.info(f"Saving empty array to {output_file}")
+        np.save(output_file, np.array([], dtype=np.float64))
         return None
+
+    outfile = PosixPath(output_file)
+    outfile.parent.mkdir(parents=True, exist_ok=True)
 
     colname = "_temp_col"
     log.info(f"The {colname} column will be deleted at the end of this function")
     for fr in frs:
         fr.to_dataframe(df, column_name=colname, query=True)
-    np.save(output_name, df[colname].to_numpy())
-    log.info(f"Saved output to {output_name}")
+    np.save(outfile, df[colname].to_numpy())
+    log.info(f"Saved output to {outfile}")
     df.drop(columns=[colname], inplace=True)
     log.info(f"Temporary column '{colname}' deleted")

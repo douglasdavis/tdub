@@ -287,9 +287,7 @@ def get_branches(
     return list(set(bs) ^ weights)
 
 
-def conservative_branches(
-    file_name: str, tree: str = "WtLoop_nominal", sort: bool = False
-) -> List[str]:
+def conservative_branches(file_name: str, tree: str = "WtLoop_nominal") -> List[str]:
     """get branches in a ROOT file that form a conservative minimum
 
     we define "conservative minimum" as the branches necessary for
@@ -303,8 +301,6 @@ def conservative_branches(
        the ROOT file name
     tree : str
        the ROOT tree name
-    sort : bool
-       sort the resulting branch list before returning
 
     Returns
     -------
@@ -339,6 +335,4 @@ def conservative_branches(
     )
     good_branches = bs & good_branches
 
-    if sort:
-        return sorted(good_branches)
-    return list(good_branches)
+    return sorted(good_branches)

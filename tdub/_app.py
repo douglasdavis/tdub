@@ -17,8 +17,9 @@ def parse_args():
     applygennpy = subparsers.add_parser("apply-gennpy", help="Calculate samples BDT response and save to .npy file")
     applygennpy.add_argument("--single-file", type=str, help="input ROOT file")
     applygennpy.add_argument("--all-in-dir", type=str, help="Process all files in a directory")
-    applygennpy.add_argument("--folds", type=str, nargs="+", help="directories with outputs from folded trainings", required=True)
-    applygennpy.add_argument("--arr-name", type=str, default="pbdt_response", help="name for the array")
+    applygennpy.add_argument("-f", "--folds", type=str, nargs="+", help="directories with outputs from folded trainings", required=True)
+    applygennpy.add_argument("-n", "--arr-name", type=str, default="pbdt_response", help="name for the array")
+    applygennpy.add_argument("-o", "--out-dir", type=str, help="save output to a specific directory")
 
     rexpulls = subparsers.add_parser("rex-pulls", help="create matplotlib pull plots from TRExFitter output", parents=[common_parser])
     rexpulls.add_argument("workspace", type=str, help="TRExFitter workspace")
@@ -107,13 +108,18 @@ def _pred2npy(args):
 
     frs = [FoldedResult(p) for p in args.folds]
 
+    if args.out_dir:
+        outdir = pathlib.PosixPath(args.out_dir)
+    else:
+        outdir = pathlib.PosixPath(".")
+
     def process_sample(sample_name):
         stem = pathlib.PosixPath(sample_name).stem
         sampinfo = SampleInfo(stem)
         tree = f"WtLoop_{sampinfo.tree}"
         df = conservative_dataframe(sample_name, tree=tree)
-        npyfilename = f"{stem}.{args.arr_name}.npy"
-        generate_npy(frs, df, output_name=npyfilename)
+        npyfilename = outdir / f"{stem}.{args.arr_name}.npy"
+        generate_npy(frs, df, npyfilename)
 
     if args.single_file is not None and args.all_in_dir is not None:
         raise ValueError("--single-file and --all-in-dir cannot be used together")
