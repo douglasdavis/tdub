@@ -31,11 +31,11 @@ pulls
 
 Generate matplotlib pull plots using TRExFitter output
 
-.. command-output:: tdub pulls --help
+.. command-output:: tdub rex-pulls --help
 
 stacks
 ^^^^^^
 
 Generate matplotlib stacked histogram plots using TRExFitter output
 
-.. command-output:: tdub stacks --help
+.. command-output:: tdub rex-stacks --help

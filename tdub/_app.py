@@ -14,20 +14,12 @@ def parse_args():
     common_parser = argparse.ArgumentParser(add_help=False)
     common_parser.add_argument("--debug", action="store_true", help="set logging level to debug")
 
-    stacks = subparsers.add_parser("stacks", help="create matplotlib stack plots from TRExFitter output", parents=[common_parser])
-    stacks.add_argument("workspace", type=str, help="TRExFitter workspace")
-    stacks.add_argument("-o", "--out-dir", type=str, help="output directory for plots")
-    stacks.add_argument("--lumi", type=str, default="139", help="Integrated lumi. for text")
-    stacks.add_argument("--do-postfit", action="store_true", help="produce post fit plots as well")
-    stacks.add_argument("--skip-regions", type=str, default=None, help="skip regions based on regex")
-    stacks.add_argument("--band-style", type=str, choices=["hatch", "shade"], default="hatch", help="band art")
-    stacks.add_argument("--legend-ncol", type=int, choices=[1, 2], default=1, help="number of legend columns")
-
-    pulls = subparsers.add_parser("pulls", help="create matplotlib pull plots from TRExFitter output", parents=[common_parser])
-    pulls.add_argument("workspace", type=str, help="TRExFitter workspace")
-    pulls.add_argument("config", type=str, help="TRExFitter config")
-    pulls.add_argument("-o", "--out-dir", type=str, help="output directory")
-    pulls.add_argument("--no-text", action="store_true", help="don't print values on plots")
+    fold = subparsers.add_parser("fold", help="Perform a folded training")
+    fold.add_argument("optimdir", type=str, help="directory containing optimization information")
+    fold.add_argument("datadir", type=str, help="Directory with ROOT files")
+    fold.add_argument("-o", "--out-dir", type=str, default="_folded", help="output directory for saving optimizatin results")
+    fold.add_argument("-s", "--seed", type=int, default=414, help="random seed for folding")
+    fold.add_argument("-n", "--n-splits", type=int, default=3, help="number of splits for folding")
 
     optimize = subparsers.add_parser("optimize", help="Gaussian processes minimization for HP optimization")
     optimize.add_argument("region", type=str, help="Region to train")
@@ -37,18 +29,26 @@ def parse_args():
     optimize.add_argument("-n", "--n-calls", type=int, default=15, help="number of calls for the optimization procedure")
     optimize.add_argument("-r", "--esr", type=int, default=20, help="early stopping rounds for the training")
 
-    fold = subparsers.add_parser("fold", help="Perform a folded training")
-    fold.add_argument("optimdir", type=str, help="directory containing optimization information")
-    fold.add_argument("datadir", type=str, help="Directory with ROOT files")
-    fold.add_argument("-o", "--out-dir", type=str, default="_folded", help="output directory for saving optimizatin results")
-    fold.add_argument("-s", "--seed", type=int, default=414, help="random seed for folding")
-    fold.add_argument("-n", "--n-splits", type=int, default=3, help="number of splits for folding")
-
     pred2npy = subparsers.add_parser("pred2npy", help="Calculate samples BDT response and save to .npy file")
     pred2npy.add_argument("--single-file", type=str, help="input ROOT file")
     pred2npy.add_argument("--all-in-dir", type=str, help="Process all files in a directory")
     pred2npy.add_argument("--folds", type=str, nargs="+", help="directories with outputs from folded trainings", required=True)
     pred2npy.add_argument("--arr-name", type=str, default="pbdt_response", help="name for the array")
+
+    rexpulls = subparsers.add_parser("rex-pulls", help="create matplotlib pull plots from TRExFitter output", parents=[common_parser])
+    rexpulls.add_argument("workspace", type=str, help="TRExFitter workspace")
+    rexpulls.add_argument("config", type=str, help="TRExFitter config")
+    rexpulls.add_argument("-o", "--out-dir", type=str, help="output directory")
+    rexpulls.add_argument("--no-text", action="store_true", help="don't print values on plots")
+
+    rexstacks = subparsers.add_parser("rex-stacks", help="create matplotlib stack plots from TRExFitter output", parents=[common_parser])
+    rexstacks.add_argument("workspace", type=str, help="TRExFitter workspace")
+    rexstacks.add_argument("-o", "--out-dir", type=str, help="output directory for plots")
+    rexstacks.add_argument("--lumi", type=str, default="139", help="Integrated lumi. for text")
+    rexstacks.add_argument("--do-postfit", action="store_true", help="produce post fit plots as well")
+    rexstacks.add_argument("--skip-regions", type=str, default=None, help="skip regions based on regex")
+    rexstacks.add_argument("--band-style", type=str, choices=["hatch", "shade"], default="hatch", help="band art")
+    rexstacks.add_argument("--legend-ncol", type=int, choices=[1, 2], default=1, help="number of legend columns")
 
     # fmt: on
     return (parser.parse_args(), parser)
@@ -137,15 +137,11 @@ def cli():
     setup_logging()
     log = logging.getLogger("tdub.cli")
 
-    if args.action == "regions2parquet":
-        return _parquet_regions(args, log)
-    elif args.action == "stacks":
+    if args.action == "rex-tacks":
         from tdub.rexart import run_stacks
-
         return run_stacks(args)
-    elif args.action == "pulls":
+    elif args.action == "rex-pulls":
         from tdub.rexart import run_pulls
-
         return run_pulls(args)
     elif args.action == "optimize":
         return _optimize(args)
