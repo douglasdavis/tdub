@@ -140,11 +140,11 @@ def cli():
     if args.action == "regions2parquet":
         return _parquet_regions(args, log)
     elif args.action == "stacks":
-        from tdub.art import run_stacks
+        from tdub.rexart import run_stacks
 
         return run_stacks(args)
     elif args.action == "pulls":
-        from tdub.art import run_pulls
+        from tdub.rexart import run_pulls
 
         return run_pulls(args)
     elif args.action == "optimize":
