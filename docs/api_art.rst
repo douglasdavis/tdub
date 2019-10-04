@@ -16,7 +16,7 @@ Class Summary
    Sample
    NuisPar
    Template
-   Histogram
+   TRExHistogram
    RegionMeta
 
 Function Summary
@@ -39,7 +39,7 @@ Reference
 .. autoclass:: Template
    :members:
 
-.. autoclass:: Histogram
+.. autoclass:: TRExHistogram
    :members:
 
 .. autoclass:: RegionMeta

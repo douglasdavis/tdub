@@ -3,64 +3,53 @@ from __future__ import annotations
 import os
 import subprocess
 import logging
+import re
 from pathlib import PosixPath
 from dataclasses import dataclass, field
-import re
 
 import yaml
 import uproot
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 import tdub.utils
 
-# fmt: off
-import matplotlib
 matplotlib.use("pdf")
-import matplotlib.font_manager as font_manager
-# import os
-# if os.environ.get("HELVETICA_MPL"):
-#     curdir = os.path.dirname(os.path.abspath(__file__))
-#     print(curdir)
-#     fontprop_reg = font_manager.FontProperties(fname="{}/Helvetica/Regular.ttf".format(curdir))
-#     fontprop_atl = font_manager.FontProperties(fname="{}/Helvetica/Bold_Italic.ttf".format(curdir))
-#     matplotlib.rcParams["font.family"] = fontprop_reg.get_name()
-#     print(fontprop_reg.get_name())
-# matplotlib.rcParams['pdf.fonttype'] = 42
-# matplotlib.rcParams['ps.fonttype'] = 42
-# matplotlib.rcParams['text.usetex'] = True
-matplotlib.rcParams["axes.labelsize"] = 14
-matplotlib.rcParams["font.size"] = 12
-matplotlib.rcParams["xtick.top"] = True
-matplotlib.rcParams["ytick.right"] = True
-matplotlib.rcParams["xtick.direction"] = "in"
-matplotlib.rcParams["ytick.direction"] = "in"
-matplotlib.rcParams["xtick.labelsize"] = 12
-matplotlib.rcParams["ytick.labelsize"] = 12
-matplotlib.rcParams["xtick.minor.visible"] = True
-matplotlib.rcParams["ytick.minor.visible"] = True
-matplotlib.rcParams["xtick.major.width"] = 0.8
-matplotlib.rcParams["xtick.minor.width"] = 0.8
-matplotlib.rcParams["xtick.major.size"] = 7.0
-matplotlib.rcParams["xtick.minor.size"] = 4.0
-matplotlib.rcParams["xtick.major.pad"] = 1.5
-matplotlib.rcParams["xtick.minor.pad"] = 1.4
-matplotlib.rcParams["ytick.major.width"] = 0.8
-matplotlib.rcParams["ytick.minor.width"] = 0.8
-matplotlib.rcParams["ytick.major.size"] = 7.0
-matplotlib.rcParams["ytick.minor.size"] = 4.0
-matplotlib.rcParams["ytick.major.pad"] = 1.5
-matplotlib.rcParams["ytick.minor.pad"] = 1.4
-matplotlib.rcParams["legend.frameon"] = False
-matplotlib.rcParams["legend.numpoints"] = 1
-matplotlib.rcParams["legend.fontsize"] = 11
-matplotlib.rcParams["legend.handlelength"] = 1.5
-matplotlib.rcParams["axes.formatter.limits"] = [-4, 4]
-matplotlib.rcParams["axes.formatter.use_mathtext"] = True
-# fmt: on
 
 
 log = logging.getLogger(__name__)
+
+
+def _setup_style():
+    matplotlib.rcParams["axes.labelsize"] = 14
+    matplotlib.rcParams["font.size"] = 12
+    matplotlib.rcParams["xtick.top"] = True
+    matplotlib.rcParams["ytick.right"] = True
+    matplotlib.rcParams["xtick.direction"] = "in"
+    matplotlib.rcParams["ytick.direction"] = "in"
+    matplotlib.rcParams["xtick.labelsize"] = 12
+    matplotlib.rcParams["ytick.labelsize"] = 12
+    matplotlib.rcParams["xtick.minor.visible"] = True
+    matplotlib.rcParams["ytick.minor.visible"] = True
+    matplotlib.rcParams["xtick.major.width"] = 0.8
+    matplotlib.rcParams["xtick.minor.width"] = 0.8
+    matplotlib.rcParams["xtick.major.size"] = 7.0
+    matplotlib.rcParams["xtick.minor.size"] = 4.0
+    matplotlib.rcParams["xtick.major.pad"] = 1.5
+    matplotlib.rcParams["xtick.minor.pad"] = 1.4
+    matplotlib.rcParams["ytick.major.width"] = 0.8
+    matplotlib.rcParams["ytick.minor.width"] = 0.8
+    matplotlib.rcParams["ytick.major.size"] = 7.0
+    matplotlib.rcParams["ytick.minor.size"] = 4.0
+    matplotlib.rcParams["ytick.major.pad"] = 1.5
+    matplotlib.rcParams["ytick.minor.pad"] = 1.4
+    matplotlib.rcParams["legend.frameon"] = False
+    matplotlib.rcParams["legend.numpoints"] = 1
+    matplotlib.rcParams["legend.fontsize"] = 11
+    matplotlib.rcParams["legend.handlelength"] = 1.5
+    matplotlib.rcParams["axes.formatter.limits"] = [-4, 4]
+    matplotlib.rcParams["axes.formatter.use_mathtext"] = True
 
 
 @dataclass
@@ -115,7 +104,7 @@ class NuisPar:
 
 @dataclass
 class Template:
-    """Defines a template for generation by WtStat
+    """Defines a template for generation by TREx
 
     Attributes
     ----------
@@ -154,7 +143,7 @@ class Template:
 
 
 @dataclass
-class Histogram:
+class TRExHistogram:
     """Defines a histogram built from a TRExFitter file
 
     Attributes
@@ -307,7 +296,7 @@ _region_meta = {
 
 def draw_ratio_with_line(
     ax: matplotlib.axes.Axis,
-    data: Histogram,
+    data: TRExHistogram,
     mc_sum: numpy.ndarray,
     mc_err: numpy.ndarray,
     yline: float = 1.0,
@@ -352,7 +341,7 @@ def draw_atlas_label(
             ax.text(x, y - (i + 1) * 0.06, exline, transform=ax.transAxes, size=s2)
 
 
-def set_labels(ax: matplotlib.axes.Axes, histogram: Histogram) -> None:
+def set_labels(ax: matplotlib.axes.Axes, histogram: TRExHistogram) -> None:
     """ define the axis labels """
     if histogram.has_uniform_bins():
         ylabel_suffix = f" / {histogram.bin_width} {histogram.unit}"
@@ -475,7 +464,7 @@ def stackem(
 
 def prefit_histograms(
     args: argparse.Namespace, fit_name: str, region: str, samples: List[Sample]
-) -> Tuple[Histogram, List[Histogram], uproot_methods.classes.TGraphAsymmErrors]:
+) -> Tuple[TRExHistogram, List[TRExHistogram], uproot_methods.classes.TGraphAsymmErrors]:
     """Prepare prefit histogram objects
 
     Parameters
@@ -491,9 +480,9 @@ def prefit_histograms(
 
     Returns
     -------
-    data : Histogram
+    data : TRExHistogram
        data histogram
-    histograms : List[Histogram]
+    histograms : List[TRExHistogram]
        MC histograms
     band : uproot_methods.classes.TGraphAsymmErrors
        uncertainty band
@@ -501,14 +490,14 @@ def prefit_histograms(
     hfile = f"{args.workspace}/Histograms/{fit_name}_{region}_histos.root"
     bfile = f"{args.workspace}/Histograms/{fit_name}_{region}_preFit.root"
     band = uproot.open(bfile).get("g_totErr")
-    histograms = [Histogram(hfile, region, sample) for sample in samples]
-    data = Histogram(hfile, region, Sample("Data", "Data", "", "Data"))
+    histograms = [TRExHistogram(hfile, region, sample) for sample in samples]
+    data = TRExHistogram(hfile, region, Sample("Data", "Data", "", "Data"))
     return data, histograms, band
 
 
 def postfit_histograms(
     args: argparse.Namespace, fit_name: str, region: str, samples: List[Samples]
-) -> Tuple[Histogram, List[Histogram], uproot_methods.classes.TGraphAsymmErrors]:
+) -> Tuple[TRExHistogram, List[TRExHistogram], uproot_methods.classes.TGraphAsymmErrors]:
     """Prepare postfit histogram objects
 
     Parameters
@@ -524,9 +513,9 @@ def postfit_histograms(
 
     Returns
     -------
-    data : Histogram
+    data : TRExHistogram
        data histogram
-    histograms : List[Histogram]
+    histograms : List[TRExHistogram]
        MC histograms
     band : uproot_methods.classes.TGraphAsymmErrors
        uncertainty band
@@ -535,7 +524,7 @@ def postfit_histograms(
     hfile = f"{args.workspace}/Histograms/{region}_postFit.root"
     bfile = f"{args.workspace}/Histograms/{region}_postFit.root"
     band = uproot.open(bfile).get("g_totErr_postFit")
-    histograms = [Histogram(hfile, region, sample, postfit=True) for sample in samples]
+    histograms = [TRExHistogram(hfile, region, sample, postfit=True) for sample in samples]
     return histograms, band
 
 
@@ -555,6 +544,7 @@ def run_stacks(args: argparse.Namespace) -> None:
     args : argparse.Namespace
 
     """
+    _setup_style()
     samples = _get_plot_samples()
 
     if args.out_dir is None:
@@ -715,6 +705,7 @@ def run_pulls(args: argparse.Namespace) -> None:
     args : argparse.Namespace
 
     """
+    _setup_style()
     systematics, categories = get_blank_systematics(args.config)
     fit_name = PosixPath(args.workspace).stem
     fit_result = PosixPath(f"{args.workspace}/Fits/{fit_name}.txt")
