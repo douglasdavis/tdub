@@ -44,6 +44,8 @@ class FoldedResult:
        the list of kinematic features used by the model
     folder : sklearn.model_selection.KFold
        the folding object that the training session used
+    summary : dict(str, Any)
+       the contents of the ``summary.json`` file.
 
     """
 
@@ -57,10 +59,10 @@ class FoldedResult:
         self._model2 = joblib.load(fold_path / "model_fold2.joblib.gz")
 
         summary_file = fold_path / "summary.json"
-        summary = json.loads(summary_file.read_text())
-        self._features = summary["features"]
-        self._folder = KFold(**(summary["kfold"]))
-        self._region = Region.from_str(summary["region"])
+        self._summary = json.loads(summary_file.read_text())
+        self._features = self._summary["features"]
+        self._folder = KFold(**(self._summary["kfold"]))
+        self._region = Region.from_str(self._summary["region"])
 
     @property
     def model0(self) -> lightgbm.LGBMClassifier:
@@ -85,6 +87,10 @@ class FoldedResult:
     @property
     def folder(self) -> KFold:
         return self._folder
+
+    @property
+    def summary(self) -> Dict[str, Any]:
+        return self._summary
 
     def to_files(
         self, files: Union[str, List[str]], tree: str = "WtLoop_nominal"

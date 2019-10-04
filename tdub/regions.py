@@ -88,6 +88,8 @@ class Region(Enum):
             else:
                 raise ValueError(f"{s} doesn't correspond to a Region")
 
+    def __str__(self) -> str:
+        return self.name[1:]
 
 
 SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
@@ -116,48 +118,54 @@ dict(Region, str): key-value pairs for regions to their selection string
 """
 
 
-FEATURESET_1j1b = sorted([
-    "pTsys_lep1lep2jet1met",
-    "mass_lep2jet1",
-    "mass_lep1jet1",
-    "pTsys_lep1lep2",
-    "deltaR_lep2_jet1",
-    "nloosejets",
-    "deltaR_lep1_lep2",
-    "deltapT_lep1_jet1",
-    "mT_lep2met",
-    "nloosebjets",
-    "cent_lep1lep2",
-    "pTsys_lep1lep2jet1",
-])
+FEATURESET_1j1b = sorted(
+    [
+        "pTsys_lep1lep2jet1met",
+        "mass_lep2jet1",
+        "mass_lep1jet1",
+        "pTsys_lep1lep2",
+        "deltaR_lep2_jet1",
+        "nloosejets",
+        "deltaR_lep1_lep2",
+        "deltapT_lep1_jet1",
+        "mT_lep2met",
+        "nloosebjets",
+        "cent_lep1lep2",
+        "pTsys_lep1lep2jet1",
+    ]
+)
 """
 list(str): list of features we use for classifiers in the 1j1b region
 """
 
-FEATURESET_2j1b = sorted([
-    "mass_lep1jet2",
-    "psuedoContTagBin_jet1",
-    "mass_lep1jet1",
-    "mass_lep2jet1",
-    "mass_lep2jet2",
-    "pTsys_lep1lep2jet1jet2met",
-    "psuedoContTagBin_jet2",
-    "pT_jet2",
-])
+FEATURESET_2j1b = sorted(
+    [
+        "mass_lep1jet2",
+        "psuedoContTagBin_jet1",
+        "mass_lep1jet1",
+        "mass_lep2jet1",
+        "mass_lep2jet2",
+        "pTsys_lep1lep2jet1jet2met",
+        "psuedoContTagBin_jet2",
+        "pT_jet2",
+    ]
+)
 """
 list(str): list of features we use for classifiers in the 2j1b region
 """
 
 
-FEATURESET_2j2b = sorted([
-    "mass_lep1jet2",
-    "mass_lep1jet1",
-    "deltaR_lep1_jet1",
-    "mass_lep2jet1",
-    "pTsys_lep1lep2met",
-    "pT_jet2",
-    "mass_lep2jet2",
-])
+FEATURESET_2j2b = sorted(
+    [
+        "mass_lep1jet2",
+        "mass_lep1jet1",
+        "deltaR_lep1_jet1",
+        "mass_lep2jet1",
+        "pTsys_lep1lep2met",
+        "pT_jet2",
+        "mass_lep2jet2",
+    ]
+)
 """
 list(str): list of features we use for classifiers in the 2j2b region
 """
