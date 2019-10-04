@@ -5,37 +5,37 @@ Top level CLI:
 
 .. command-output:: tdub --help
 
-fold
-^^^^
+apply-gennpy
+^^^^^^^^^^^^
 
-Run a :math:`k`-fold cross validation training
+Apply BDT folded training models to file(s), save model response to .npy file(s)
 
-.. command-output:: tdub fold --help
+.. command-output:: tdub apply-gennpy --help
 
-optimize
-^^^^^^^^
-
-Run a round of hyperparameter optimiziation using Gaussian Processes
-
-.. command-output:: tdub optimize --help
-
-pred2npy
-^^^^^^^^
-
-Save sample BDT predictions to .npy file(s)
-
-.. command-output:: tdub pred2npy --help
-
-pulls
-^^^^^
+rex-pulls
+^^^^^^^^^
 
 Generate matplotlib pull plots using TRExFitter output
 
 .. command-output:: tdub rex-pulls --help
 
-stacks
-^^^^^^
+rex-stacks
+^^^^^^^^^^
 
 Generate matplotlib stacked histogram plots using TRExFitter output
 
 .. command-output:: tdub rex-stacks --help
+
+train-fold
+^^^^^^^^^^
+
+Run a :math:`k`-fold cross validation training
+
+.. command-output:: tdub train-fold --help
+
+train-optimize
+^^^^^^^^^^^^^^
+
+Run a round of hyperparameter optimiziation using Gaussian Processes
+
+.. command-output:: tdub train-optimize --help
