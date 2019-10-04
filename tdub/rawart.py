@@ -26,9 +26,9 @@ def draw_rocs(
 
     Returns
     -------
-    matplotlib.figure.Figure
+    :py:obj:`matplotlib.figure.Figure`
        the figure associated with the axis
-    matplotlib.axes.Axes
+    :py:obj:`matplotlib.axes.Axes`
        the axis object which has the plot
     """
     if labels is None:

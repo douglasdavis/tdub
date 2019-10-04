@@ -87,4 +87,5 @@ intersphinx_mapping = {
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "sklearn": ("https://scikit-learn.org/stable", None),
     "lightgbm": ("https://lightgbm.readthedocs.io/en/latest", None),
+    "matplotlib": ("https://matplotlib.org", None),
 }
