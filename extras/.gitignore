@@ -2,3 +2,5 @@ training_*
 optim_*
 fold_*
 _*
+*.npy
+*.root
