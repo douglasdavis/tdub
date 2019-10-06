@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 import tdub.utils
 
-from ._art import _setup_style
+from ._art import setup_style
 
 
 log = logging.getLogger(__name__)
@@ -515,7 +515,7 @@ def run_stacks(args: argparse.Namespace) -> None:
     args : argparse.Namespace
 
     """
-    _setup_style()
+    setup_style()
     samples = _get_plot_samples()
 
     if args.out_dir is None:
@@ -676,7 +676,7 @@ def run_pulls(args: argparse.Namespace) -> None:
     args : argparse.Namespace
 
     """
-    _setup_style()
+    setup_style()
     systematics, categories = get_blank_systematics(args.config)
     fit_name = PosixPath(args.workspace).stem
     fit_result = PosixPath(f"{args.workspace}/Fits/{fit_name}.txt")

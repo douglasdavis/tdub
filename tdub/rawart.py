@@ -4,13 +4,15 @@ from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
 
-from ._art import _setup_style
+from ._art import setup_style
 
 
 def draw_rocs(
     frs: List[FoldedResult],
     ax: Optional[matplotlib.axes.Axes] = None,
     labels: Optional[List[str]] = None,
+    draw_guess: bool = False,
+    draw_grid: bool = False,
 ) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
     """draw ROC curves from a set of folded training results
 
@@ -23,6 +25,11 @@ def draw_rocs(
     labels : list(str)
        a label for each training, defaults to use the region
        associated with each folded result
+    draw_guess : bool
+       draw a straight line from (0, 0) to (1, 1) to represent a 50/50
+       (guess) ROC curve.
+    draw_grid : bool
+       draw a grid on the axis
 
     Returns
     -------
@@ -30,11 +37,23 @@ def draw_rocs(
        the figure associated with the axis
     :py:obj:`matplotlib.axes.Axes`
        the axis object which has the plot
+
+    Examples
+    --------
+
+    >>> from tdub.apply import FoldedResult
+    >>> from tdub.rawart import draw_rocs
+    >>> fr_1j1b = FoldedResult("/path/to/train_1j1b")
+    >>> fr_2j1b = FoldedResult("/path/to/train_2j1b")
+    >>> fr_2j2b = FoldedResult("/path/to/train_2j2b")
+    >>> fig, ax = draw_rocs([fr_1j1b, fr_2j1b, fr_2j2b])
+
     """
     if labels is None:
         labels = [str(fr.region) for fr in frs]
+
     if ax is None:
-        _setup_style()
+        setup_style()
         fig, ax = plt.subplots()
 
     for label, fr in zip(labels, frs):
@@ -43,7 +62,12 @@ def draw_rocs(
         auc = fr.summary["roc"]["auc"]
         ax.plot(x, y, label=f"{label}, AUC: {auc:0.2f}", lw=2, alpha=0.9)
 
-    ax.plot([0, 0.5, 1.0], [0, 0.5, 1.0], lw=1, alpha=0.4, ls="--", color="k")
+    if draw_guess:
+        ax.plot([0, 1.0], [0, 1.0], lw=1, alpha=0.4, ls="--", color="k")
+
+    if draw_grid:
+        ax.grid(alpha=0.5)
+
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.0])
     ax.set_xlabel("False positive rate")
