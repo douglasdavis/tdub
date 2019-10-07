@@ -79,15 +79,14 @@ def draw_rocs(
     return ax.figure, ax
 
 
-def draw_selected_stack(
+def draw_stack(
     *,
     data_df: pandas.DataFrame,
     mc_dfs: Iterable[pandas.DataFrame],
-    mc_weights: Iterable[pandas.DataFrame],
     distribution: str,
-    selection: str,
     bins: int,
     range: Tuple[float, float],
+    weight_name: str = "weight_nominal",
     colors: Optional[Iterable[str]] = None,
     mc_labels: Optional[Iterable[str]] = None,
     lumi: float = 139.0,
@@ -106,16 +105,14 @@ def draw_selected_stack(
        the dataframe for data
     mc_dfs : list(pandas.DataFrame)
        the list of MC dataframes
-    mc_weights : list(pandas.DataFrame)
-       the list of MC weight dataframes
     distribution: str
        the variable to histogram
-    selection : str
-       the selection string in :py:func:`pandas.DataFrame.eval` form
     bins : int
        the number of bins
     range : tuple(float, float)
        the range to histogram the distribution
+    weight_name : str
+       the name of the weight column
     colors : list(str), optional
        the colors for the Monte Carlo histograms
     mc_labels : list(str)
@@ -141,17 +138,11 @@ def draw_selected_stack(
     centers = bin_centers(edges)
 
     data_count, __ = pygram11.histogram(
-        data_df[data_df.eval(selection)][distribution].to_numpy(),
-        bins=bins,
-        range=range,
-        flow=True,
+        data_df[distribution].to_numpy(), bins=bins, range=range, flow=True
     )
     data_err = np.sqrt(data_count)
-    mc_sels = [df.eval(selection) for df in mc_dfs]
-    mc_dists = [df[sel][distribution].to_numpy() for df, sel in zip(mc_dfs, mc_sels)]
-    mc_ws = [
-        df[sel]["weight_nominal"].to_numpy() * lumi for df, sel in zip(mc_weights, mc_sels)
-    ]
+    mc_dists = [df[distribution].to_numpy() for df in mc_dfs]
+    mc_ws = [df[weight_name].to_numpy() * lumi for df in mc_dfs]
     mc_hists = [
         pygram11.histogram(mcd, weights=mcw, bins=bins, range=range, flow=True)
         for mcd, mcw in zip(mc_dists, mc_ws)

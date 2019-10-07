@@ -18,6 +18,7 @@ Function Summary
 
 .. autosummary::
 
+   apply_selection
    conservative_dataframe
    delayed_dataframe
    raw_dataframe
@@ -33,6 +34,8 @@ Reference
 
 .. autoclass:: SelectedDataFrame
    :members:
+
+.. autofunction:: apply_selection
 
 .. autofunction:: conservative_dataframe
 

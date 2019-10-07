@@ -36,6 +36,8 @@ class DataFramesInMemory:
         or ``reg2j1b``)
     skeleton : bool
         initialize class with empty dataframes, ddf is ignored if ``True``.
+    consolidate : bool
+        call the ``consolidate`` function at the end of initialization
 
     Attributes
     ----------
@@ -54,7 +56,7 @@ class DataFramesInMemory:
     >>> ttbar_files = quick_files("/path/to/data")["ttbar"]
     >>> branches = ["pT_lep1", "met", "mass_lep1jet1"]
     >>> ddf = delayed_dataframe(ttbar_files, branches=branches)
-    >>> dfim = DataFramesInMemory("ttbar", ddf)
+    >>> dfim = DataFramesInMemory(name="ttbar", ddf=ddf)
 
     Having the legwork done by other module features (see
     :py:func:`specific_dataframe`):
@@ -66,10 +68,12 @@ class DataFramesInMemory:
 
     def __init__(
         self,
+        *,
         name: str = "",
         ddf: Optional[dask.dataframe.DataFrame] = None,
-        dropnonkin: bool = True,
         skeleton: bool = False,
+        dropnonkin: bool = False,
+        consolidate: bool = False,
     ) -> DataFramesInMemory:
         if skeleton:
             self.name = name
@@ -86,6 +90,8 @@ class DataFramesInMemory:
                 nonweights += categorized["meta"]
             self._df = ddf[sorted(nonweights)].compute()
             self._weights = ddf[categorized["weights"]].compute()
+            if consolidate:
+                self.consolidate()
 
     @property
     def df(self):
@@ -96,9 +102,27 @@ class DataFramesInMemory:
         return self._weights
 
     def __repr__(self):
-        return "DataFramesInMemory(name={}, df_shape={}, weights_shape={})".format(
-            self.name, self.df.shape, self.weights.shape
-        )
+        if self.weights is not None:
+            return "DataFramesInMemory(name={}, df_shape={}, weights_shape={})".format(
+                self.name, self.df.shape, self.weights.shape
+            )
+        else:
+            return "DataFramesInMemory(name={}, df_shape={}, weights=None)".format(
+                self.name, self.df.shape
+            )
+
+    def consolidate(self) -> None:
+        """consolidate the data into a single dataframe
+
+        this will remove the weights from the separate dataframe and
+        move the data to the ``df`` attribute; the ``weights attribute
+        will be reassigned to ``None``.
+        """
+        weight_cols = list(self.weights.columns)
+        for weight_col in weight_cols:
+            log.info(f"Moving {weight_col} to the main dataframe")
+            self._df[weight_col] = self._weights.pop(weight_col)
+        self._weights = None
 
 
 @dataclass
@@ -136,6 +160,15 @@ class SelectedDataFrame:
 
         kwargs are passed to the :obj:`DataFramesInMemory` constructor
 
+        Keyword Args
+        ------------
+        consolidate : bool
+          consolidate weight columns into the main DataFrame (usually
+          they are seperate, see :py:obj:`DataFramesInMemory`)
+        dropnonkin : bool
+          drop non-kinematic columns (metadata like columns, like ``OS``,
+          ``reg2j1b``, etc.).
+
         Returns
         -------
         :obj:`DataFramesInMemory`
@@ -147,8 +180,9 @@ class SelectedDataFrame:
         >>> files = quick_files("/path/to/data")["ttbar"]
         >>> sdf = specific_dataframe(files, "2j2b", name="ttbar_2j2b")
         >>> dfim = sdf.to_ram(dropnonkin=False)
+
         """
-        return DataFramesInMemory(self.name, self.df, **kwargs)
+        return DataFramesInMemory(name=self.name, ddf=self.df, **kwargs)
 
 
 def raw_dataframe(
@@ -380,9 +414,9 @@ def specific_dataframe(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     extra_branches: Optional[List[str]] = None,
-    to_ram: bool = False,
-    to_ram_kw: Optional[Dict[str, Any]] = None,
     bypass_dask: bool = False,
+    to_ram: bool = False,
+    **kwargs,
 ) -> Union[SelectedDataFrame, DataFramesInMemory]:
     """Construct a dataframe based on specific predefined region selection
 
@@ -402,16 +436,22 @@ def specific_dataframe(
        a list of additional branches to save (the standard branches
        associated as features for the region you selected will be
        included by default).
-    to_ram : bool
-       automatically send dataset to memory via
-       :py:func:`SelectedDataFrame.to_ram`
-    to_ram_kw : dict(str, Any)
-       keywords to send to :py:func:`SelectedDataFrame.to_ram`
-       function
     bypass_dask: bool
        bypass going through a delayed dataframe, just use pandas; this
        will cause the function to return a :obj:`DataFramesInMemory`
-       instance (``to_ram`` and ``to_ram_kw`` are ignored)
+       instance (``to_ram`` will be ignored)
+    to_ram : bool
+       automatically send dataset to memory via
+       :py:func:`SelectedDataFrame.to_ram`
+
+    Keyword Args
+    ------------
+    consolidate : bool
+       consolidate weight columns into the main DataFrame (usually
+       they are seperate, see :py:obj:`DataFramesInMemory`)
+    dropnonkin : bool
+       drop non-kinematic columns (metadata like columns, like ``OS``,
+       ``reg2j1b``, etc.).
 
     Returns
     -------
@@ -434,6 +474,20 @@ def specific_dataframe(
     (i.e. ttbar samples) we should stick to dask.
 
     >>> frame_2j2b = specific_dataframe(files, "2j2b", bypass_dask=True)
+
+    Ask that the weight branches/columns are stored in the main
+    ``df`` DataFrame (not in the ``weights`` DataFrame).
+
+    >>> from tdub.frames import specific_dataframe
+    >>> dfim = specific_dataframe(ttbar_files, "2j2b", to_ram=True, consolidate=True)
+    >>> dfim.weights is None:
+    True
+
+    Or perform the consolidation independent of initialization:
+
+    >>> from tdub.frames import specific_dataframe
+    >>> dfim = specific_dataframe(ttbar_files, "2j2b", to_ram=True)
+    >>> dfim.consolidate()
 
     """
     if isinstance(region, str):
@@ -463,20 +517,22 @@ def specific_dataframe(
         raw_df = raw_dataframe(files, tree, weight_name, branches=branches)
         weight_df = pd.DataFrame(raw_df.pop(weight_name))
         sel = raw_df.eval(q)
-        dfim = DataFramesInMemory(name=name, skeleton=True)
-        kin_branches = sorted(categorize_branches(raw_df)["kin"])
-        dfim._df = raw_df[sel][kin_branches]
+        dfim = DataFramesInMemory(skeleton=True)
+        categorized = categorize_branches(raw_df)
+        use_branches, meta_branches = categorized["kin"], categorized["meta"]
+        if not kwargs.pop("dropnonkin", False):
+            use_branches += meta_branches
+        dfim._df = raw_df[sel][sorted(use_branches, key=str.lower)]
         dfim._weights = weight_df[sel]
+        if kwargs.pop("consolidate", False):
+            dfim.consolidate()
         return dfim
 
     sdf = SelectedDataFrame(
         name, q, delayed_dataframe(files, tree, weight_name, branches).query(q)
     )
     if to_ram:
-        if to_ram_kw is None:
-            return sdf.to_ram()
-        else:
-            return sdf.to_ram(**to_ram_kw)
+        return sdf.to_ram(**kwargs)
     return sdf
 
 
@@ -534,3 +590,34 @@ def stdregion_dataframes(
         use_branches,
         delayed_dataframe_kw={"repartition_kw": repart_kw, "experimental": False},
     )
+
+
+def apply_selection(
+    *, dfs: Iterable[pandas.DataFrame], selection: str
+) -> List[pandas.DataFrame]:
+    """apply a selection string to all given dataframes
+
+    Parameters
+    ----------
+    dfs : list(pandas.DataFrame)
+       the dataframes to apply the selection to
+    selection : str
+       the selection string (in :py:func:`pandas.DataFrame.eval` form)
+
+    Returns
+    -------
+    list(pandas.DataFrame)
+       the dataframes satisfying the selection string
+
+    Examples
+    --------
+    >>> from tdub.utils import quick_files
+    >>> from tdub.frames import specific_dataframe, apply_selection
+    >>> qf = quick_files("/path/to/files")
+    >>> dfim_tW_DR = specific_dataframe(qf["tW_DR"], to_ram=True)
+    >>> dfim_ttbar = specific_dataframe(qf["ttbar"], to_ram=True)
+    >>> low_bdt = "(bdt_response < 0.4)"
+    >>> selected_dfs = apply_selection(dfs=[dfim_tW_DR.df, dfim_ttbar.df], selection=low_bdt)
+
+    """
+    return [df[df.eval(selection)] for df in dfs]

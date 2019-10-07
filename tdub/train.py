@@ -75,9 +75,9 @@ def prepare_from_root(
         log.info(f"  - {f}")
 
     ## signal pretty much always be tW, no need for dask
-    sig_dfim = specific_dataframe(sig_files, region, "train_sig", bypass_dask=True)
+    sig_dfim = specific_dataframe(sig_files, region, "train_sig", bypass_dask=True, dropnonkin=True)
     ## bkg is pretty much always ttbar, so lets use daks to be careful
-    bkg_dfim = specific_dataframe(bkg_files, region, "train_bkg", to_ram=True)
+    bkg_dfim = specific_dataframe(bkg_files, region, "train_bkg", to_ram=True, dropnonkin=True)
 
     sorted_cols = sorted(sig_dfim.df.columns.to_list(), key=str.lower)
     sig_dfim._df = sig_dfim._df[sorted_cols]
