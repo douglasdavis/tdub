@@ -592,17 +592,17 @@ def stdregion_dataframes(
     )
 
 
-def apply_selection(
-    *, dfs: Iterable[pandas.DataFrame], selection: str
+def satisfying_selection(
+    *dfs: pandas.DataFrame, selection: str
 ) -> List[pandas.DataFrame]:
-    """apply a selection string to all given dataframes
+    """get subsets of dataframes that satisfy a selection
 
     Parameters
     ----------
-    dfs : list(pandas.DataFrame)
+    *dfs : sequence of :py:obj:`pandas.DataFrame`
        the dataframes to apply the selection to
     selection : str
-       the selection string (in :py:func:`pandas.DataFrame.eval` form)
+       the selection string (in :py:func:`pandas.eval` form)
 
     Returns
     -------
@@ -612,12 +612,13 @@ def apply_selection(
     Examples
     --------
     >>> from tdub.utils import quick_files
-    >>> from tdub.frames import specific_dataframe, apply_selection
+    >>> from tdub.frames import specific_dataframe, satisfying_selection
     >>> qf = quick_files("/path/to/files")
     >>> dfim_tW_DR = specific_dataframe(qf["tW_DR"], to_ram=True)
     >>> dfim_ttbar = specific_dataframe(qf["ttbar"], to_ram=True)
     >>> low_bdt = "(bdt_response < 0.4)"
-    >>> selected_dfs = apply_selection(dfs=[dfim_tW_DR.df, dfim_ttbar.df], selection=low_bdt)
+    >>> tW_DR_selected, ttbar_selected = satisfying_selection(dfim_tW_DR.df, dfim_ttbar.df,
+    ...                                                       selection=low_bdt)
 
     """
     return [df[df.eval(selection)] for df in dfs]

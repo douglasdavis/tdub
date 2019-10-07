@@ -18,10 +18,10 @@ Function Summary
 
 .. autosummary::
 
-   apply_selection
    conservative_dataframe
    delayed_dataframe
    raw_dataframe
+   satisfying_selection
    selected_dataframes
    specific_dataframe
    stdregion_dataframes
@@ -35,13 +35,13 @@ Reference
 .. autoclass:: SelectedDataFrame
    :members:
 
-.. autofunction:: apply_selection
-
 .. autofunction:: conservative_dataframe
 
 .. autofunction:: delayed_dataframe
 
 .. autofunction:: raw_dataframe
+
+.. autofunction:: satisfying_selection
 
 .. autofunction:: selected_dataframes
 
