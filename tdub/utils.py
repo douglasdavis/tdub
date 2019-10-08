@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+# stdlib
 from dataclasses import dataclass
 from glob import glob
 from pathlib import PosixPath
 import re
+import numbers
+
+# external
+import numpy as np
 import uproot
 
-import tdub.regions
+# tdub
+from .regions import FEATURESET_1j1b, FEATURESET_2j1b, FEATURESET_2j2b
 
 
 __all__ = [
@@ -14,6 +20,7 @@ __all__ = [
     "categorize_branches",
     "quick_files",
     "bin_centers",
+    "edges_and_centers",
     "get_branches",
     "conservative_branches",
 ]
@@ -237,6 +244,50 @@ def bin_centers(bin_edges: numpy.ndarray) -> numpy.ndarray:
     return (bin_edges[1:] + bin_edges[:-1]) * 0.5
 
 
+def edges_and_centers(
+    bins: Union[int, Iterable], range: Optional[Tuple[float, float]] = None
+) -> numpy.array:
+    """create arrays for edges and bin centers
+
+    Parameters
+    ----------
+    bins : int or sequence of scalers
+       the number of bins or sequence representing bin edges
+    range : tuple(float, float), optional
+       the minimum and maximum defining the bin range (used if bins is integral)
+
+    Returns
+    -------
+    :py:obj:`numpy.ndarray`
+       the bin edges
+    :py:obj:`numpy.ndarray`
+       the bin centers
+
+    Examples
+    --------
+
+    from bin multiplicity and a range
+
+    >>> from tdub.utils import edges_and_centers
+    >>> edges, centers = edges_and_centers(bins=20, range=(25, 225))
+
+    from pre-existing edges
+
+    >>> edges, centers = edges_and_centers(np.linspace(0, 10, 21))
+
+    """
+    if isinstance(bins, numbers.Integral):
+        if range is None:
+            raise ValueError("for integral bins we require non-None range")
+        edges = np.linspace(range[0], range[1], bins + 1)
+    else:
+        edges = np.asarray(bins)
+        if not np.all(edges[1:] >= edges[:-1]):
+            raise ValueError("bins edges must monotonically increase")
+    centers = bin_centers(edges)
+    return edges, centers
+
+
 def get_branches(
     file_name: str,
     tree: str = "WtLoop_nominal",
@@ -329,9 +380,9 @@ def conservative_branches(file_name: str, tree: str = "WtLoop_nominal") -> List[
 
     good_branches = set(
         {"reg1j1b", "reg2j1b", "reg2j2b", "OS"}
-        | set(tdub.regions.FEATURESET_1j1b)
-        | set(tdub.regions.FEATURESET_2j1b)
-        | set(tdub.regions.FEATURESET_2j2b)
+        | set(FEATURESET_1j1b)
+        | set(FEATURESET_2j1b)
+        | set(FEATURESET_2j2b)
     )
     good_branches = bs & good_branches
 

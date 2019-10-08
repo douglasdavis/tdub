@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+# stdlib
 from dataclasses import dataclass
 
+# external
 import numpy as np
 import matplotlib.pyplot as plt
 import pygram11
 
+# tdub
 from ._art import setup_style
-from .utils import bin_centers
+from .utils import edges_and_centers
 
 
 def draw_rocs(
@@ -85,9 +88,9 @@ def draw_stack(
     mc_dfs: Iterable[pandas.DataFrame],
     distribution: str,
     bins: int,
-    range: Tuple[float, float],
+    range: Optional[Tuple[float, float]] = None,
     weight_name: str = "weight_nominal",
-    colors: Optional[Iterable[str]] = None,
+    colors: Optional[Iterable[Any]] = None,
     mc_labels: Optional[Iterable[str]] = None,
     lumi: float = 139.0,
     legend_ncol: int = 2,
@@ -107,13 +110,13 @@ def draw_stack(
        the list of MC dataframes
     distribution: str
        the variable to histogram
-    bins : int
-       the number of bins
-    range : tuple(float, float)
-       the range to histogram the distribution
+    bins : int or sequence of scalars
+       the number of bins or sequence representing bin edges
+    range : tuple(float, float), optional
+       the range to histogram the distribution (used for integral bins)
     weight_name : str
        the name of the weight column
-    colors : list(str), optional
+    colors : list(Any), optional
        the colors for the Monte Carlo histograms
     mc_labels : list(str)
        the list of labels for the legend
@@ -133,10 +136,26 @@ def draw_stack(
     :py:obj:`matplotlib.axes.Axes`
        the axis object which has the ratio plot
 
-    """
-    edges = np.linspace(range[0], range[1], bins + 1)
-    centers = bin_centers(edges)
+    Examples
+    --------
 
+    >>> mc_dfs= get_mc_dataframes()    # fake function
+    >>> data_df = get_data_dataframe() # fake function
+    >>> colors = reversed(["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"])
+    >>> mc_labels = mc_labels = reversed(["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"])
+    >>> fig, ax, axr = draw_stacks(data_df=data_df,
+    ...     data_df=datadf,
+    ...     mc_dfs=mc_dfs,
+    ...     colors=colors,
+    ...     mc_labels=mc_labels,
+    ...     dist="mass_lep1jet2",
+    ...     bins=25,
+    ...     range=(0, 250.0),
+    ... )
+    >>> fig.savefig("mass_lep1jet2.pdf")
+    >>> plt.close(fig)
+
+    """
     data_count, __ = pygram11.histogram(
         data_df[distribution].to_numpy(), bins=bins, range=range, flow=True
     )
@@ -163,6 +182,7 @@ def draw_stack(
         mc_labels = ["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"]
         mc_labels.reverse()
 
+    edges, centers = edges_and_centers(bins, range=range)
     setup_style()
     fig, (ax, axr) = plt.subplots(
         2,
@@ -192,7 +212,7 @@ def draw_stack(
     ax.legend(handles, labels, loc="upper right", ncol=legend_ncol)
 
     axr.errorbar(centers, ratio, yerr=ratio_err, fmt="ko", zorder=999)
-    axr.plot([range[0], range[1]], [1, 1], color="gray", linestyle="solid", marker=None)
+    axr.plot([edges[0], edges[-1]], [1, 1], color="gray", linestyle="solid", marker=None)
     axr.set_ylim([0.8, 1.2])
     axr.set_yticks([0.9, 1.0, 1.1])
     axr.autoscale(enable=True, axis="x", tight=True)
