@@ -179,9 +179,9 @@ def draw_stack(
     if colors is None:
         colors = ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]
         colors.reverse()
-    if mc_labels is None:
-        mc_labels = ["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"]
-        mc_labels.reverse()
+    if labels is None:
+        labels = ["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"]
+        labels.reverse()
 
     edges, centers = edges_and_centers(bins, range=range)
     setup_style()
@@ -194,11 +194,11 @@ def draw_stack(
     )
 
     ax.hist(
-        [centers for _ in mc_labels],
+        [centers for _ in labels],
         weights=mc_counts,
         bins=edges,
         histtype="stepfilled",
-        label=mc_labels,
+        label=labels,
         color=colors,
         stacked=True,
     )
