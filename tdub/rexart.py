@@ -15,12 +15,9 @@ import matplotlib.pyplot as plt
 
 import tdub.utils
 
-from ._art import setup_style
-
+from ._art import setup_style, draw_atlas_label, var_to_axis_meta
 
 log = logging.getLogger(__name__)
-
-
 
 
 @dataclass
@@ -199,25 +196,6 @@ class TRExHistogram:
         return np.allclose(diffs, diffs[0])
 
 
-@dataclass
-class RegionMeta:
-    """A class to hold information about a TRExFitter region
-
-    Attributes
-    ----------
-    title: str
-       the region title
-    unit: str
-       the unit for the distribution histogrammed as that region
-    logy: bool
-       for plotting with a log scale on the y-axis.
-    """
-
-    title: str = ""
-    unit: str = ""
-    logy: bool = False
-
-
 def _get_plot_samples() -> List[Sample]:
     plot_samples = [
         Sample(name="tW", signature="tW", color="#1f77b4", tex="$tW$"),
@@ -230,39 +208,7 @@ def _get_plot_samples() -> List[Sample]:
     return plot_samples
 
 
-# fmt: off
-_region_meta = {
-    "bdt_response": RegionMeta("Classifier Response", ""),
-    "cent_lep1lep2": RegionMeta("Centrality($\\ell_1\\ell_2$)", ""),
-    "mT_lep2met": RegionMeta("$m_{\\mathrm{T}}(\\ell_2E_\\mathrm{T}^{\\mathrm{miss}})$", "GeV"),
-    "nloosejets": RegionMeta("$N_j^{\\mathrm{soft}}$", "", True),
-    "nloosebjets": RegionMeta("$N_b^{\\mathrm{soft}}$", "", True),
-    "deltapT_lep1_jet1": RegionMeta("$\\Delta p_{\\mathrm{T}}(\\ell_1, j_1)$", "GeV"),
-    "mass_lep2jet1": RegionMeta("$m_{\\ell_2 j_1}$", "GeV"),
-    "mass_lep1jet2": RegionMeta("$m_{\\ell_1 j_2}$", "GeV"),
-    "mass_lep1jet1": RegionMeta("$m_{\\ell_1 j_1}$", "GeV"),
-    "mass_lep2jet2": RegionMeta("$m_{\\ell_2 j_2}$", "GeV"),
-    "psuedoContTagBin_jet2": RegionMeta("$b$-tag bin ($j_2$)", ""),
-    "psuedoContTagBin_jet1": RegionMeta("$b$-tag bin ($j_1$)", ""),
-    "pTsys_lep1lep2jet1": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2 j_1)$", "GeV"),
-    "pTsys_lep1lep2jet1jet2met": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2 j_1 j_2 E_{\\mathrm{T}}^{\\mathrm{miss}})$", "GeV"),
-    "pTsys_lep1lep2jet1met": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2 j_1 E_{\\mathrm{T}}^{\\mathrm{miss}})$", "GeV"),
-    "pTsys_lep1lep2": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2)$", "GeV"),
-    "pTsys_lep1lep2met": RegionMeta("$p_{\\mathrm{T}}^{\\mathrm{sys}}(\\ell_1\\ell_2 E_{\\mathrm{T}}^{\\mathrm{miss}})$", "GeV"),
-    "deltaR_lep2_jet1": RegionMeta("$\\Delta R(\\ell_2, j_1)$", ""),
-    "deltaR_lep1_jet1": RegionMeta("$\\Delta R(\\ell_1, j_1)$", ""),
-    "deltaR_lep1_lep2": RegionMeta("$\\Delta R(\\ell_1, \\ell_2)$", ""),
-    "pT_lep1": RegionMeta("$p_{\\mathrm{T}}(\\ell_1)$", "GeV"),
-    "pT_lep2": RegionMeta("$p_{\\mathrm{T}}(\\ell_2)$", "GeV"),
-    "pT_jet1": RegionMeta("$p_{\\mathrm{T}}(j_1)$", "GeV"),
-    "pT_jet2": RegionMeta("$p_{\\mathrm{T}}(j_2)$", "GeV"),
-    "eta_lep1": RegionMeta("$\\eta(\\ell_1)$", ""),
-    "eta_lep2": RegionMeta("$\\eta(\\ell_2)$", ""),
-    "eta_jet1": RegionMeta("$\\eta(j_1)$", ""),
-    "eta_jet2": RegionMeta("$\\eta(j_2)$", ""),
-    "met": RegionMeta("$E_{\\mathrm{T}}^{\\mathrm{miss}}$", "GeV"),
-}
-# fmt: on
+_region_meta = var_to_axis_meta()
 
 
 def draw_ratio_with_line(
@@ -284,32 +230,6 @@ def draw_ratio_with_line(
     ax.set_ylabel("Data / MC")
     if autoxscale:
         ax.autoscale(enable=True, axis="x", tight=True)
-
-
-def draw_atlas_label(
-    ax: matplotlib.axes.Axis,
-    internal: bool = True,
-    extra_lines: Optional[List[str]] = None,
-    x: float = 0.050,
-    y: float = 0.905,
-    s1: int = 14,
-    s2: int = 12,
-) -> None:
-    """ draw the ATLAS label on the plot, with extra lines if desired """
-    ax.text(
-        x,
-        y,
-        "ATLAS",
-        fontstyle="italic",
-        fontweight="bold",
-        transform=ax.transAxes,
-        size=s1,
-    )
-    if internal:
-        ax.text(x + 0.15, y, r"Internal", transform=ax.transAxes, size=s1)
-    if extra_lines is not None:
-        for i, exline in enumerate(extra_lines):
-            ax.text(x, y - (i + 1) * 0.06, exline, transform=ax.transAxes, size=s2)
 
 
 def set_labels(ax: matplotlib.axes.Axes, histogram: TRExHistogram) -> None:

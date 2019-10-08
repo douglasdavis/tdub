@@ -17,7 +17,6 @@ Class Summary
    NuisPar
    Template
    TRExHistogram
-   RegionMeta
 
 Function Summary
 ^^^^^^^^^^^^^^^^
@@ -40,9 +39,6 @@ Reference
    :members:
 
 .. autoclass:: TRExHistogram
-   :members:
-
-.. autoclass:: RegionMeta
    :members:
 
 .. autofunction:: run_stacks

@@ -144,7 +144,7 @@ def cli():
     log = logging.getLogger("tdub.cli")
 
     # fmt: off
-    if args.action == "rex-tacks":
+    if args.action == "rex-stacks":
         from tdub.rexart import run_stacks
         return run_stacks(args)
     elif args.action == "rex-pulls":
