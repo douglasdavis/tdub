@@ -138,8 +138,10 @@ def draw_stack(
     Examples
     --------
 
-    >>> mc_dfs= get_mc_dataframes()    # fake function
-    >>> data_df = get_data_dataframe() # fake function
+    >>> import matplotlib.pyplot as plt
+    >>> from tdub.rawart import draw_stack
+    >>> mc_dfs = get_mc_dataframes()   # some user defined function
+    >>> data_df = get_data_dataframe() # some user defined function
     >>> colors = list(reversed(["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]))
     >>> mc_labels = list(reversed(["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"]))
     >>> fig, ax, axr = draw_stacks(data_df=data_df,
