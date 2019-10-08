@@ -85,22 +85,18 @@ def draw_rocs(
 def draw_stack(
     *,
     data_df: pandas.DataFrame,
-    mc_dfs: Iterable[pandas.DataFrame],
+    mc_dfs: List[pandas.DataFrame],
     distribution: str,
-    bins: int,
-    range: Optional[Tuple[float, float]] = None,
     weight_name: str = "weight_nominal",
+    bins: Union[int, Sequence[numbers.Real]] = 10,
+    range: Optional[Tuple[float, float]] = None,
     colors: Optional[Iterable[Any]] = None,
     mc_labels: Optional[Iterable[str]] = None,
     lumi: float = 139.0,
     legend_ncol: int = 2,
     y_scalefac: float = 1.35,
-    ax: Optional[matplotlib.axes.Axes] = None,
 ) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes, matplotlib.axes.Axes]:
-    """draw a standard histogram stack for some distribution and selection
-
-    create the stacked distribution of a particular variable after
-    applying a selection to all data and MC.
+    """using some dataframes, draw the stacked histograms for some distribution
 
     Parameters
     ----------
@@ -110,16 +106,19 @@ def draw_stack(
        the list of MC dataframes
     distribution: str
        the variable to histogram
+    weight_name : str
+       the name of the weight column
     bins : int or sequence of scalars
        the number of bins or sequence representing bin edges
     range : tuple(float, float), optional
-       the range to histogram the distribution (used for integral bins)
-    weight_name : str
-       the name of the weight column
+       the range to histogram the distribution (used for integral
+       bins, ignored if ``bins`` is a sequence).
     colors : list(Any), optional
-       the colors for the Monte Carlo histograms
-    mc_labels : list(str)
-       the list of labels for the legend
+       the colors for the Monte Carlo histograms, ``None`` defaults to
+       the normal colors associated with our standard samples
+    mc_labels : list(str), optional
+       the list of labels for the legend. ``None`` default sto the the
+       normal labels associated with out standard samples
     lumi : float
        the luminosity for the data (to scale the MC)
     legend_ncol : int
@@ -141,14 +140,14 @@ def draw_stack(
 
     >>> mc_dfs= get_mc_dataframes()    # fake function
     >>> data_df = get_data_dataframe() # fake function
-    >>> colors = reversed(["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"])
-    >>> mc_labels = mc_labels = reversed(["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"])
+    >>> colors = list(reversed(["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]))
+    >>> mc_labels = list(reversed(["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"]))
     >>> fig, ax, axr = draw_stacks(data_df=data_df,
     ...     data_df=datadf,
     ...     mc_dfs=mc_dfs,
     ...     colors=colors,
     ...     mc_labels=mc_labels,
-    ...     dist="mass_lep1jet2",
+    ...     distribution="mass_lep1jet2",
     ...     bins=25,
     ...     range=(0, 250.0),
     ... )
@@ -217,4 +216,4 @@ def draw_stack(
     axr.set_yticks([0.9, 1.0, 1.1])
     axr.autoscale(enable=True, axis="x", tight=True)
 
-    return ax.figure, ax, axr
+    return fig, ax, axr
