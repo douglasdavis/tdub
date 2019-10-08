@@ -91,7 +91,7 @@ def draw_stack(
     bins: Union[int, Sequence[numbers.Real]] = 10,
     range: Optional[Tuple[float, float]] = None,
     colors: Optional[Iterable[Any]] = None,
-    mc_labels: Optional[Iterable[str]] = None,
+    labels: Optional[Iterable[str]] = None,
     lumi: float = 139.0,
     legend_ncol: int = 2,
     y_scalefac: float = 1.35,
@@ -116,7 +116,7 @@ def draw_stack(
     colors : list(Any), optional
        the colors for the Monte Carlo histograms, ``None`` defaults to
        the normal colors associated with our standard samples
-    mc_labels : list(str), optional
+    labels : list(str), optional
        the list of labels for the legend. ``None`` default sto the the
        normal labels associated with out standard samples
     lumi : float
@@ -140,15 +140,15 @@ def draw_stack(
 
     >>> import matplotlib.pyplot as plt
     >>> from tdub.rawart import draw_stack
-    >>> mc_dfs = get_mc_dataframes()   # some user defined function
-    >>> data_df = get_data_dataframe() # some user defined function
+    >>> mc_dfs = get_mc_dataframes()   # some user defined function returning a list of dataframes
+    >>> data_df = get_data_dataframe() # some user defined function returning a single dataframe
     >>> colors = list(reversed(["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]))
-    >>> mc_labels = list(reversed(["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"]))
-    >>> fig, ax, axr = draw_stacks(data_df=data_df,
+    >>> labels = list(reversed(["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"]))
+    >>> fig, ax, axr = draw_stacks(
     ...     data_df=datadf,
     ...     mc_dfs=mc_dfs,
+    ...     labels=labels,
     ...     colors=colors,
-    ...     mc_labels=mc_labels,
     ...     distribution="mass_lep1jet2",
     ...     bins=25,
     ...     range=(0, 250.0),
