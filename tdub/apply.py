@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 class FoldedResult:
-    """A class to hold the output from a folded training result
+    """Provides access to the properties of a folded training result
 
     Parameters
     ----------
@@ -46,6 +46,12 @@ class FoldedResult:
        the folding object that the training session used
     summary : dict(str, Any)
        the contents of the ``summary.json`` file.
+
+    Examples
+    --------
+
+    >>> from tdub.apply import FoldedResult
+    >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
 
     """
 
@@ -109,6 +115,12 @@ class FoldedResult:
         numpy.ndarray
           the classifier output for the region associated with ``fr``
 
+        Examples
+        --------
+        >>> from tdub.apply import FoldedResult
+        >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
+        >>> y = fr_1j1b.to_files(["/path/to/file1.root", "/path/to/file2.root"])
+
         """
         dfim = specific_dataframe(files, self.region, tree=tree, to_ram=True)
         dfim._df = dfim.df[self.features]
@@ -122,7 +134,10 @@ class FoldedResult:
         return y
 
     def to_dataframe(
-        self, df: pandas.DataFrame, column_name: str = "bdt_response", query: bool = False
+        self,
+        df: pandas.DataFrame,
+        column_name: str = "unnamed_bdt_response",
+        query: bool = False,
     ) -> None:
         """apply trained models to an arbitrary dataframe.
 
@@ -141,6 +156,15 @@ class FoldedResult:
            perform a query on the dataframe to select events belonging to
            the region associated with ``fr`` necessary if the dataframe
            hasn't been pre-filtered
+
+        Examples
+        --------
+
+        >>> from tdub.apply import FoldedResult
+        >>> from tdub.frames import conservative_dataframe
+        >>> df = conservative_dataframe("/path/to/file.root")
+        >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
+        >>> fr_1j1b.to_dataframe(df, query=True)
 
         """
         if df.shape[0] == 0:
@@ -173,9 +197,7 @@ class FoldedResult:
 
 
 def generate_npy(
-    frs: List[FoldedResult],
-    df: pandas.DataFrame,
-    output_file: Union[str, os.PathLike],
+    frs: List[FoldedResult], df: pandas.DataFrame, output_file: Union[str, os.PathLike]
 ) -> None:
     """create a NumPy npy file which is the response for all events in a DataFrame
 
@@ -193,6 +215,17 @@ def generate_npy(
        the dataframe of events to get the responses for
     output_file : str or os.PathLike
        name of the output NumPy file
+
+    Examples
+    --------
+
+    >>> from tdub.apply import FoldedResult, generate_npy
+    >>> from tdub.frames import conservative_dataframe
+    >>> df = conservative_dataframe("/path/to/file.root")
+    >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
+    >>> fr_2j1b = FoldedResult("/path/to/folded_training_2j1b")
+    >>> fr_2j2b = FoldedResult("/path/to/folded_training_2j2b")
+    >>> generate_npy([fr_1j1b, fr_2j1b, fr_2j2b], df, "output.npy")
 
     """
 
