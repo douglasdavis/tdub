@@ -7,18 +7,20 @@
 
 ---
 
-`tdub` is a Python project for handling some mid- and down-stream
-steps in the ATLAS Run 2 tW inclusive cross section analysis. The
-project provides a simple command line interface for performing
-standard analysis tasks including:
+`tdub` is a Python project for handling some downstsream steps in the
+ATLAS Run 2 tW inclusive cross section analysis. The project provides
+a simple command line interface for performing standard analysis tasks
+including:
 
-- generating plots from the output of
-  [`TRExFitter`](https://gitlab.cern.ch/TRExStats/TRExFitter/).
 - BDT hyperparameter optimization.
 - training BDT models on our Monte Carlo.
 - applying trained BDT models to our data and Monte Carlo.
+- generating plots from various raw sources (our ROOT files and
+  classifier training output).
+- generating plots from the output of
+  [`TRExFitter`](https://gitlab.cern.ch/TRExStats/TRExFitter/).
 
 For potentially finer-grained tasks the API is fully documented. The
-API mainly provides quick and easy access to Pythonic representations
+API mainly provides quick and easy access to pythonic representations
 (i.e. dataframes or NumPy arrays) of our datasets (which of course
 originate from [ROOT](https://root.cern/) files).
