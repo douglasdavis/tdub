@@ -1,9 +1,9 @@
-tdub.rawart
------------
+tdub.raw_art
+------------
 
 A module for producing art from raw information (i.e. not TRExFitter).
 
-.. currentmodule:: tdub.rawart
+.. currentmodule:: tdub.raw_art
 
 Function Summary
 ^^^^^^^^^^^^^^^^

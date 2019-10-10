@@ -14,8 +14,7 @@ import dask.dataframe as dd
 import pandas as pd
 
 from tdub.utils import categorize_branches, conservative_branches
-from tdub.regions import SELECTIONS, FEATURESETS
-from tdub.regions import Region
+from tdub.utils import Region, SELECTIONS, FEATURESETS
 
 
 log = logging.getLogger(__name__)
@@ -52,7 +51,8 @@ class DataFramesInMemory:
     --------
     Manually constructing in memory dataframes from a dask dataframe:
 
-    >>> from tdub.frames import DataFramesInMemory, delayed_dataframe, quick_files
+    >>> from tdub.utils import quick_files
+    >>> from tdub.frames import DataFramesInMemory, delayed_dataframe
     >>> ttbar_files = quick_files("/path/to/data")["ttbar"]
     >>> branches = ["pT_lep1", "met", "mass_lep1jet1"]
     >>> ddf = delayed_dataframe(ttbar_files, branches=branches)
@@ -176,7 +176,9 @@ class SelectedDataFrame:
 
         Examples
         --------
-        >>> from tdub.frames import specific_dataframe, quick_files
+
+        >>> from tdub.utils import quick_files
+        >>> from tdub.frames import specific_dataframe
         >>> files = quick_files("/path/to/data")["ttbar"]
         >>> sdf = specific_dataframe(files, "2j2b", name="ttbar_2j2b")
         >>> dfim = sdf.to_ram(dropnonkin=False)
@@ -222,8 +224,8 @@ def raw_dataframe(
     Examples
     --------
 
-    >>> from tdub.frames import raw_dataframe
     >>> from tdub.utils import quick_files
+    >>> from tdub.frames import raw_dataframe
     >>> files = quick_files("/path/to/files")["ttbar"]
     >>> df = raw_dataframe(files)
 
@@ -268,8 +270,8 @@ def conservative_dataframe(
     Examples
     --------
 
-    >>> from tdub.frames import conservative_dataframe
     >>> from tdub.utils import quick_files
+    >>> from tdub.frames import conservative_dataframe
     >>> files = quick_files("/path/to/files")["ttbar"]
     >>> df = conservative_dataframe(files)
 
@@ -320,8 +322,8 @@ def delayed_dataframe(
     Examples
     --------
 
-    >>> from tdub.frames import delayed_dataframe
     >>> from tdub.utils import quick_files
+    >>> from tdub.frames import delayed_dataframe
     >>> files = quick_files("/path/to/files")["tW_DR"]
     >>> ddf = delayed_dataframe(files, branches=["branch_a", "branch_b"])
 
@@ -389,8 +391,8 @@ def selected_dataframes(
     Examples
     --------
 
-    >>> from tdub.frames import selected_dataframes
     >>> from tdub.utils import quick_files
+    >>> from tdub.frames import selected_dataframes
     >>> files = quick_files("/path/to/files")["tW_DS"]
     >>> selections = {"r2j2b": "(reg2j2b == True) & (OS == True)",
     ...               "r2j1b": "(reg2j1b == True) & (OS == True)"}
@@ -424,7 +426,7 @@ def specific_dataframe(
     ----------
     files : list(str) or str
        a single ROOT file or list of ROOT files
-    region : tdub.regions.Region or str
+    region : tdub.utils.Region or str
        which predefined tW region to select
     name : str
        give your selection a name
@@ -463,8 +465,8 @@ def specific_dataframe(
     Examples
     --------
 
-    >>> from tdub.frames import specific_dataframe
     >>> from tdub.utils import quick_files
+    >>> from tdub.frames import specific_dataframe
     >>> files = quick_files("/path/to/files")["ttbar"]
     >>> frame_2j1b = specific_dataframe(files, Region.r2j1b, extra_branches=["pT_lep1"])
     >>> frame_2j2b = specific_dataframe(files, "2j2b", extra_branches=["met"])
@@ -495,7 +497,7 @@ def specific_dataframe(
     elif isinstance(region, Region):
         reg = region
     else:
-        raise TypeError("region argument must be tdub.regions.Region or str")
+        raise TypeError("region argument must be tdub.utils.Region or str")
     if extra_branches is None:
         extra_branches = []
     if reg == Region.r1j1b:
@@ -566,8 +568,9 @@ def stdregion_dataframes(
 
     Examples
     --------
-    >>> from tdub.frames import stdregion_dataframes
+
     >>> from tdub.utils import quick_files
+    >>> from tdub.frames import stdregion_dataframes
     >>> files = quick_files("/path/to/files")["tW_DR"]
     >>> standard_regions = stdregion_dataframes(files)
 

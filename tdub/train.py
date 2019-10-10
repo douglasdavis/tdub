@@ -16,8 +16,7 @@ from scipy import interp
 import pygram11
 
 from tdub.frames import specific_dataframe
-from tdub.regions import Region
-from tdub.utils import quick_files, bin_centers
+from tdub.utils import Region, quick_files, bin_centers
 
 
 log = logging.getLogger(__name__)
@@ -511,7 +510,7 @@ def gp_minimize_auc(
     Examples
     --------
 
-    >>> from tdub.regions import Region
+    >>> from tdub.utils import Region
     >>> from tdub.train import prepare_from_root, gp_minimize_auc
     >>> gp_minimize_auc(Region.r2j1b, "DS", "/path/to/data", "opt_DS_2j1b")
     >>> gp_minimize_auc(Region.r2j1b, "DR", "/path/to/data", "opt_DR_2j1b")

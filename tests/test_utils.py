@@ -84,3 +84,17 @@ def test_categorize_branches():
     assert cb["meta"] == sorted(["OS", "reg1j1b", "reg2j2b", "elmu"], key=str.lower)
     assert cb["kin"] == sorted(["pT_lep1", "pT_lep2"], key=str.lower)
     assert cb["weights"] == sorted(["weight_nominal", "weight_sys_jvt"], key=str.lower)
+
+
+def test_Region_from_str():
+    assert Region.from_str("2j2b") == Region.r2j2b
+    assert Region.from_str("1j1b") == Region.r1j1b
+    assert Region.from_str("2j1b") == Region.r2j1b
+
+    assert Region.from_str("r2j2b") == Region.r2j2b
+    assert Region.from_str("r1j1b") == Region.r1j1b
+    assert Region.from_str("r2j1b") == Region.r2j1b
+
+    assert Region.from_str("reg2j2b") == Region.r2j2b
+    assert Region.from_str("reg1j1b") == Region.r1j1b
+    assert Region.from_str("reg2j1b") == Region.r2j1b

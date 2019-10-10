@@ -48,7 +48,7 @@ def draw_rocs(
     --------
 
     >>> from tdub.apply import FoldedResult
-    >>> from tdub.rawart import draw_rocs
+    >>> from tdub.raw_art import draw_rocs
     >>> fr_1j1b = FoldedResult("/path/to/train_1j1b")
     >>> fr_2j1b = FoldedResult("/path/to/train_2j1b")
     >>> fr_2j2b = FoldedResult("/path/to/train_2j2b")
@@ -139,7 +139,7 @@ def draw_stack(
     --------
 
     >>> import matplotlib.pyplot as plt
-    >>> from tdub.rawart import draw_stack
+    >>> from tdub.raw_art import draw_stack
     >>> mc_dfs = get_mc_dataframes()   # some user defined function returning a list of dataframes
     >>> data_df = get_data_dataframe() # some user defined function returning a single dataframe
     >>> colors = list(reversed(["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]))

@@ -15,7 +15,7 @@ import joblib
 from lightgbm import LGBMClassifier
 from sklearn.model_selection import KFold
 
-from tdub.regions import Region, SELECTIONS
+from tdub.utils import Region, SELECTIONS
 from tdub.frames import specific_dataframe
 
 

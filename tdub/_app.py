@@ -145,10 +145,10 @@ def cli():
 
     # fmt: off
     if args.action == "rex-stacks":
-        from tdub.rexart import run_stacks
+        from tdub.rex_art import run_stacks
         return run_stacks(args)
     elif args.action == "rex-pulls":
-        from tdub.rexart import run_pulls
+        from tdub.rex_art import run_pulls
         return run_pulls(args)
     elif args.action == "train-optimize":
         return _optimize(args)
