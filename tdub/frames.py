@@ -595,9 +595,7 @@ def stdregion_dataframes(
     )
 
 
-def satisfying_selection(
-    *dfs: pandas.DataFrame, selection: str
-) -> List[pandas.DataFrame]:
+def satisfying_selection(*dfs: pandas.DataFrame, selection: str) -> List[pandas.DataFrame]:
     """get subsets of dataframes that satisfy a selection
 
     Parameters

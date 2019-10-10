@@ -140,8 +140,8 @@ def draw_stack(
 
     >>> import matplotlib.pyplot as plt
     >>> from tdub.raw_art import draw_stack
-    >>> mc_dfs = get_mc_dataframes()   # some user defined function returning a list of dataframes
-    >>> data_df = get_data_dataframe() # some user defined function returning a single dataframe
+    >>> mc_dfs = get_mc_dataframes()   # user defined function returns a list of dataframes
+    >>> data_df = get_data_dataframe() # user defined function returns a single dataframe
     >>> colors = list(reversed(["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]))
     >>> labels = list(reversed(["$tW$", "$t\\bar{t}$", "Diboson", "$Z+$jets", "MCNP"]))
     >>> fig, ax, axr = draw_stacks(
