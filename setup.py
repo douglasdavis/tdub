@@ -21,7 +21,7 @@ def get_version():
 
 setup(
     name="tdub",
-    version = get_version(),
+    version=get_version(),
     scripts=[],
     packages=find_packages(exclude=["tests"]),
     entry_points={"console_scripts": ["tdub = tdub._app:cli"]},
