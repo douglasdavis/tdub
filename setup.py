@@ -1,32 +1,28 @@
 from setuptools import setup
 from setuptools import find_packages
 import os
+import pathlib
 
 
-with open("requirements.txt") as f:
+with pathlib.PosixPath("requirements.txt").open("r") as f:
     requirements = f.read().splitlines()
 
+with pathlib.PosixPath("README.md").open("r") as f:
+    readme = f.read()
 
-this_directory = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(this_directory, "README.md"), "rb") as f:
-    long_description = f.read().decode("utf-8")
-
-
-def get_version():
-    with open(os.path.join("tdub", "__init__.py"), "r") as f:
-        for line in f.readlines():
-            if "__version__ = " in line:
-                return line.strip().split(" = ")[-1][1:-1]
-
+with pathlib.PosixPath("tdub/__init__.py").open("r") as f:
+    for line in f.readlines():
+        if "__version__ = " in line:
+            version = line.strip().split(" = ")[-1][1:-1]
 
 setup(
     name="tdub",
-    version=get_version(),
+    version=version,
     scripts=[],
     packages=find_packages(exclude=["tests"]),
     entry_points={"console_scripts": ["tdub = tdub._app:cli"]},
     description="tdub is tee double-you",
-    long_description=long_description,
+    long_description=readme,
     long_description_content_type="text/markdown",
     author="Doug Davis",
     author_email="ddavis@ddavis.io",
