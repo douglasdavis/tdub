@@ -21,7 +21,7 @@ setup(
     scripts=[],
     packages=find_packages(exclude=["tests"]),
     entry_points={"console_scripts": ["tdub = tdub._app:cli"]},
-    description="tdub is tee double-you",
+    description="tW analysis tools",
     long_description=readme,
     long_description_content_type="text/markdown",
     author="Doug Davis",
