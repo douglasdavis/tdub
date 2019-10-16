@@ -85,6 +85,20 @@ def test_categorize_branches():
     assert cb["kin"] == sorted(["pT_lep1", "pT_lep2"], key=str.lower)
     assert cb["weights"] == sorted(["weight_nominal", "weight_sys_jvt"], key=str.lower)
 
+    cb = categorize_branches("tests/test_data/testfile1.root")
+    assert "reg2j1b" in cb["meta"]
+    assert "pT_lep1" not in cb["meta"]
+    assert "pT_lep1" not in cb["weights"]
+    assert "pT_lep2" in cb["kin"]
+
+    from pathlib import PosixPath
+
+    cb = categorize_branches(PosixPath("tests/test_data/testfile2.root"))
+    assert "reg2j1b" in cb["meta"]
+    assert "pT_lep1" not in cb["meta"]
+    assert "pT_lep1" not in cb["weights"]
+    assert "pT_lep2" in cb["kin"]
+
 
 def test_Region_from_str():
     assert Region.from_str("2j2b") == Region.r2j2b

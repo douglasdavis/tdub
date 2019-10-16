@@ -7,6 +7,7 @@ from glob import glob
 from pathlib import PosixPath
 import numbers
 import re
+import os
 
 # external
 import numpy as np
@@ -42,11 +43,11 @@ class Region(Enum):
     Attributes
     ----------
     r1j1b
-        Our ``1j1b`` region
+       Our ``1j1b`` region
     r1j1b
-        Our ``2j1b`` region
+       Our ``2j1b`` region
     r2j1b = 1
-        Our ``2j2b`` region
+       Our ``2j2b`` region
 
     Examples
     --------
@@ -178,7 +179,10 @@ class SampleInfo:
             self.tree = m.group("tree")
 
 
-def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
+def categorize_branches(
+    source: Union[Union[str, os.PathLike], Iterable[str]],
+    tree: Optional[str] = "WtLoop_nominal",
+) -> Dict[str, List[str]]:
     """categorize branches into a separate lists
 
     The categories:
@@ -189,8 +193,13 @@ def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
 
     Parameters
     ----------
-    branches : Iterable(str)
-       whole set of branches (columns from dataframes)
+    source : os.PathLike or str or Iterable(str)
+       if iterable of strings, use that as list of branches, if
+       os.PathLike, tuple then get branches from ROOT file given a
+       tree name.
+    tree : str, optional
+       the tree name in the file if ``source`` is os.PathLike; this is
+       ignored if ``source`` is an iterable of strings.
 
     Returns
     -------
@@ -199,6 +208,7 @@ def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
 
     Examples
     --------
+
     >>> from tdub.utils import categorize_branches
     >>> branches = ["pT_lep1", "pT_lep2", "weight_nominal", "weight_sys_jvt", "reg2j2b"]
     >>> cated = categorize_branches(branches)
@@ -208,6 +218,12 @@ def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
     ['reg2j2b']
     >>> cated["kin"]
     ['pT_lep1', 'pT_lep2']
+
+    Using the file name
+
+    >>> cbed = categorize_branches("/path/to/file.root")
+    >>> root_file = PosixPath("/path/to/file.root")
+    >>> cbed = categorized_branches(root_file)
 
     """
     metas = {
@@ -221,11 +237,19 @@ def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
         "elmu",
         "elel",
         "mumu",
+        "charge_lep1",
+        "charge_lep2",
+        "pdgId_lep1",
+        "pdgId_lep2",
         "runNumber",
         "randomRunNumber",
         "eventNumber",
     }
-    bset = set(branches)
+
+    if isinstance(source, str) or isinstance(source, os.PathLike):
+        bset = set(get_branches(source, tree=tree))
+    else:
+        bset = set(source)
     weight_re = re.compile(r"(^weight_\w+)|(\w+_weight$)")
     weights = set(filter(weight_re.match, bset))
     metas = metas & set(bset)
@@ -237,7 +261,7 @@ def categorize_branches(branches: Iterable[str]) -> Dict[str, List[str]]:
     }
 
 
-def quick_files(datapath: str) -> Dict[str, List[str]]:
+def quick_files(datapath: Union[str, os.PathLike]) -> Dict[str, List[str]]:
     """get a dictionary of ``{sample_str : file_list}`` for quick file access.
 
     The lists of files are sorted alphabetically. These types of
@@ -253,13 +277,13 @@ def quick_files(datapath: str) -> Dict[str, List[str]]:
 
     Parameters
     ----------
-    datapath : str
-        path where all of the ROOT files live
+    datapath : str or os.PathLike
+       path where all of the ROOT files live
 
     Returns
     -------
     dict(str, list(str))
-        dictionary for quick file access
+       dictionary for quick file access
 
     Examples
     --------
@@ -365,7 +389,7 @@ def edges_and_centers(
 
 
 def get_branches(
-    file_name: str,
+    file_name: Union[str, os.PathLike],
     tree: str = "WtLoop_nominal",
     ignore_weights: bool = False,
     sort: bool = False,
@@ -374,7 +398,7 @@ def get_branches(
 
     Parameters
     ----------
-    file_name : str
+    file_name : str or os.PathLike
        the ROOT file name
     tree : str
        the ROOT tree name
@@ -414,7 +438,9 @@ def get_branches(
     return list(set(bs) ^ weights)
 
 
-def conservative_branches(file_name: str, tree: str = "WtLoop_nominal") -> List[str]:
+def conservative_branches(
+    file_name: Union[str, os.PathLike], tree: str = "WtLoop_nominal"
+) -> List[str]:
     """get branches in a ROOT file that form a conservative minimum
 
     we define "conservative minimum" as the branches necessary for
@@ -424,7 +450,7 @@ def conservative_branches(file_name: str, tree: str = "WtLoop_nominal") -> List[
 
     Parameters
     ----------
-    file_name : str
+    file_name : str or os.PathLike
        the ROOT file name
     tree : str
        the ROOT tree name
