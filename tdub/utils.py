@@ -195,8 +195,8 @@ def categorize_branches(
     ----------
     source : os.PathLike or str or Iterable(str)
        if iterable of strings, use that as list of branches, if
-       os.PathLike, tuple then get branches from ROOT file given a
-       tree name.
+       os.PathLike or str then get branches from ROOT file the
+       ``tree`` argument.
     tree : str, optional
        the tree name in the file if ``source`` is os.PathLike; this is
        ignored if ``source`` is an iterable of strings.
