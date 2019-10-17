@@ -623,3 +623,50 @@ def satisfying_selection(*dfs: pandas.DataFrame, selection: str) -> List[pandas.
 
     """
     return [df[df.eval(selection)] for df in dfs]
+
+
+def iterate_and_select(
+    files: Union[str, List[str]],
+    selection: str,
+    tree: str = "WtLoop_nominal",
+    weight_name: str = "weight_nominal",
+    branches: Optional[List[str]] = None,
+    **kwargs,
+) -> pandas.DataFrame:
+    """uses uproot's iterate feature run a selection iteratively
+
+    if we want to build a memory-hungry dataframe and apply a
+    selection this helps us avoid crashing due to using all of our
+    RAM.
+
+    kwargs are fed to uproot.pandas.iterate
+
+    Parameters
+    ----------
+    files : list(str) or str
+       a single ROOT file or list of ROOT files
+    selection : str
+       the selection string (in :py:func:`pandas.eval` form)
+    tree : str
+       the tree name to turn into a dataframe
+    weight_name: str
+       weight branch
+    branches : list(str), optional
+       a list of branches to include as columns in the dataframe,
+       default is ``None`` (all branches)
+
+    Returns
+    -------
+    pandas.DataFrame
+       the final selected dataframe from the files
+
+    """
+    bs = branches
+    if branches is not None:
+        bs = sorted(set(branches) | set([weight_name]), key=str.lower)
+    dfs = []
+    itr = uproot.pandas.iterate(files, tree, branches=bs, **kwargs)
+    for i, df in enumerate(itr):
+        dfs.append(df.query(selection))
+        log.debug(f"finished iteration {i}")
+    return pd.concat(dfs)
