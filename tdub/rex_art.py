@@ -264,7 +264,7 @@ def stackem(
     histograms: List[Sample],
     template_var: str,
     band: Optional[uproot_methods.classes.TGraphAasymmErrors] = None,
-    figsize: Tuple[float, float] = (6, 5.25),
+    figsize: Optional[Tuple[float, float]] = None,
 ) -> Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axis, matplotlib.axes.Axis]]:
     """Create a stack plot
 
@@ -282,7 +282,7 @@ def stackem(
        name of the template variable
     band : Optional[uproot_methods.classes.TGraphAsymmErrors]
        error band
-    figsize : tuple(float, float)
+    figsize : tuple(float, float), optional
        matplotlib figure size
 
     Returns

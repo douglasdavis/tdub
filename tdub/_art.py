@@ -7,6 +7,7 @@ import matplotlib
 matplotlib.use("pdf")
 
 def setup_style():
+    matplotlib.rcParams["figure.figsize"] = (6, 5.25)
     matplotlib.rcParams["axes.labelsize"] = 14
     matplotlib.rcParams["font.size"] = 12
     matplotlib.rcParams["xtick.top"] = True
