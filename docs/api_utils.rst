@@ -23,6 +23,8 @@ Function Summary
    conservative_branches
    edges_and_centers
    get_branches
+   get_features
+   get_selection
    quick_files
 
 Constant Summary
@@ -55,6 +57,8 @@ Reference
 .. autofunction:: conservative_branches
 .. autofunction:: edges_and_centers
 .. autofunction:: get_branches
+.. autofunction:: get_features
+.. autofunction:: get_selection
 .. autofunction:: quick_files
 
 .. autodata:: SELECTION_1j1b

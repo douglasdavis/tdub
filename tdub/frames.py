@@ -93,7 +93,7 @@ class DataFramesInMemory:
             self.name = name
             all_columns = list(ddf.columns)
             categorized = categorize_branches(all_columns)
-            nonweights = categorized["kin"]
+            nonweights = categorized["kinematics"]
             if not dropnonkin:
                 nonweights += categorized["meta"]
             self._df = ddf[sorted(nonweights)].compute()
@@ -163,24 +163,19 @@ class SelectedDataFrame:
     selection: str
     df: dd.DataFrame = field(repr=False, compare=False)
 
-    def to_ram(self, **kwargs) -> DataFramesInMemory:
+    def to_ram(self, **dfim_opts) -> DataFramesInMemory:
         """create a dataset that lives in memory
 
-        kwargs are passed to the :obj:`DataFramesInMemory` constructor
-
-        Keyword Args
-        ------------
-        consolidate : bool
-          consolidate weight columns into the main DataFrame (usually
-          they are seperate, see :py:obj:`DataFramesInMemory`)
-        dropnonkin : bool
-          drop non-kinematic columns (metadata like columns, like ``OS``,
-          ``reg2j1b``, etc.).
+        Parameters
+        ----------
+        dfim_opts
+           options passed to the :py:obj:`DataFramesInMemory`
+           initializer
 
         Returns
         -------
         :obj:`DataFramesInMemory`
-           the wrapper around two pandas-backed DataFrames in memory
+           the dataset now living in memory
 
         Examples
         --------
@@ -192,7 +187,7 @@ class SelectedDataFrame:
         >>> dfim = sdf.to_ram(dropnonkin=False)
 
         """
-        return DataFramesInMemory(name=self.name, ddf=self.df, **kwargs)
+        return DataFramesInMemory(name=self.name, ddf=self.df, **dfim_opts)
 
 
 def raw_dataframe(
@@ -631,7 +626,7 @@ def satisfying_selection(*dfs: pandas.DataFrame, selection: str) -> List[pandas.
     ...                                                       selection=low_bdt)
 
     """
-    return [df[df.eval(selection)] for df in dfs]
+    return [df.query(selection) for df in dfs]
 
 
 def iterative_selection(
@@ -641,6 +636,7 @@ def iterative_selection(
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
     concat: bool = False,
+    keep_category: Optional[str] = None,
     **iterate_opts,
 ) -> pandas.DataFrame:
     """build a selected dataframe via uproot's iterate
@@ -664,13 +660,18 @@ def iterative_selection(
     tree : str
        the tree name to turn into a dataframe
     weight_name: str
-       weight branch
+       weight branch to preserve
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None`` (all branches)
     concat : bool
        concatenate the resulting selected dataframes to return
        a single dataframe
+    keep_category : str, optional
+       if not ``None``, the selected dataframe(s) will only include
+       columns which are part of the given category (see
+       :py:func:`tdub.utils.categorize_branches`). The weight branch
+       is always kept.
 
     Returns
     -------
@@ -690,14 +691,31 @@ def iterative_selection(
     >>> ttbar_dfs = iterative_selection(qf["ttbar"], SELECTION_2j2b, entrysteps="1 GB")
     >>> tW_df = iterative_selection(qf["tW_DR"], SELECTION_2j2b, concat=True)
 
+    Keep only the kinematic branches after selection:
+
+    >>> tW_df = iterative_selection(qf["tW_DR"], SELECTION_2j2b, concat=True,
+    ...                             keep_category="kinematics")
+
     """
+    if keep_category is not None:
+        if isinstance(files, list):
+            branch_cats = categorize_branches(files[0], tree=tree)
+        else:
+            branch_cats = categorize_branches(files, tree=tree)
+        keep_branches = branch_cats.get(keep_category)
+        if weight_name not in keep_branches:
+            keep_branches.append(weight_name)
+
     bs = branches
     if branches is not None:
         bs = sorted(set(branches) | set([weight_name]), key=str.lower)
     dfs = []
-    itr = uproot.pandas.iterate(files, tree, branches=bs, **kwargs)
+    itr = uproot.pandas.iterate(files, tree, branches=bs, **iterate_opts)
     for i, df in enumerate(itr):
-        dfs.append(df.query(selection))
+        idf = df.query(selection)
+        if keep_category is not None:
+            idf = idf[keep_branches]
+        dfs.append(idf)
         log.debug(f"finished iteration {i}")
     if concat:
         return pd.concat(dfs)

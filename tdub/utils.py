@@ -191,9 +191,9 @@ def categorize_branches(
 
     The categories:
 
-    - ``meta`` for meta information (final state information)
-    - ``kin`` for kinematic features (used for classifiers)
+    - ``kinematics`` for kinematic features (used for classifiers)
     - ``weights`` for any branch that starts or ends with ``weight``
+    - ``meta`` for meta information (final state information)
 
     Parameters
     ----------
@@ -220,7 +220,7 @@ def categorize_branches(
     ['weight_sys_jvt', 'weight_nominal']
     >>> cated["meta"]
     ['reg2j2b']
-    >>> cated["kin"]
+    >>> cated["kinematics"]
     ['pT_lep1', 'pT_lep2']
 
     Using the file name
@@ -257,10 +257,10 @@ def categorize_branches(
     weight_re = re.compile(r"(^weight_\w+)|(\w+_weight$)")
     weights = set(filter(weight_re.match, bset))
     metas = metas & set(bset)
-    kins = (set(bset) ^ weights) ^ metas
+    kinematics = (set(bset) ^ weights) ^ metas
     return {
+        "kinematics": sorted(kinematics, key=str.lower),
         "weights": sorted(weights, key=str.lower),
-        "kin": sorted(kins, key=str.lower),
         "meta": sorted(metas, key=str.lower),
     }
 
@@ -493,6 +493,72 @@ def conservative_branches(
     good_branches = bs & good_branches
 
     return sorted(good_branches)
+
+
+def get_selection(region: str) -> str:
+    """get the selection given a region
+
+    see :py:func:`tdub.utils.Region.from_str` for the compatible
+    strings.
+
+    Parameters
+    ----------
+    region : str
+       the region as a string
+
+    Returns
+    -------
+    str
+       the selection string
+
+    Examples
+    --------
+
+    >>> from tdub.utils import get_selection
+    >>> get_selection("r2j1b")
+    '(reg2j1b == True) & (OS == True)'
+    >>> get_selection("reg1j1b")
+    '(reg1j1b == True) & (OS == True)'
+    >>> get_selection("2j2b")
+    '(reg2j2b == True) & (OS == True)'
+
+    """
+    return SELECTIONS[Region.from_str(region)]
+
+
+def get_features(region: str) -> List[str]:
+    """get the feature list for a region
+
+    see :py:func:`tdub.utils.Region.from_str` for the compatible
+    strings.
+
+    Parameters
+    ----------
+    region : str
+       the region as a string
+
+    Returns
+    -------
+    list(str)
+       the list of features for that region
+
+    Examples
+    --------
+
+    >>> from pprint import pprint
+    >>> from tdub.utils import get_features
+    >>> pprint(get_features("reg2j1b"))
+    ['mass_lep1jet1',
+     'mass_lep1jet2',
+     'mass_lep2jet1',
+     'mass_lep2jet2',
+     'pT_jet2',
+     'pTsys_lep1lep2jet1jet2met',
+     'psuedoContTagBin_jet1',
+     'psuedoContTagBin_jet2']
+
+    """
+    return FEATURESETS[Region.from_str(region)]
 
 
 SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
