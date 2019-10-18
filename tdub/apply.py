@@ -4,19 +4,22 @@ Module for applying trained models
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from pathlib import PosixPath
+# stdlib
 import json
 import logging
+from dataclasses import dataclass, field
+from pathlib import PosixPath
 
-import uproot
+# external
 import numpy as np
 import joblib
+import uproot
 from lightgbm import LGBMClassifier
 from sklearn.model_selection import KFold
 
-from tdub.utils import Region, SELECTIONS
+# tdub
 from tdub.frames import specific_dataframe
+from tdub.utils import Region, SELECTIONS
 
 
 log = logging.getLogger(__name__)

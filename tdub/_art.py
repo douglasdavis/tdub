@@ -1,12 +1,18 @@
+"""
+Backend art utilities
+"""
+
 from __future__ import annotations
 
+# std
 from dataclasses import dataclass
 
+#external
 import matplotlib
 
-matplotlib.use("pdf")
 
 def setup_style():
+    matplotlib.use("pdf")
     matplotlib.rcParams["figure.figsize"] = (6, 5.25)
     matplotlib.rcParams["axes.labelsize"] = 14
     matplotlib.rcParams["font.size"] = 12

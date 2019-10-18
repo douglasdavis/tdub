@@ -1,20 +1,27 @@
+"""
+Module for training BDTs
+"""
+
 from __future__ import annotations
 
-import os
+# stdlib
+import json
 import logging
+import os
 from pathlib import PosixPath
 from pprint import pformat
-import json
 
-import lightgbm as lgbm
+# externals
 import joblib
+import lightgbm as lgbm
 import numpy as np
 import matplotlib.pyplot as plt
+import pygram11
+from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import roc_auc_score, roc_curve, auc
-from scipy import interp
-import pygram11
 
+# tdub
 from tdub.frames import specific_dataframe
 from tdub.utils import Region, quick_files, bin_centers
 

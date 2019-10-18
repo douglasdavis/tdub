@@ -4,17 +4,25 @@ Module for handling dataframes
 
 from __future__ import annotations
 
+# stdlib
 import logging
 from dataclasses import dataclass, field
 
+# externals
 import cachetools
-import uproot
 import dask
 import dask.dataframe as dd
 import pandas as pd
+import uproot
 
-from tdub.utils import categorize_branches, conservative_branches
-from tdub.utils import Region, SELECTIONS, FEATURESETS
+# tdub
+from tdub.utils import (
+    categorize_branches,
+    conservative_branches,
+    Region,
+    SELECTIONS,
+    FEATURESETS,
+)
 
 
 log = logging.getLogger(__name__)
@@ -632,6 +640,7 @@ def iterative_selection(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
+    concat: bool = False,
     **iterate_opts,
 ) -> pandas.DataFrame:
     """build a selected dataframe via uproot's iterate
@@ -659,20 +668,27 @@ def iterative_selection(
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None`` (all branches)
+    concat : bool
+       concatenate the resulting selected dataframes to return
+       a single dataframe
 
     Returns
     -------
-    pandas.DataFrame
-       the final selected dataframe from the files
+    list(pandas.DataFrame) or pandas.DataFrame
+       the final selected dataframe(s) from the files
 
     Examples
     --------
+
+    Creating a ``ttbar_dfs`` list of dataframes and a single ``tW_df``
+    dataframe:
 
     >>> from tdub.frames import iterative_selection
     >>> from tdub.utils import quick_files
     >>> from tdub.utils import SELECTION_2j2b
     >>> qf = quick_files("/path/to/files")
-    >>> ttbar_df = iterative_selection(qf["ttbar"], SELECTION_2j2b, entrysteps="1 GB")
+    >>> ttbar_dfs = iterative_selection(qf["ttbar"], SELECTION_2j2b, entrysteps="1 GB")
+    >>> tW_df = iterative_selection(qf["tW_DR"], SELECTION_2j2b, concat=True)
 
     """
     bs = branches
@@ -683,4 +699,6 @@ def iterative_selection(
     for i, df in enumerate(itr):
         dfs.append(df.query(selection))
         log.debug(f"finished iteration {i}")
-    return pd.concat(dfs)
+    if concat:
+        return pd.concat(dfs)
+    return dfs

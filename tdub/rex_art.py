@@ -1,21 +1,27 @@
+"""
+Module for art from TRExFitter
+"""
+
 from __future__ import annotations
 
-import os
-import subprocess
+# stdlib
 import logging
+import os
 import re
-from pathlib import PosixPath
+import subprocess
 from dataclasses import dataclass, field
+from pathlib import PosixPath
 
-import yaml
-import uproot
+# externals
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+import uproot
+import yaml
 
+# tdub
 import tdub.utils
-
-from ._art import setup_style, draw_atlas_label, var_to_axis_meta
+from tdub._art import setup_style, draw_atlas_label, var_to_axis_meta
 
 log = logging.getLogger(__name__)
 

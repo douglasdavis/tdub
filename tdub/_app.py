@@ -1,8 +1,14 @@
+"""
+Command line application
+"""
+
+# stdlib
 import argparse
-import logging
 import json
+import logging
 import pathlib
 
+# tdub
 from tdub import setup_logging
 
 

@@ -1,3 +1,7 @@
+"""
+Module for art from raw data
+"""
+
 from __future__ import annotations
 
 # stdlib
@@ -9,8 +13,8 @@ import matplotlib.pyplot as plt
 import pygram11
 
 # tdub
-from ._art import setup_style
-from .utils import edges_and_centers
+from tdub._art import setup_style
+from tdub.utils import edges_and_centers
 
 
 def draw_rocs(

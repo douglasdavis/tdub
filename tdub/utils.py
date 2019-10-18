@@ -1,13 +1,17 @@
+"""
+Module for general utilities
+"""
+
 from __future__ import annotations
 
 # stdlib
+import numbers
+import os
+import re
 from dataclasses import dataclass
 from enum import Enum
 from glob import glob
 from pathlib import PosixPath
-import numbers
-import re
-import os
 
 # external
 import numpy as np
