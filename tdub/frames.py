@@ -612,6 +612,7 @@ def satisfying_selection(*dfs: pandas.DataFrame, selection: str) -> List[pandas.
 
     Examples
     --------
+
     >>> from tdub.utils import quick_files
     >>> from tdub.frames import specific_dataframe, satisfying_selection
     >>> qf = quick_files("/path/to/files")
@@ -625,21 +626,25 @@ def satisfying_selection(*dfs: pandas.DataFrame, selection: str) -> List[pandas.
     return [df[df.eval(selection)] for df in dfs]
 
 
-def iterate_and_select(
+def iterative_selection(
     files: Union[str, List[str]],
     selection: str,
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
-    **kwargs,
+    **iterate_opts,
 ) -> pandas.DataFrame:
-    """uses uproot's iterate feature run a selection iteratively
+    """build a selected dataframe via uproot's iterate
 
     if we want to build a memory-hungry dataframe and apply a
     selection this helps us avoid crashing due to using all of our
     RAM.
 
-    kwargs are fed to uproot.pandas.iterate
+    ``iterate_opts`` are fed to :py:func:`uproot.pandas.iterate`
+
+    this dataframe construction function is useful when we want to
+    grab all of the branches in a large dataset that won't fit in
+    memory before the selection.
 
     Parameters
     ----------
@@ -659,6 +664,15 @@ def iterate_and_select(
     -------
     pandas.DataFrame
        the final selected dataframe from the files
+
+    Examples
+    --------
+
+    >>> from tdub.frames import iterative_selection
+    >>> from tdub.utils import quick_files
+    >>> from tdub.utils import SELECTION_2j2b
+    >>> qf = quick_files("/path/to/files")
+    >>> ttbar_df = iterative_selection(qf["ttbar"], SELECTION_2j2b, entrysteps="1 GB")
 
     """
     bs = branches

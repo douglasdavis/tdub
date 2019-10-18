@@ -20,6 +20,7 @@ Function Summary
 
    conservative_dataframe
    delayed_dataframe
+   iterative_selection
    raw_dataframe
    satisfying_selection
    selected_dataframes
@@ -38,6 +39,8 @@ Reference
 .. autofunction:: conservative_dataframe
 
 .. autofunction:: delayed_dataframe
+
+.. autofunction:: iterative_selection
 
 .. autofunction:: raw_dataframe
 
