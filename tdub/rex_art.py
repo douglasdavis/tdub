@@ -21,7 +21,7 @@ import yaml
 
 # tdub
 import tdub.utils
-from tdub._art import setup_style, draw_atlas_label, var_to_axis_meta
+from tdub._art import draw_atlas_label, setup_style, var_to_axis_meta
 
 log = logging.getLogger(__name__)
 

@@ -19,11 +19,11 @@ import matplotlib.pyplot as plt
 import pygram11
 from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
-from sklearn.metrics import roc_auc_score, roc_curve, auc
+from sklearn.metrics import auc, roc_auc_score, roc_curve
 
 # tdub
 from tdub.frames import specific_dataframe
-from tdub.utils import Region, quick_files, bin_centers
+from tdub.utils import Region, bin_centers, quick_files
 
 
 log = logging.getLogger(__name__)

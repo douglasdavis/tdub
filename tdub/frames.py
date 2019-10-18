@@ -17,11 +17,11 @@ import uproot
 
 # tdub
 from tdub.utils import (
+    FEATURESETS,
+    SELECTIONS,
+    Region,
     categorize_branches,
     conservative_branches,
-    Region,
-    SELECTIONS,
-    FEATURESETS,
 )
 
 
