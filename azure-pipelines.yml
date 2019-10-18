@@ -33,7 +33,12 @@ jobs:
 
   - script: |
       python -m pytest
-    displayName: 'Tests with pytest'
+      python -m tdub apply-gennpy
+      python -m tdub rex-pulls
+      python -m tdub rex-stacks
+      python -m tdub train-fold
+      python -m tdub train-optimize
+    displayName: 'Tests with pytest and run CLI'
 
 
 - job: 'macOS'
@@ -61,4 +66,9 @@ jobs:
 
   - script: |
       python -m pytest
-    displayName: 'Tests with pytest'
+      python -m tdub apply-gennpy
+      python -m tdub rex-pulls
+      python -m tdub rex-stacks
+      python -m tdub train-fold
+      python -m tdub train-optimize
+    displayName: 'Tests with pytest and run CLI'
