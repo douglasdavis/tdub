@@ -21,8 +21,6 @@ Function Summary
    bin_centers
    categorize_branches
    conservative_branches
-   drop_cols
-   drop_avoid
    edges_and_centers
    get_branches
    get_features
@@ -58,8 +56,6 @@ Reference
 .. autofunction:: bin_centers
 .. autofunction:: categorize_branches
 .. autofunction:: conservative_branches
-.. autofunction:: drop_cols
-.. autofunction:: drop_avoid
 .. autofunction:: edges_and_centers
 .. autofunction:: get_branches
 .. autofunction:: get_features

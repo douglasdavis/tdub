@@ -20,6 +20,8 @@ Function Summary
 
    conservative_dataframe
    delayed_dataframe
+   drop_cols
+   drop_avoid
    iterative_selection
    raw_dataframe
    satisfying_selection
@@ -32,22 +34,15 @@ Reference
 
 .. autoclass:: DataFramesInMemory
    :members:
-
 .. autoclass:: SelectedDataFrame
    :members:
-
 .. autofunction:: conservative_dataframe
-
 .. autofunction:: delayed_dataframe
-
+.. autofunction:: drop_cols
+.. autofunction:: drop_avoid
 .. autofunction:: iterative_selection
-
 .. autofunction:: raw_dataframe
-
 .. autofunction:: satisfying_selection
-
 .. autofunction:: selected_dataframes
-
 .. autofunction:: specific_dataframe
-
 .. autofunction:: stdregion_dataframes

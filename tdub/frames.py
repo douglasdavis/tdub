@@ -17,11 +17,13 @@ import uproot
 
 # tdub
 from tdub.utils import (
+    AVOID_IN_CLF,
     FEATURESETS,
     SELECTIONS,
     Region,
     categorize_branches,
     conservative_branches,
+    get_branches,
 )
 
 
@@ -637,6 +639,7 @@ def iterative_selection(
     branches: Optional[List[str]] = None,
     concat: bool = False,
     keep_category: Optional[str] = None,
+    ignore_avoid: bool = False,
     **iterate_opts,
 ) -> pandas.DataFrame:
     """build a selected dataframe via uproot's iterate
@@ -672,6 +675,8 @@ def iterative_selection(
        columns which are part of the given category (see
        :py:func:`tdub.utils.categorize_branches`). The weight branch
        is always kept.
+    ignore_avoid : bool
+       ignore branches defined by :py:data:`tdub.utils.AVOID_IN_CLF`
 
     Returns
     -------
@@ -691,10 +696,10 @@ def iterative_selection(
     >>> ttbar_dfs = iterative_selection(qf["ttbar"], SELECTION_2j2b, entrysteps="1 GB")
     >>> tW_df = iterative_selection(qf["tW_DR"], SELECTION_2j2b, concat=True)
 
-    Keep only the kinematic branches after selection:
+    Keep only the kinematic branches after selection and ignore avoided columns:
 
     >>> tW_df = iterative_selection(qf["tW_DR"], SELECTION_2j2b, concat=True,
-    ...                             keep_category="kinematics")
+    ...                             keep_category="kinematics", ignore_avoid=True)
 
     """
     if keep_category is not None:
@@ -709,6 +714,17 @@ def iterative_selection(
     bs = branches
     if branches is not None:
         bs = sorted(set(branches) | set([weight_name]), key=str.lower)
+
+    if ignore_avoid:
+        if bs is None:
+            if isinstance(files, list):
+                filebs = get_branches(files[0], tree=tree)
+            else:
+                filebs = get_branches(files, tree=tree)
+            bs = sorted(set(filebs) - set(AVOID_IN_CLF), key=str.lower)
+        else:
+            bs = sorted(set(bs) - set(AVOID_IN_CLF), key=str.lower)
+
     dfs = []
     itr = uproot.pandas.iterate(files, tree, branches=bs, **iterate_opts)
     for i, df in enumerate(itr):
@@ -720,3 +736,66 @@ def iterative_selection(
     if concat:
         return pd.concat(dfs)
     return dfs
+
+
+def drop_cols(df: pandas.DataFrame, cols: Iterable[str]) -> None:
+    """drop some columns from a dataframe
+
+    this is a convenient function because it just ignores branches
+    that don't exist in the dataframe that are present in ``cols``.
+
+    Parameters
+    ----------
+    df : :py:obj:`pandas.DataFrame`
+       the df which we want to slim
+    cols : list(str)
+       the columns to remove
+
+    Examples
+    --------
+
+    >>> import pandas as pd
+    >>> from tdub.utils import drop_cols
+    >>> df = pd.read_parquet("some_file.parquet")
+    >>> "E_jet1" in df.columns:
+    True
+    >>> "E_mass1" in df.columns:
+    True
+    >>> drop_cols(df, ["E_jet1", "mass_jet1"])
+    >>> "E_jet1" in df.columns:
+    False
+    >>> "E_mass1" in df.columns:
+    False
+
+    """
+    in_dataframe = set(df.columns)
+    in_cols = set(cols)
+    in_both = list(in_dataframe & in_cols)
+    df.drop(columns=in_both, inplace=True)
+
+
+def drop_avoid(df: pandas.DataFrame) -> None:
+    """drop columns that we avoid in classifiers
+
+    this uses :py:func:`tdub.frames.drop_cols` with a predefined set
+    of columns (:py:data:`tdub.utils.AVOID_IN_CLF`).
+
+    Parameters
+    ----------
+    df : :py:obj:`pandas.DataFrame`
+       the df which we want to slim
+
+    Examples
+    --------
+
+    >>> from tdub.utils improt drop_avoid
+    >>> import pandas as pd
+    >>> df = pd.read_parquet("some_file.parquet")
+    >>> "E_jetL1" in df.columns:
+    True
+    >>> drop_avoid(df)
+    >>> "E_jetL1" in df.columns:
+    False
+
+    """
+    drop_cols(df, AVOID_IN_CLF)
