@@ -6,6 +6,11 @@ trigger:
     include:
       - "*.*.*"
 
+pr:
+  branches:
+    exclude:
+      - "*"
+
 pool:
   vmImage: 'ubuntu-latest'
 strategy:
