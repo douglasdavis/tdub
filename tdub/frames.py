@@ -724,6 +724,8 @@ def iterative_selection(
             bs = sorted(set(filebs) - set(AVOID_IN_CLF), key=str.lower)
         else:
             bs = sorted(set(bs) - set(AVOID_IN_CLF), key=str.lower)
+        if keep_category is not None:
+            keep_branches = sorted(set(keep_branches) & set(bs), key=str.lower)
 
     dfs = []
     itr = uproot.pandas.iterate(files, tree, branches=bs, **iterate_opts)
