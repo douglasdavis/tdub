@@ -4,13 +4,15 @@ import os
 import pathlib
 
 
-with pathlib.PosixPath("requirements.txt").open("r") as f:
+project_root = pathlib.PosixPath(__file__).parent
+
+with (project_root / "requirements.txt").open("r") as f:
     requirements = f.read().splitlines()
 
-with pathlib.PosixPath("README.md").open("r") as f:
+with (project_root / "README.md").open("r") as f:
     readme = f.read()
 
-with pathlib.PosixPath("tdub/__init__.py").open("r") as f:
+with (project_root / "tdub" / "__init__.py").open("r") as f:
     for line in f.readlines():
         if "__version__ = " in line:
             version = line.strip().split(" = ")[-1][1:-1]
