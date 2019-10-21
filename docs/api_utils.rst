@@ -21,6 +21,8 @@ Function Summary
    bin_centers
    categorize_branches
    conservative_branches
+   drop_cols
+   drop_avoid
    edges_and_centers
    get_branches
    get_features
@@ -32,14 +34,15 @@ Constant Summary
 
 .. autosummary::
 
-   SELECTION_1j1b
-   SELECTION_2j1b
-   SELECTION_2j2b
-   SELECTIONS
+   AVOID_IN_CLF
    FEATURESET_1j1b
    FEATURESET_2j1b
    FEATURESET_2j2b
    FEATURESETS
+   SELECTION_1j1b
+   SELECTION_2j1b
+   SELECTION_2j2b
+   SELECTIONS
 
 Reference
 ^^^^^^^^^
@@ -55,19 +58,15 @@ Reference
 .. autofunction:: bin_centers
 .. autofunction:: categorize_branches
 .. autofunction:: conservative_branches
+.. autofunction:: drop_cols
+.. autofunction:: drop_avoid
 .. autofunction:: edges_and_centers
 .. autofunction:: get_branches
 .. autofunction:: get_features
 .. autofunction:: get_selection
 .. autofunction:: quick_files
 
-.. autodata:: SELECTION_1j1b
-   :annotation:
-.. autodata:: SELECTION_2j1b
-   :annotation:
-.. autodata:: SELECTION_2j2b
-   :annotation:
-.. autodata:: SELECTIONS
+.. autodata:: AVOID_IN_CLF
    :annotation:
 .. autodata:: FEATURESET_1j1b
    :annotation:
@@ -76,4 +75,12 @@ Reference
 .. autodata:: FEATURESET_2j2b
    :annotation:
 .. autodata:: FEATURESETS
+   :annotation:
+.. autodata:: SELECTION_1j1b
+   :annotation:
+.. autodata:: SELECTION_2j1b
+   :annotation:
+.. autodata:: SELECTION_2j2b
+   :annotation:
+.. autodata:: SELECTIONS
    :annotation:

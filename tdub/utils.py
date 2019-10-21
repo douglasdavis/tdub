@@ -561,6 +561,69 @@ def get_features(region: str) -> List[str]:
     return FEATURESETS[Region.from_str(region)]
 
 
+def drop_cols(df: pandas.DataFrame, cols: Iterable[str]) -> None:
+    """drop some columns from a dataframe
+
+    this is a convenient function because it just ignores branches
+    that don't exist in the dataframe that are present in ``cols``.
+
+    Parameters
+    ----------
+    df : :py:obj:`pandas.DataFrame`
+       the df which we want to slim
+    cols : list(str)
+       the columns to remove
+
+    Examples
+    --------
+
+    >>> import pandas as pd
+    >>> from tdub.utils import drop_cols
+    >>> df = pd.read_parquet("some_file.parquet")
+    >>> "E_jet1" in df.columns:
+    True
+    >>> "E_mass1" in df.columns:
+    True
+    >>> drop_cols(df, ["E_jet1", "mass_jet1"])
+    >>> "E_jet1" in df.columns:
+    False
+    >>> "E_mass1" in df.columns:
+    False
+
+    """
+    in_dataframe = set(df.columns)
+    in_cols = set(cols)
+    in_both = list(in_dataframe & in_cols)
+    df.drop(columns=in_both, inplace=True)
+
+
+def drop_avoid(df: pandas.DataFrame) -> None:
+    """drop columns that we avoid in classifiers
+
+    this uses :py:func:`tdub.utils.drop_cols` with a predefined set of columns
+    (:py:data:`tdub.utils.AVOID_IN_CLF`).
+
+    Parameters
+    ----------
+    df : :py:obj:`pandas.DataFrame`
+       the df which we want to slim
+
+    Examples
+    --------
+
+    >>> from tdub.utils improt drop_avoid
+    >>> import pandas as pd
+    >>> df = pd.read_parquet("some_file.parquet")
+    >>> "E_jetL1" in df.columns:
+    True
+    >>> drop_avoid(df)
+    >>> "E_jetL1" in df.columns:
+    False
+
+    """
+    drop_cols(df, AVOID_IN_CLF)
+
+
 SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
 """
 str: The pandas flavor selection string for the 1j1b region
@@ -601,7 +664,8 @@ FEATURESET_1j1b = sorted(
         "nloosebjets",
         "cent_lep1lep2",
         "pTsys_lep1lep2jet1",
-    ]
+    ],
+    key=str.lower,
 )
 """
 list(str): list of features we use for classifiers in the 1j1b region
@@ -617,7 +681,8 @@ FEATURESET_2j1b = sorted(
         "pTsys_lep1lep2jet1jet2met",
         "psuedoContTagBin_jet2",
         "pT_jet2",
-    ]
+    ],
+    key=str.lower,
 )
 """
 list(str): list of features we use for classifiers in the 2j1b region
@@ -633,7 +698,8 @@ FEATURESET_2j2b = sorted(
         "pTsys_lep1lep2met",
         "pT_jet2",
         "mass_lep2jet2",
-    ]
+    ],
+    key=str.lower,
 )
 """
 list(str): list of features we use for classifiers in the 2j2b region
@@ -647,4 +713,24 @@ FEATURESETS = {
 }
 """
 dict(Region, list(str)): key-value pairs for regions to their feature set
+"""
+
+
+AVOID_IN_CLF = sorted(
+    [
+        "bdt_response",
+        "eta_met",
+        "sumet",
+        "mass_jet1",
+        "mass_jet2",
+        "mass_jetF",
+        "mass_jetL1",
+        "mass_jetS1",
+        "E_jetL1",
+        "E_jetS1",
+    ],
+    key=str.lower,
+)
+"""
+list(str): list of features to avoid in classifiers
 """
