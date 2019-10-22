@@ -36,7 +36,16 @@ def test_drop_avoid():
         str(test_file_root / "testfile3.root"),
     ]
     df = iterative_selection(files, "(reg1j1b == True)", concat=True)
-    drop_avoid(df)
+    df.drop_avoid()
     avoid = set(AVOID_IN_CLF)
     cols = set(df.columns)
     assert len(cols & avoid) == 0
+
+
+def test_drop_jet2():
+    files = [str(test_file_root / "testfile1.root"), str(test_file_root / "testfile3.root")]
+    df = iterative_selection(files, "(OS == True)", concat=True)
+    j2s = [col for col in df.columns if "jet2" in col]
+    df.drop_jet2()
+    for j in j2s:
+        assert j not in df.columns

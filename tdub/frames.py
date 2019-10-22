@@ -740,17 +740,19 @@ def iterative_selection(
     return dfs
 
 
-def drop_cols(df: pandas.DataFrame, cols: Iterable[str]) -> None:
+def drop_cols(df: pandas.DataFrame, *cols: str) -> None:
     """drop some columns from a dataframe
 
     this is a convenient function because it just ignores branches
     that don't exist in the dataframe that are present in ``cols``.
 
+    we augment :py:class:`pandas.DataFrame` with this function
+
     Parameters
     ----------
     df : :py:obj:`pandas.DataFrame`
        the df which we want to slim
-    cols : list(str)
+    *cols : sequence of strings
        the columns to remove
 
     Examples
@@ -763,7 +765,7 @@ def drop_cols(df: pandas.DataFrame, cols: Iterable[str]) -> None:
     True
     >>> "E_mass1" in df.columns:
     True
-    >>> drop_cols(df, ["E_jet1", "mass_jet1"])
+    >>> drop_cols(df, "E_jet1", "mass_jet1")
     >>> "E_jet1" in df.columns:
     False
     >>> "E_mass1" in df.columns:
@@ -776,11 +778,16 @@ def drop_cols(df: pandas.DataFrame, cols: Iterable[str]) -> None:
     df.drop(columns=in_both, inplace=True)
 
 
+pd.DataFrame.drop_cols = drop_cols
+
+
 def drop_avoid(df: pandas.DataFrame) -> None:
     """drop columns that we avoid in classifiers
 
     this uses :py:func:`tdub.frames.drop_cols` with a predefined set
     of columns (:py:data:`tdub.utils.AVOID_IN_CLF`).
+
+    we augment :py:class:`pandas.DataFrame` with this function
 
     Parameters
     ----------
@@ -800,4 +807,41 @@ def drop_avoid(df: pandas.DataFrame) -> None:
     False
 
     """
-    drop_cols(df, AVOID_IN_CLF)
+    drop_cols(df, *AVOID_IN_CLF)
+
+
+pd.DataFrame.drop_avoid = drop_avoid
+
+
+def drop_jet2(df: pandas.DataFrame) -> None:
+    """drop all columns with jet2 properties
+
+    in the 1j1b region we obviously don't have a second jet; so this
+    lets us get rid of all columns dependent on jet2 kinematic
+    properties.
+
+    we augment :py:class:`pandas.DataFrame` with this function
+
+    Parameters
+    ----------
+    df : :py:obj:`pandas.DataFrame`
+       the df which we want to slim
+
+    Examples
+    --------
+
+    >>> from tdub.utils improt drop_jet2
+    >>> import pandas as pd
+    >>> df = pd.read_parquet("some_file.parquet")
+    >>> "pTsys_lep1lep2jet1jet2met" in df.columns:
+    True
+    >>> drop_jet2(df)
+    >>> "pTsys_lep1lep2jet1jet2met" in df.columns:
+    False
+
+    """
+    j2cols = [col for col in df.columns if "jet2" in col]
+    drop_cols(df, *j2cols)
+
+
+pd.DataFrame.drop_jet2 = drop_jet2
