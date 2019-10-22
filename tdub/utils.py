@@ -657,7 +657,6 @@ AVOID_IN_CLF = sorted(
     [
         "bdt_response",
         "eta_met",
-        "eta_jetS1",
         "eta_jetL1",
         "sumet",
         "mass_jet1",
@@ -666,7 +665,8 @@ AVOID_IN_CLF = sorted(
         "mass_jetL1",
         "mass_jetS1",
         "E_jetL1",
-        "E_jetS1",
+        "pT_lep3",
+        "pT_jetL1",
     ],
     key=str.lower,
 )
