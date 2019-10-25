@@ -1,27 +1,29 @@
-tdub.feasel
------------
+tdub.features
+-------------
 
 A module for performing feature selection
 
-.. currentmodule:: tdub.feasel
+.. currentmodule:: tdub.features
 
 Class Summary
 ^^^^^^^^^^^^^
 
 .. autosummary::
 
-   Selector
+   FeatSelector
 
 Function Summary:
 
 .. autosummary::
 
    create_parquet_files
+   prepare_from_parquet
 
 Reference
 ^^^^^^^^^
 
-.. autoclass:: Selector
+.. autoclass:: FeatSelector
    :members:
 
 .. autofunction:: create_parquet_files
+.. autofunction:: prepare_from_parquet
