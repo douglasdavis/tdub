@@ -6,6 +6,7 @@ API Reference
 
    api_apply.rst
    api_frames.rst
+   api_feasel.rst
    api_raw_art.rst
    api_rex_art.rst
    api_train.rst
