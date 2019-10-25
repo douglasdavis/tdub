@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 import lightgbm as lgbm
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 try:
     import pyarrow
@@ -138,8 +139,8 @@ def prepare_from_parquet(
     bkg_file = str(data_path / f"ttbar_{region}.parquet")
     sig = pd.read_parquet(sig_file)
     bkg = pd.read_parquet(bkg_file)
-    log.info(f"signal file loaded: {sig_file}")
-    log.info(f"background file loaded {bkg_file}")
+    log.info(f"sig file loaded: {sig_file}")
+    log.info(f"bkg file loaded: {bkg_file}")
 
     for c in sig.columns.to_list():
         if c not in bkg.columns.to_list():
@@ -157,6 +158,7 @@ def prepare_from_parquet(
             ttbar_frac = 1.00
 
     if ttbar_frac < 1:
+        log.info(f"sampling a fraction ({ttbar_frac}) of the background")
         bkg = bkg.sample(frac=ttbar_frac, random_state=414)
         weight_scale = weight_scale / ttbar_frac
 
@@ -177,7 +179,7 @@ def prepare_from_parquet(
     return df, labels, weights
 
 
-class FeatSelector:
+class FeatureSelector:
     """A class to steer the steps of feature selection
 
     Parameters
@@ -219,9 +221,9 @@ class FeatSelector:
     Examples
     --------
 
-    >>> from tdub.features import FeatSelector, prepare_from_parquet
+    >>> from tdub.features import FeatureSelector, prepare_from_parquet
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
-    >>> fs = FeatSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
+    >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
 
     """
 
@@ -331,36 +333,43 @@ class FeatSelector:
         0.85
 
         """
-        log.info("checking correlations")
 
         if threshold is not None:
             self.corr_threshold = threshold
 
+        log.info("calculating correlations")
         self._corr_matrix = self.df.corr()
 
-        uptri = np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool)
-        uptri = self._corr_matrix.where(uptri)
+        uptri = np.triu(np.ones(self.corr_matrix.shape), k=1).astype(np.bool)
+        uptri = self.corr_matrix.where(uptri)
+        log.info(f"testing correlations above threshold: {self.corr_threshold}")
         dropcols = [c for c in uptri.columns if any(uptri[c].abs() > self.corr_threshold)]
+        log.info(f"found {len(dropcols)} features with correlations above threshold")
 
-        self._correlated = pd.DataFrame(columns=["drop", "because", "coeff"])
+        self._correlated = pd.DataFrame(columns=["drop_this", "because", "coeff"])
         for col in dropcols:
-            other_features = list(uptri.index[uptri[col].abs() > self.corr_threshold])
-            coeffs = list(uptri.index[uptri[col].abs() > self.corr_threshold])
-            this_col = [col for i in range(len(other_features))]
+            above_threshold = uptri[col].abs() > self.corr_threshold
+            other_features = list(uptri.index[above_threshold])
+            coeffs = list(uptri[col][above_threshold])
+            this_col = [col for _ in range(len(other_features))]
             self._correlated.append(
-                pd.DataFrame(dict(drop=this_col, because=other_features, coeff=coeffs))
+                pd.DataFrame(dict(drop_this=this_col, because=other_features, coeff=coeffs))
             )
+
+        log.info("correlations now calculated")
 
     def check_importances(
         self,
         extra_clf_opts: Optional[Dict[str, Any]] = None,
         extra_fit_opts: Optional[Dict[str, Any]] = None,
         n_fits: int = 5,
+        test_size: float = 0.5,
         random_state: int = 414,
     ) -> None:
         """train vanilla GBDT to calculate feature importance
 
-        some default ``clf_dict`` and ``fit_dict`` are used (see
+        some default options are used for the
+        :py:class:`lightgbm.LGBMClassifier` instance and fit (see
         implementation); you can provide extras via function some
         arguments.
 
@@ -403,8 +412,8 @@ class FeatSelector:
 
         log.info("starting training iterations")
         for i in range(n_fits):
-            log.info(f"iteration {i}/{nfits}")
-            model = LGBMClassifier(**clf_dict)
+            log.info(f"iteration {i+1}/{n_fits}")
+            model = lgbm.LGBMClassifier(**clf_opts)
             train_df, test_df, train_y, test_y, train_w, test_w = train_test_split(
                 self.df,
                 self.labels,

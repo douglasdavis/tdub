@@ -8,7 +8,9 @@ def setup_logging():
     import logging
 
     # fmt: off
-    logging.basicConfig(level=logging.INFO, format="{:25}  %(levelname)s  %(message)s".format("[%(name)s : %(funcName)s]"))
+    logging.basicConfig(
+        level=logging.INFO, format="{:25}  %(levelname)8s  %(message)s".format("[%(name)s : %(funcName)24s]")
+    )
     logging.addLevelName(logging.WARNING, "\033[1;31m{:8}\033[1;0m".format(logging.getLevelName(logging.WARNING)))
     logging.addLevelName(logging.ERROR, "\033[1;35m{:8}\033[1;0m".format(logging.getLevelName(logging.ERROR)))
     logging.addLevelName(logging.INFO, "\033[1;32m{:8}\033[1;0m".format(logging.getLevelName(logging.INFO)))

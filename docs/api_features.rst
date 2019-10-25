@@ -10,7 +10,7 @@ Class Summary
 
 .. autosummary::
 
-   FeatSelector
+   FeatureSelector
 
 Function Summary:
 
@@ -22,7 +22,7 @@ Function Summary:
 Reference
 ^^^^^^^^^
 
-.. autoclass:: FeatSelector
+.. autoclass:: FeatureSelector
    :members:
 
 .. autofunction:: create_parquet_files
