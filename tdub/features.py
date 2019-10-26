@@ -5,6 +5,7 @@ Module for selecting features
 from __future__ import annotations
 
 # stdlib
+import copy
 import gc
 import logging
 from dataclasses import dataclass, field
@@ -209,6 +210,8 @@ class FeatureSelector:
        the list of all features determined at initialization
     corr_threshold : float
        the threshold for excluding features based on correlations
+    default_clf_opts : dict
+       the default arguments we initialize classifiers with.
     corr_matrix : pandas.DataFrame
        the raw correlation matrix for the features (requires calling the
        ``check_collinearity`` function)
@@ -246,6 +249,19 @@ class FeatureSelector:
         self._labels = labels
         self._raw_features = df.columns.to_list()
         self.corr_threshold = corr_threshold
+
+        self.default_clf_opts = dict(
+            boosting_type="gbdt",
+            num_leaves=42,
+            learning_rate=0.05,
+            subsample_for_bin=180000,
+            min_child_samples=40,
+            reg_alpha=0.4,
+            reg_lambda=0.5,
+            colsample_bytree=0.8,
+            n_estimators=250,
+            max_depth=5,
+        )
 
         ## Calculated later by some member functions
         self._corr_matrix = None
@@ -392,18 +408,7 @@ class FeatureSelector:
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
 
         """
-        clf_opts = dict(
-            boosting_type="gbdt",
-            num_leaves=42,
-            learning_rate=0.05,
-            subsample_for_bin=180000,
-            min_child_samples=40,
-            reg_alpha=0.4,
-            reg_lambda=0.5,
-            colsample_bytree=0.8,
-            n_estimators=250,
-            max_depth=5,
-        )
+        clf_opts = copy.deepcopy(self.default_clf_opts)
         if extra_clf_opts is not None:
             for k, v in extra_clf_opts.items():
                 clf_ops[k] = v
@@ -427,7 +432,7 @@ class FeatureSelector:
                 sample_weight=train_w,
                 eval_set=[(test_df, test_y)],
                 eval_sample_weight=[test_w],
-                early_stopping_rounds=15,
+                early_stopping_rounds=10,
                 verbose=20,
             )
             if extra_fit_opts is not None:
@@ -444,3 +449,57 @@ class FeatureSelector:
         )
         self._importances.sort_values("importance", ascending=False, inplace=True)
         self._importances.reset_index(inplace=True)
+
+    def uncorrelated_important_features(self, n: int = 20) -> List[str]:
+        """get the top uncorrelated features
+
+        this will parse the correlations and most important features
+        and return the list of ordered important features. Given a
+        feature that should be dropped due to a collinear feature, we
+        ensure that the more important member of the pair is included
+        in the resulting list.
+
+        Parameters
+        ----------
+        n : int
+           the total number of features to retrieve
+
+        Returns
+        -------
+        list(str)
+           the ordered top features
+
+        """
+        if self._correlated is None:
+            log.error("correlations are not calculated; call check_collinearity()")
+            return list([])
+        if self._importances is None:
+            log.error("feature importances are not calculated; call check_importances()")
+            return list([])
+
+        drop_because_corr = self.correlated.drop_this.to_list()
+        features_ordered = self.importances.feature.to_list()
+        n_top, exclude = [], []
+        raw_top_n = features_ordered[:n]
+        for f in raw_top_n:
+            if f not in drop_because_corr:
+                n_top.append(f)
+                continue
+            log.info(f"{f} is in the top {n}; but correlations say drop it; closer look:")
+            dropped_df = self.correlations.query("drop == '{f}'")
+            for corr_feat in dropped_df.because.to_list():
+                if corr_feat not in drop_bc_corr:
+                    log.info("{corr_feat} will be kept without swap")
+                if features_ordered.index(f) < features_ordered.index(corr_feat):
+                    log.info("{corr_feat} to be replaced with {f}")
+                    n_top.append(f)
+                    exclude.append(corr_feat)
+
+        for f in exclude:
+            if f in n_top:
+                n_top.remove(f)
+
+        ## use dict to ensure we drop duplicates while preserving
+        ## order (python3.7 insertion order is preserved).
+        temp_dict = {f: None for f in n_top}
+        return list(temp_dict.keys())
