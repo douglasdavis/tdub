@@ -330,7 +330,7 @@ class FeatureSelector:
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
-        >>> fs.check_for_unique(and_drop=True)
+        >>> fs.check_for_uniques(and_drop=True)
 
         """
         uqcounts = pd.DataFrame(self.df.nunique()).T
@@ -368,7 +368,7 @@ class FeatureSelector:
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
-        >>> fs.check_for_unique(and_drop=True)
+        >>> fs.check_for_uniques(and_drop=True)
         >>> fs.corr_threshold
         0.90
         >>> fs.check_collinearity(threshold=0.85)
@@ -435,7 +435,7 @@ class FeatureSelector:
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
-        >>> fs.check_for_unique(and_drop=True)
+        >>> fs.check_for_uniques(and_drop=True)
         >>> fs.check_collinearity()
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
 
@@ -504,7 +504,7 @@ class FeatureSelector:
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
-        >>> fs.check_for_unique(and_drop=True)
+        >>> fs.check_for_uniques(and_drop=True)
         >>> fs.check_collinearity()
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
         >>> fs.check_candidates(n=25)
@@ -575,7 +575,7 @@ class FeatureSelector:
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
-        >>> fs.check_for_unique(and_drop=True)
+        >>> fs.check_for_uniques(and_drop=True)
         >>> fs.check_collinearity()
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
         >>> fs.check_candidates(n=25)
