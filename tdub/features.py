@@ -327,6 +327,9 @@ class FeatureSelector:
         Examples
         --------
 
+        >>> from tdub.features import FeatureSelector, prepare_from_parquet
+        >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
+        >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
         >>> fs.check_for_unique(and_drop=True)
 
         """
@@ -362,6 +365,10 @@ class FeatureSelector:
 
         Overriding the exclusion threshold:
 
+        >>> from tdub.features import FeatureSelector, prepare_from_parquet
+        >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
+        >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
+        >>> fs.check_for_unique(and_drop=True)
         >>> fs.corr_threshold
         0.90
         >>> fs.check_collinearity(threshold=0.85)
@@ -425,6 +432,11 @@ class FeatureSelector:
         Examples
         --------
 
+        >>> from tdub.features import FeatureSelector, prepare_from_parquet
+        >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
+        >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
+        >>> fs.check_for_unique(and_drop=True)
+        >>> fs.check_collinearity()
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
 
         """
@@ -486,6 +498,17 @@ class FeatureSelector:
         n : int
            the total number of features to retrieve
 
+        Examples
+        --------
+
+        >>> from tdub.features import FeatureSelector, prepare_from_parquet
+        >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
+        >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
+        >>> fs.check_for_unique(and_drop=True)
+        >>> fs.check_collinearity()
+        >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
+        >>> fs.check_candidates(n=25)
+
         """
         if self._correlated is None:
             log.error("correlations are not calculated; call check_collinearity()")
@@ -545,6 +568,18 @@ class FeatureSelector:
            extra arguments forwarded to :py:class:`lightgbm.LGBMClassifier`.
         extra_fit_opts : dict
            extra arguments forwarded to :py:func:`lightgbm.LGBMClassifier.fit`.
+
+        Examples
+        --------
+
+        >>> from tdub.features import FeatureSelector, prepare_from_parquet
+        >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
+        >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
+        >>> fs.check_for_unique(and_drop=True)
+        >>> fs.check_collinearity()
+        >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
+        >>> fs.check_candidates(n=25)
+        >>> fs.check_iterative_aucs(max_features=20)
 
         """
         if self._candidates is None:
