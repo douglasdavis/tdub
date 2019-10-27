@@ -205,7 +205,9 @@ class FeatureSelector:
     weights : numpy.ndarray
        the raw weights array compatible with the dataframe
     labels : numpy.ndarray
-       the raw labels array compatible with teh dataframe
+       the raw labels array compatible with the dataframe (we expect
+       ``1`` for signal, :math:`tW`, and ``0`` for background,
+       :math:`t\\bar{t}`).
     raw_features : list(str)
        the list of all features determined at initialization
     corr_threshold : float
