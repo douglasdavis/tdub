@@ -220,6 +220,14 @@ class FeatureSelector:
     importances : pandas.DataFrame
        the importances as determined by a vanilla GBDT (requires
        calling the ``check_importances`` function)
+    candidates : list(str)
+       list of candiate featurese (sorted by importance) as determined
+       by calling the ``check_candidates``
+    iterative_aucs : numpy.ndarray
+       an array of AUC values built by iteratively adding the next
+       best feature in the candidates list. (the first entry is
+       calculated using only the top feature, the second entry uses
+       the top 2 features, and so on).
 
     Examples
     --------
@@ -267,6 +275,8 @@ class FeatureSelector:
         self._corr_matrix = None
         self._correlated = None
         self._importances = None
+        self._candidates = None
+        self._iterative_aucs = None
 
     @property
     def df(self) -> pandas.DataFrame:
@@ -295,6 +305,14 @@ class FeatureSelector:
     @property
     def importances(self) -> pandas.DataFrame:
         return self._importances
+
+    @property
+    def candidates(self) -> List[str]:
+        return self._candidates
+
+    @property
+    def iterative_aucs(self) -> List[str]:
+        return self._iterative_aucs
 
     def check_for_uniques(self, and_drop: bool = True) -> None:
         """check the dataframe for features that have a single unique value
@@ -450,33 +468,31 @@ class FeatureSelector:
         self._importances.sort_values("importance", ascending=False, inplace=True)
         self._importances.reset_index(inplace=True)
 
-    def uncorrelated_important_features(self, n: int = 20) -> List[str]:
+    def check_candidates(self, n: int = 20) -> None:
         """get the top uncorrelated features
 
         this will parse the correlations and most important features
-        and return the list of ordered important features. Given a
-        feature that should be dropped due to a collinear feature, we
+        and build a list of ordered important features. When a feature
+        that should be dropped due to a collinear feature is found, we
         ensure that the more important member of the pair is included
-        in the resulting list.
+        in the resulting list and drop the other member of the
+        pair. This will populate the ``candidates`` attribute for the
+        class.
 
         Parameters
         ----------
         n : int
            the total number of features to retrieve
 
-        Returns
-        -------
-        list(str)
-           the ordered top features
-
         """
         if self._correlated is None:
             log.error("correlations are not calculated; call check_collinearity()")
-            return list([])
+            return None
         if self._importances is None:
             log.error("feature importances are not calculated; call check_importances()")
-            return list([])
+            return None
 
+        log.info(f"checking for top {n} candidates")
         drop_because_corr = self.correlated.drop_this.to_list()
         features_ordered = self.importances.feature.to_list()
         n_top, exclude = [], []
@@ -502,4 +518,77 @@ class FeatureSelector:
         ## use dict to ensure we drop duplicates while preserving
         ## order (python3.7 insertion order is preserved).
         temp_dict = {f: None for f in n_top}
-        return list(temp_dict.keys())
+        self._candidates = list(temp_dict.keys())
+
+    def check_iterative_aucs(
+        self,
+        max_features: Optional[int] = None,
+        extra_clf_opts: Optional[Dict[str, Any]] = None,
+        extra_fit_opts: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """calculate aucs iteratively adding the next best feature
+
+        after calling the check_candidates function we have a good set
+        of candidate features; this function will train vanilla BDTs
+        iteratively including one more feater at a time starting with
+        the most important.
+
+        Parameters
+        ----------
+        max_features : int
+           the maximum number of features to allow to be
+           checked. default will be the length of the ``candidates``
+           list.
+        extra_clf_opts : dict
+           extra arguments forwarded to :py:class:`lightgbm.LGBMClassifier`.
+        extra_fit_opts : dict
+           extra arguments forwarded to :py:func:`lightgbm.LGBMClassifier.fit`.
+
+        """
+        if self._candidates is None:
+            log.error("candidates are not calculated; call check_candidates()")
+            return None
+
+        if max_features is None:
+            max_features = len(self.candidates)
+
+        train_df, test_df, train_y, test_y, train_w, test_w = train_test_split(
+            self.df[self.candidates],
+            self.labels,
+            self.weights,
+            test_size=0.33,
+            random_state=414,
+            shuffle=True,
+        )
+
+        clf_opts = copy.deepcopy(self.default_clf_opts)
+        if extra_clf_opts is not None:
+            for k, v in extra_clf_opts.items():
+                clf_ops[k] = v
+
+        self._iterative_aucs = []
+        for i in range(1, max_features + 1):
+            log.info(f"iteration {i}/{max_features + 1}")
+            ifeatures = self.candidates[:i]
+            itrain_df = train_df[ifeatures]
+            itest_df = test_df[ifeatures]
+            model = lgbm.LGBMClassifier(**clf_opts)
+            fit_opts = dict(
+                eval_metric="auc",
+                sample_weight=train_w,
+                eval_set=[(itest_df, test_y)],
+                eval_sample_weight=[test_w],
+                early_stopping_rounds=10,
+                verbose=20,
+            )
+            if extra_fit_opts is not None:
+                for k, v in extra_fit_opts:
+                    fit_opts[k] = v
+            model.fit(itrain_df, train_y, **fit_opts)
+            self._iterative_aucs.append(model.best_score_["valid_0"]["auc"])
+
+            gc.enable()
+            del ifeatures, itrain_df, itest_df
+            gc.collect()
+
+        self._iterative_aucs = np.array(self._iterative_aucs)
