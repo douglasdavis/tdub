@@ -599,6 +599,10 @@ def prepare_from_parquet(
 ) -> Tuple[pandas.DataFrame, np.ndarray, np.ndarray]:
     """prepare feature selection data from parquet files
 
+    this function requires pyarrow_.
+
+    .. _pyarrow: https://arrow.apache.org/docs/python/
+
     Parameters
     ----------
     data_dir : str or os.PathLike
@@ -630,6 +634,10 @@ def prepare_from_parquet(
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
 
     """
+    if pyarrow is None:
+        log.error("pyarrow required, doing nothing")
+        return None
+
     data_path = PosixPath(data_dir)
     if not data_path.exists():
         raise RuntimeError(f"{data_dir} doesn't exist")
