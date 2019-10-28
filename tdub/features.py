@@ -448,7 +448,7 @@ class FeatureSelector:
         importance_counter = np.zeros(len(self.raw_features))
 
         log.info("starting importance testing training iterations")
-        for i in range(i, n_fits + 1):
+        for i in range(1, n_fits + 1):
             log.info(f"iteration {i}/{n_fits}")
             model = lgbm.LGBMClassifier(**clf_opts)
             train_df, test_df, train_y, test_y, train_w, test_w = train_test_split(
