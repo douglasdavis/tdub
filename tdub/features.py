@@ -29,157 +29,6 @@ from tdub.frames import iterative_selection
 from tdub.utils import quick_files, get_selection
 
 
-def create_parquet_files(
-    qf_dir: Union[str, os.PathLike],
-    out_dir: Optional[Union[str, os.PathLike]] = None,
-    entrysteps: Optional[Any] = None,
-) -> None:
-    """create slimmed and selected parquet files from ROOT files
-
-    this function requires pyarrow_.
-
-    .. _pyarrow: https://arrow.apache.org/docs/python/
-
-    Parameters
-    ----------
-    qf_dir : str or os.PathLike
-       directory to run :py:func:`tdub.utils.quick_files`
-    out_dir : str or os.PathLike, optional
-       directory to save output files
-    entrysteps : any, optional
-       entrysteps option forwarded to
-       :py:func:`tdub.frames.iterative_selection`
-
-    Examples
-    --------
-
-    >>> from tdub.features import create_parquet_files
-    >>> create_parquet_files("/path/to/root/files", "/path/to/pq/output", entrysteps="250 MB")
-
-    """
-    if pyarrow is None:
-        log.error("pyarrow required, doing nothing")
-        return None
-    indir = str(PosixPath(qf_dir).resolve())
-    qf = quick_files(indir)
-    if out_dir is None:
-        out_dir = PosixPath(".")
-    else:
-        out_dir = PosixPath(out_dir)
-    if entrysteps is None:
-        entrysteps = "500 MB"
-
-    for r in ("1j1b", "2j1b", "2j2b"):
-        always_drop = ["eta_met", "bdt_response"]
-        if r == "1j1b":
-            always_drop.append("minimaxmbl")
-        for sample in ("tW_DR", "tW_DS", "ttbar"):
-            log.info(f"preparing to save a {sample} {r} parquet file using the files:")
-            for f in qf[sample]:
-                log.info(f" - {f}")
-            df = iterative_selection(
-                qf[sample],
-                get_selection(r),
-                keep_category="kinematics",
-                concat=True,
-                entrysteps=entrysteps,
-            )
-            df.drop_cols(*always_drop)
-            df.drop_avoid()
-            if r == "1j1b":
-                df.drop_jet2()
-            outname = str(out_dir / f"{sample}_{r}.parquet")
-            df.to_parquet(outname, engine="pyarrow")
-            log.info(f"{outname} saved")
-
-
-def prepare_from_parquet(
-    data_dir: Union[str, os.PathLike],
-    region: Union[str, tdub.utils.Region],
-    nlo_method: str = "DR",
-    ttbar_frac: Union[str, float] = "auto",
-    weight_scale: float = 1000.0,
-) -> Tuple[pandas.DataFrame, np.ndarray, np.ndarray]:
-    """prepare feature selection data from parquet files
-
-    Parameters
-    ----------
-    data_dir : str or os.PathLike
-       directory where the parquet files live
-    region : str or tdub.utils.Region
-       the region where we're going to select features
-    nlo_method : str
-       the :math:`tW` sample (``DR`` or ``DS``)
-    ttbar_frac : str or float
-       the fraction of :math:`t\\bar{t}` events to use, "auto" (the
-       default) uses some sensible defaults to fit in memory: 0.70 for
-       2j2b and 0.60 for 2j1b.
-    weight_scale : float
-       factor to scale sum of weights
-
-    Returns
-    -------
-    pandas.DataFrame
-       the dataframe which contains kinematic features
-    numpy.ndarray
-       the labels array for the events
-    numpy.ndarray
-       the weights array for the events
-
-    Examples
-    --------
-
-    >>> from tdub.features import prepare_from_parquet
-    >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
-
-    """
-    data_path = PosixPath(data_dir)
-    if not data_path.exists():
-        raise RuntimeError(f"{data_dir} doesn't exist")
-    sig_file = str(data_path / f"tW_{nlo_method}_{region}.parquet")
-    bkg_file = str(data_path / f"ttbar_{region}.parquet")
-    sig = pd.read_parquet(sig_file)
-    bkg = pd.read_parquet(bkg_file)
-    log.info(f"sig file loaded: {sig_file}")
-    log.info(f"bkg file loaded: {bkg_file}")
-
-    for c in sig.columns.to_list():
-        if c not in bkg.columns.to_list():
-            log.warn(f"{c} not in bkg")
-    for c in bkg.columns.to_list():
-        if c not in sig.columns.to_list():
-            log.warn(f"{c} not in sig")
-
-    if ttbar_frac == "auto":
-        if region == "2j2b":
-            ttbar_frac = 0.70
-        if region == "2j1b":
-            ttbar_frac = 0.60
-        if region == "1j1b":
-            ttbar_frac = 1.00
-
-    if ttbar_frac < 1:
-        log.info(f"sampling a fraction ({ttbar_frac}) of the background")
-        bkg = bkg.sample(frac=ttbar_frac, random_state=414)
-        weight_scale = weight_scale / ttbar_frac
-
-    sig_weights = sig.pop("weight_nominal").to_numpy() * weight_scale
-    bkg_weights = bkg.pop("weight_nominal").to_numpy() * weight_scale
-    sig_weights *= bkg_weights.sum() / sig_weights.sum()
-
-    sig_labels = np.ones_like(sig_weights)
-    bkg_labels = np.zeros_like(bkg_weights)
-
-    df = pd.concat([sig, bkg])
-    labels = np.concatenate([sig_labels, bkg_labels])
-    weights = np.concatenate([sig_weights, bkg_weights])
-    gc.enable()
-    del sig, bkg, sig_labels, bkg_labels, sig_weights, bkg_weights
-    gc.collect()
-
-    return df, labels, weights
-
-
 class FeatureSelector:
     """A class to steer the steps of feature selection
 
@@ -254,12 +103,14 @@ class FeatureSelector:
             df.shape[0] == weights.shape[0]
         ), "df and weights must have the same number of entries"
 
+        ## hidden behind properties
         self._df = df
         self._weights = weights
         self._labels = labels
         self._raw_features = df.columns.to_list()
-        self.corr_threshold = corr_threshold
 
+        ## public attributes
+        self.corr_threshold = corr_threshold
         self.default_clf_opts = dict(
             boosting_type="gbdt",
             num_leaves=42,
@@ -274,6 +125,7 @@ class FeatureSelector:
         )
 
         ## Calculated later by some member functions
+        ## we hide these behind properties
         self._corr_matrix = None
         self._correlated = None
         self._importances = None
@@ -629,3 +481,154 @@ class FeatureSelector:
             gc.collect()
 
         self._iterative_aucs = np.array(self._iterative_aucs)
+
+
+def create_parquet_files(
+    qf_dir: Union[str, os.PathLike],
+    out_dir: Optional[Union[str, os.PathLike]] = None,
+    entrysteps: Optional[Any] = None,
+) -> None:
+    """create slimmed and selected parquet files from ROOT files
+
+    this function requires pyarrow_.
+
+    .. _pyarrow: https://arrow.apache.org/docs/python/
+
+    Parameters
+    ----------
+    qf_dir : str or os.PathLike
+       directory to run :py:func:`tdub.utils.quick_files`
+    out_dir : str or os.PathLike, optional
+       directory to save output files
+    entrysteps : any, optional
+       entrysteps option forwarded to
+       :py:func:`tdub.frames.iterative_selection`
+
+    Examples
+    --------
+
+    >>> from tdub.features import create_parquet_files
+    >>> create_parquet_files("/path/to/root/files", "/path/to/pq/output", entrysteps="250 MB")
+
+    """
+    if pyarrow is None:
+        log.error("pyarrow required, doing nothing")
+        return None
+    indir = str(PosixPath(qf_dir).resolve())
+    qf = quick_files(indir)
+    if out_dir is None:
+        out_dir = PosixPath(".")
+    else:
+        out_dir = PosixPath(out_dir)
+    if entrysteps is None:
+        entrysteps = "500 MB"
+
+    for r in ("1j1b", "2j1b", "2j2b"):
+        always_drop = ["eta_met", "bdt_response"]
+        if r == "1j1b":
+            always_drop.append("minimaxmbl")
+        for sample in ("tW_DR", "tW_DS", "ttbar"):
+            log.info(f"preparing to save a {sample} {r} parquet file using the files:")
+            for f in qf[sample]:
+                log.info(f" - {f}")
+            df = iterative_selection(
+                qf[sample],
+                get_selection(r),
+                keep_category="kinematics",
+                concat=True,
+                entrysteps=entrysteps,
+            )
+            df.drop_cols(*always_drop)
+            df.drop_avoid()
+            if r == "1j1b":
+                df.drop_jet2()
+            outname = str(out_dir / f"{sample}_{r}.parquet")
+            df.to_parquet(outname, engine="pyarrow")
+            log.info(f"{outname} saved")
+
+
+def prepare_from_parquet(
+    data_dir: Union[str, os.PathLike],
+    region: Union[str, tdub.utils.Region],
+    nlo_method: str = "DR",
+    ttbar_frac: Union[str, float] = "auto",
+    weight_scale: float = 1000.0,
+) -> Tuple[pandas.DataFrame, np.ndarray, np.ndarray]:
+    """prepare feature selection data from parquet files
+
+    Parameters
+    ----------
+    data_dir : str or os.PathLike
+       directory where the parquet files live
+    region : str or tdub.utils.Region
+       the region where we're going to select features
+    nlo_method : str
+       the :math:`tW` sample (``DR`` or ``DS``)
+    ttbar_frac : str or float
+       the fraction of :math:`t\\bar{t}` events to use, "auto" (the
+       default) uses some sensible defaults to fit in memory: 0.70 for
+       2j2b and 0.60 for 2j1b.
+    weight_scale : float
+       factor to scale sum of weights
+
+    Returns
+    -------
+    pandas.DataFrame
+       the dataframe which contains kinematic features
+    numpy.ndarray
+       the labels array for the events
+    numpy.ndarray
+       the weights array for the events
+
+    Examples
+    --------
+
+    >>> from tdub.features import prepare_from_parquet
+    >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
+
+    """
+    data_path = PosixPath(data_dir)
+    if not data_path.exists():
+        raise RuntimeError(f"{data_dir} doesn't exist")
+    sig_file = str(data_path / f"tW_{nlo_method}_{region}.parquet")
+    bkg_file = str(data_path / f"ttbar_{region}.parquet")
+    sig = pd.read_parquet(sig_file)
+    bkg = pd.read_parquet(bkg_file)
+    log.info(f"sig file loaded: {sig_file}")
+    log.info(f"bkg file loaded: {bkg_file}")
+
+    for c in sig.columns.to_list():
+        if c not in bkg.columns.to_list():
+            log.warn(f"{c} not in bkg")
+    for c in bkg.columns.to_list():
+        if c not in sig.columns.to_list():
+            log.warn(f"{c} not in sig")
+
+    if ttbar_frac == "auto":
+        if region == "2j2b":
+            ttbar_frac = 0.70
+        if region == "2j1b":
+            ttbar_frac = 0.60
+        if region == "1j1b":
+            ttbar_frac = 1.00
+
+    if ttbar_frac < 1:
+        log.info(f"sampling a fraction ({ttbar_frac}) of the background")
+        bkg = bkg.sample(frac=ttbar_frac, random_state=414)
+        weight_scale = weight_scale / ttbar_frac
+
+    sig_weights = sig.pop("weight_nominal").to_numpy() * weight_scale
+    bkg_weights = bkg.pop("weight_nominal").to_numpy() * weight_scale
+    sig_weights *= bkg_weights.sum() / sig_weights.sum()
+
+    sig_labels = np.ones_like(sig_weights)
+    bkg_labels = np.zeros_like(bkg_weights)
+
+    df = pd.concat([sig, bkg])
+    labels = np.concatenate([sig_labels, bkg_labels])
+    weights = np.concatenate([sig_weights, bkg_weights])
+    gc.enable()
+    del sig, bkg, sig_labels, bkg_labels, sig_weights, bkg_weights
+    gc.collect()
+
+    return df, labels, weights
