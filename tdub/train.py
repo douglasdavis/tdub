@@ -16,6 +16,7 @@ import joblib
 import lightgbm as lgbm
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 import pygram11
 from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
@@ -54,14 +55,12 @@ def prepare_from_root(
 
     Returns
     -------
-    X : :obj:`numpy.ndarray`
+    df : :obj:`pandas.DataFrame`
        the feature matrix
-    y : :obj:`numpy.ndarray`
-       the event labels
-    w : :obj:`numpy.ndarray`
+    labels : :obj:`numpy.ndarray`
+       the event labels (``0`` for background; ``1`` for signal)
+    weights : :obj:`numpy.ndarray`
        the event weights
-    cols : list(str)
-       list of features which are columns of ``X``.
 
     Examples
     --------
@@ -69,7 +68,7 @@ def prepare_from_root(
     >>> from tdub.utils import quick_files
     >>> from tdub.train import prepare_from_root
     >>> qfiles = quick_files("/path/to/data")
-    >>> X, y, w, cols = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
+    >>> df, labels, weights = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
 
     """
     log.info("preparing training data")
@@ -108,18 +107,17 @@ def prepare_from_root(
     if scale_sum_weights:
         w_sig *= w_bkg.sum() / w_sig.sum()
 
-    X = np.concatenate([sig_dfim.df.to_numpy(), bkg_dfim.df.to_numpy()])
-    w = np.concatenate([w_sig, w_bkg])
+    df = pd.concat([sig_dfim.df, bkg_dfim.df])
     y = np.concatenate([np.ones_like(w_sig), np.zeros_like(w_bkg)])
+    w = np.concatenate([w_sig, w_bkg])
 
-    return X, y, w, cols
+    return df, y, w
 
 
 def folded_training(
-    X: numpy.ndarray,
-    y: numpy.ndarray,
-    w: numpy.ndarray,
-    cols: List[str],
+    df: pandas.DataFrame,
+    labels: numpy.ndarray,
+    weights: numpy.ndarray,
     params: Dict[str, Any],
     fit_kw: Dict[str, Any],
     output_dir: Union[str, os.PathLike],
@@ -141,14 +139,12 @@ def folded_training(
 
     Parameters
     ----------
-    X : :obj:`numpy.ndarray`
-       the feature matrix
-    y : :obj:`numpy.ndarray`
-       the event labels
-    w : :obj:`numpy.ndarray`
+    df : :obj:`pandas.DataFrame`
+       the feature matrix in dataframe format
+    labels : :obj:`numpy.ndarray`
+       the event labels (``1`` for signal; ``0`` for background)
+    weights : :obj:`numpy.ndarray`
        the event weights
-    cols : list(str)
-       list of features which are the columns of ``X``.
     params : dict(str, Any)
        dictionary of :obj:`lightgbm.LGBMClassifier` parameters
     fit_kw : dict(str, Any)
@@ -176,7 +172,7 @@ def folded_training(
     >>> from tdub.train import prepare_from_root
     >>> from tdub.train import folded_training
     >>> qfiles = quick_files("/path/to/data")
-    >>> X, y, w, cols = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
+    >>> df, labels, weights = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
     >>> params = dict(
     ...     boosting_type="gbdt",
     ...     num_leaves=42,
@@ -191,10 +187,9 @@ def folded_training(
     ...     is_unbalance=True,
     ... )
     >>> folded_training(
-    ...     X,
-    ...     y,
-    ...     w,
-    ...     cols,
+    ...     df,
+    ...     labels,
+    ...     weights,
     ...     params,
     ...     {"verbose": 20},
     ...     "/path/to/train/output",
@@ -214,13 +209,15 @@ def folded_training(
 
     tprs = []
     aucs = []
+    importances = np.zeros((len(df.columns)))
     mean_fpr = np.linspace(0, 1, 100)
     folder = KFold(**kfold_kw)
     fold_number = 0
-    for train_idx, test_idx in folder.split(X):
-        X_train, X_test = X[train_idx], X[test_idx]
-        y_train, y_test = y[train_idx], y[test_idx]
-        w_train, w_test = w[train_idx], w[test_idx]
+    nfits = 0
+    for train_idx, test_idx in folder.split(df):
+        X_train, X_test = df.iloc[train_idx], df.iloc[test_idx]
+        y_train, y_test = labels[train_idx], labels[test_idx]
+        w_train, w_test = weights[train_idx], weights[test_idx]
         validation_data = [(X_test, y_test)]
         validation_w = w_test
 
@@ -249,6 +246,9 @@ def folded_training(
         joblib.dump(
             fitted_model, f"model_fold{fold_number}.joblib.gz", compress=("gzip", 3)
         )
+
+        nfits += 1
+        importances += fitted_model.feature_importances_
 
         fold_fig_proba, fold_ax_proba = plt.subplots()
         fold_fig_pred, fold_ax_pred = plt.subplots()
@@ -447,6 +447,7 @@ def folded_training(
 
         fold_number += 1
 
+    relative_importances = importances / nfits
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1.0
     mean_auc = auc(mean_fpr, mean_tpr)
@@ -473,7 +474,8 @@ def folded_training(
 
     summary = {}
     summary["region"] = region
-    summary["features"] = [str(c) for c in cols]
+    summary["features"] = [str(c) for c in df.columns]
+    summary["importances"] = list(relative_importances)
     summary["kfold"] = kfold_kw
     summary["roc"] = {
         "auc": mean_auc,
@@ -491,9 +493,9 @@ def folded_training(
 
 
 def gp_minimize_auc(
+    data_dir: str,
     region: Union[Region, str],
     nlo_method: str,
-    data_dir: str,
     output_dir: Union[str, os.PathLike] = "_unnamed_optimization",
     n_calls: int = 15,
     esr: int = 20,
@@ -505,12 +507,12 @@ def gp_minimize_auc(
 
     Parameters
     ----------
+    data_dir : str
+       path containing ROOT files
     region : Region or str
        the region where we're going to perform the training
     nlo_method : str
        which tW NLO method sample ('DR' or 'DS' or 'Both')
-    data_dir : str
-       path containing ROOT files
     output_dir : str or os.PathLike
        path to save optimization output
     n_calls : int
@@ -523,19 +525,14 @@ def gp_minimize_auc(
 
     >>> from tdub.utils import Region
     >>> from tdub.train import prepare_from_root, gp_minimize_auc
-    >>> gp_minimize_auc(Region.r2j1b, "DS", "/path/to/data", "opt_DS_2j1b")
-    >>> gp_minimize_auc(Region.r2j1b, "DR", "/path/to/data", "opt_DR_2j1b")
+    >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DS", "opt_DS_2j1b")
+    >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DR", "opt_DR_2j1b")
 
     """
 
     from skopt.utils import use_named_args
     from skopt.space import Real, Integer, Categorical
     from skopt import gp_minimize
-
-    run_from_dir = os.getcwd()
-    save_dir = PosixPath(output_dir)
-    save_dir.mkdir(exist_ok=True, parents=True)
-    os.chdir(save_dir)
 
     qfiles = quick_files(f"{data_dir}")
     if nlo_method == "DR":
@@ -547,9 +544,10 @@ def gp_minimize_auc(
         tW_files.sort()
     else:
         raise ValueError("nlo_method must be 'DR' or 'DS' or 'Both'")
-    X, y, w, cols = prepare_from_root(tW_files, qfiles["ttbar"], region)
+
+    df, labels, weights = prepare_from_root(tW_files, qfiles["ttbar"], region)
     X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-        X, y, w, train_size=0.333, random_state=414, shuffle=True
+        df, labels, weights, train_size=0.333, random_state=414, shuffle=True
     )
     validation_data = [(X_test, y_test)]
     validation_w = w_test
@@ -566,6 +564,11 @@ def gp_minimize_auc(
         Integer(low=3, high=8, name="max_depth"),
     ]
     default_parameters = [42, 1e-1, 180000, 40, 0.4, 0.5, 0.8, 200, 5]
+
+    run_from_dir = os.getcwd()
+    save_dir = PosixPath(output_dir)
+    save_dir.mkdir(exist_ok=True, parents=True)
+    os.chdir(save_dir)
 
     global best_fit
     global best_auc
@@ -612,7 +615,7 @@ def gp_minimize_auc(
         os.chdir(p.resolve())
 
         with open("features.txt", "w") as f:
-            for c in cols:
+            for c in df.columns:
                 print(c, file=f)
 
         model = lgbm.LGBMClassifier(
@@ -717,7 +720,7 @@ def gp_minimize_auc(
     summary = {
         "region": region,
         "nlo_method": nlo_method,
-        "features": cols,
+        "features": list(df.columns),
         "best_iteration": best_fit,
         "best_auc": best_auc,
         "best_params": best_paramdict,

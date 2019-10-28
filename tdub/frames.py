@@ -526,7 +526,7 @@ def specific_dataframe(
         sel = raw_df.eval(q)
         dfim = DataFramesInMemory(skeleton=True)
         categorized = categorize_branches(raw_df)
-        use_branches, meta_branches = categorized["kin"], categorized["meta"]
+        use_branches, meta_branches = categorized["kinematics"], categorized["meta"]
         if not kwargs.pop("dropnonkin", False):
             use_branches += meta_branches
         dfim._df = raw_df[sel][sorted(use_branches, key=str.lower)]

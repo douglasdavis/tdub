@@ -50,7 +50,7 @@ def parse_args():
     trainfold.add_argument("-n", "--n-splits", type=int, default=3, help="number of splits for folding")
 
     trainoptimize = subparsers.add_parser("train-optimize", help="Gaussian processes minimization for HP optimization")
-    trainoptimize.add_argument("region", type=str, help="Region to train")
+    trainoptimize.add_argument("region", type=str, help="Region to train", choices=["1j1b", "2j1b", "2j2b"])
     trainoptimize.add_argument("nlomethod", type=str, help="NLO method samples to use", choices=["DR", "DS", "Both"])
     trainoptimize.add_argument("datadir", type=str, help="Directory with ROOT files")
     trainoptimize.add_argument("-o", "--out-dir", type=str, default="_optim", help="output directory for saving optimizatin results")
@@ -79,9 +79,9 @@ def _optimize(args):
     from tdub.train import gp_minimize_auc
 
     return gp_minimize_auc(
+        args.datadir,
         args.region,
         args.nlomethod,
-        args.datadir,
         output_dir=args.out_dir,
         n_calls=args.n_calls,
         esr=args.esr,
@@ -90,11 +90,13 @@ def _optimize(args):
 
 def _fselprepare(args):
     from tdub.features import create_parquet_files
+
     create_parquet_files(args.indir, args.outdir, args.entrysteps)
 
 
 def _fselexecute(args):
     from tdub.features import prepare_from_parquet, FeatureSelector
+
     if args.out == "_auto":
         outdir = f"fsres_{args.nlo_method}_{args.region}"
     else:
@@ -130,12 +132,11 @@ def _foldedtraining(args):
     else:
         raise ValueError("nlo_method must be 'DR' or 'DS' or 'Both'")
 
-    X, y, w, cols = prepare_from_root(tW_files, qfiles["ttbar"], summary["region"])
+    df, labels, weights = prepare_from_root(tW_files, qfiles["ttbar"], summary["region"])
     folded_training(
-        X,
-        y,
-        w,
-        cols,
+        df,
+        labels,
+        weights,
         summary["best_params"],
         {"verbose": 20},
         args.out_dir,
