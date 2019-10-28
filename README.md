@@ -12,6 +12,7 @@ ATLAS Run 2 tW inclusive cross section analysis. The project provides
 a simple command line interface for performing standard analysis tasks
 including:
 
+- BDT feature selection.
 - BDT hyperparameter optimization.
 - training BDT models on our Monte Carlo.
 - applying trained BDT models to our data and Monte Carlo.

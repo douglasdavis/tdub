@@ -12,6 +12,20 @@ Apply BDT folded training models to file(s), save model response to .npy file(s)
 
 .. command-output:: tdub apply-gennpy --help
 
+fsel-prepare
+^^^^^^^^^^^^
+
+Prepare for feature selection by creating dedicated parquet files
+
+.. command-output:: tdub fsel-prepare --help
+
+fsel-execute
+^^^^^^^^^^^^
+
+Execute a round of feature selection on a particular setup
+
+.. command-output:: tdub fsel-execute --help
+
 rex-pulls
 ^^^^^^^^^
 

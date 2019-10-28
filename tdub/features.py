@@ -482,6 +482,48 @@ class FeatureSelector:
 
         self._iterative_aucs = np.array(self._iterative_aucs)
 
+    def save_result(self, output_dir: Union[str, os.PathLike]) -> None:
+        """save the results to a directory
+
+        Parameters
+        ----------
+        output_dir : str or os.PathLike
+           the directory to save relevant results to
+
+        Examples
+        --------
+
+        >>> from tdub.features import FeatureSelector, prepare_from_parquet
+        >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
+        >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
+        >>> fs.check_for_uniques(and_drop=True)
+        >>> fs.check_collinearity()
+        >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
+        >>> fs.check_candidates(n=25)
+        >>> fs.check_iterative_aucs(max_features=20)
+
+        """
+        outdir = PosixPath(output_dir)
+        try:
+            outdir.mkdir(exist_ok=False, parents=True)
+        except FileExistsError:
+            import random
+            import string
+            randstr = "".join(
+                random.choice(string.ascii_uppercase + string.digits) for _ in range(5)
+            )
+            outdir = outdir.resolve().parent / f"{outdir.name}_{randstr}"
+            outdir.mkdir(exist_ok=False, parents=True)
+            log.warn(f"{output_dir} already exists; creating output {output_dir}_{randstr}")
+
+        out_raw_aucs = outdir / "raw_aucs.txt"
+        out_raw_tf = outdir / "raw_top_features.txt"
+        with out_raw_aucs.open("w") as f2w:
+            np.savetxt(f2w, self.iterative_aucs, fmt="%.10f")
+        with out_raw_tf.open("w") as f2w:
+            f2w.write("\n".join(self.candidates))
+            f2w.write("\n")
+
 
 def create_parquet_files(
     qf_dir: Union[str, os.PathLike],
@@ -520,6 +562,7 @@ def create_parquet_files(
         out_dir = PosixPath(".")
     else:
         out_dir = PosixPath(out_dir)
+        out_dir.mkdir(exist_ok=True, parents=True)
     if entrysteps is None:
         entrysteps = "500 MB"
 

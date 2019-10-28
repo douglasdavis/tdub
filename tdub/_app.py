@@ -57,6 +57,20 @@ def parse_args():
     trainoptimize.add_argument("-n", "--n-calls", type=int, default=15, help="number of calls for the optimization procedure")
     trainoptimize.add_argument("-r", "--esr", type=int, default=20, help="early stopping rounds for the training")
 
+    fselprepare = subparsers.add_parser("fsel-prepare", help="Prepare a set of parquet files for feature selection")
+    fselprepare.add_argument("-i", "--in", dest="indir", type=str, required=True, help="Directory containing ROOT files")
+    fselprepare.add_argument("-o", "--out", dest="outdir", type=str, required=True, help="Output directory to save parquet files")
+    fselprepare.add_argument("--entrysteps", type=str, required=False, help="entrysteps argument for create_parquet_files function")
+
+    fselexecute = subparsers.add_parser("fsel-execute", help="Execute a round of feature selection")
+    fselexecute.add_argument("-i", "--in-pqdir", type=str, help="Directory containg the parquet files")
+    fselexecute.add_argument("-n", "--nlo-method", type=str, choices=["DR", "DS"], required=True, help="tW NLO sample")
+    fselexecute.add_argument("-r", "--region", type=str, choices=["1j1b", "2j1b", "2j2b"], required=True, help="Region to process")
+    fselexecute.add_argument("-o", "--out",  type=str, required=False, default="_auto", help="Output directory to save selection result")
+    fselexecute.add_argument("--corr-threshold", dest="corrt", type=float, default=0.85, help="Correlation threshold")
+    fselexecute.add_argument("--importance-n-fits", dest="nfits", type=int, default=5, help="Number of fitting rounds for importance calc.")
+    fselexecute.add_argument("--max-features", dest="maxf", type=int, default=25, help="maximum number of features to test iteratively")
+
     # fmt: on
     return (parser.parse_args(), parser)
 
@@ -72,6 +86,30 @@ def _optimize(args):
         n_calls=args.n_calls,
         esr=args.esr,
     )
+
+
+def _fselprepare(args):
+    from tdub.features import create_parquet_files
+    create_parquet_files(args.indir, args.outdir, args.entrysteps)
+
+
+def _fselexecute(args):
+    from tdub.features import prepare_from_parquet, FeatureSelector
+    if args.out == "_auto":
+        outdir = f"fsres_{args.nlo_method}_{args.region}"
+    else:
+        outdir = args.out
+
+    full_df, full_labels, full_weights = prepare_from_parquet(
+        args.in_pqdir, region=args.region, nlo_method=args.nlo_method
+    )
+    fs = FeatureSelector(df=full_df, labels=full_labels, weights=full_weights)
+    fs.check_for_uniques()
+    fs.check_collinearity(threshold=args.corrt)
+    fs.check_importances(n_fits=args.nfits)
+    fs.check_candidates(n=args.maxf)
+    fs.check_iterative_aucs(max_features=args.maxf)
+    fs.save_result(outdir)
 
 
 def _foldedtraining(args):
@@ -162,6 +200,10 @@ def cli():
         return _foldedtraining(args)
     elif args.action == "apply-gennpy":
         return _pred2npy(args)
+    elif args.action == "fsel-prepare":
+        return _fselprepare(args)
+    elif args.action == "fsel-execute":
+        return _fselexecute(args)
     else:
         parser.print_help()
     # fmt: on
