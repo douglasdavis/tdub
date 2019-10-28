@@ -501,6 +501,7 @@ class FeatureSelector:
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
         >>> fs.check_candidates(n=25)
         >>> fs.check_iterative_aucs(max_features=20)
+        >>> fs.save_result("feature_select_DR_2j1b")
 
         """
         outdir = PosixPath(output_dir)
