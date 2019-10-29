@@ -34,9 +34,9 @@ class FeatureSelector:
 
     Parameters
     ----------
-    data : pandas.DataFrame
+    df : pandas.DataFrame
        The dataframe which contains signal and background events; it
-       should also only contain features we with to test for (it is
+       should also only contain features we wish to test for (it is
        expected to be "clean" from non-kinematic information, like
        metadata and weights).
     weights : numpy.ndarray
