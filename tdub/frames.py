@@ -763,12 +763,17 @@ def drop_cols(df: pandas.DataFrame, *cols: str) -> None:
     >>> df = pd.read_parquet("some_file.parquet")
     >>> "E_jet1" in df.columns:
     True
-    >>> "E_mass1" in df.columns:
+    >>> "mass_jet1" in df.columns:
+    True
+    >>> "mass_jet2" in df.columns:
     True
     >>> drop_cols(df, "E_jet1", "mass_jet1")
     >>> "E_jet1" in df.columns:
     False
-    >>> "E_mass1" in df.columns:
+    >>> "mass_jet1" in df.columns:
+    False
+    >>> df.drop_cols("mass_jet2") # use augmented df class
+    >>> "mass_jet2" in df.columns:
     False
 
     """
@@ -797,7 +802,7 @@ def drop_avoid(df: pandas.DataFrame) -> None:
     Examples
     --------
 
-    >>> from tdub.utils improt drop_avoid
+    >>> from tdub.utils import drop_avoid
     >>> import pandas as pd
     >>> df = pd.read_parquet("some_file.parquet")
     >>> "E_jetL1" in df.columns:
@@ -830,7 +835,7 @@ def drop_jet2(df: pandas.DataFrame) -> None:
     Examples
     --------
 
-    >>> from tdub.utils improt drop_jet2
+    >>> from tdub.utils import drop_jet2
     >>> import pandas as pd
     >>> df = pd.read_parquet("some_file.parquet")
     >>> "pTsys_lep1lep2jet1jet2met" in df.columns:
