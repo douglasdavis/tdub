@@ -20,5 +20,3 @@ python:
     - requirements: docs/requirements.txt
     - method: pip
       path: .
-    - method: pip
-      path: git+https://github.com/pandas-dev/pandas-sphinx-theme.git@master

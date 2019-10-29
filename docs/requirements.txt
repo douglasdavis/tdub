@@ -1,2 +1,3 @@
 sphinx>=2.1
 sphinxcontrib-programoutput
+git+https://github.com/pandas-dev/pandas-sphinx-theme.git@master
