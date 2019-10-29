@@ -552,6 +552,11 @@ def gp_minimize_auc(
     validation_data = [(X_test, y_test)]
     validation_w = w_test
 
+    n_sig = y_train[y_train == 1].shape[0]
+    n_bkg = y_train[y_train == 0].shape[0]
+    scale_pos_weight = n_bkg / n_sig
+    log.info(f"n_bkg / n_sig = {n_bkg} / {n_sig} = {scale_pos_weight}")
+
     dimensions = [
         Integer(low=30, high=150, name="num_leaves"),
         Real(low=1e-3, high=2e-1, prior="log-uniform", name="learning_rate"),
@@ -629,7 +634,7 @@ def gp_minimize_auc(
             colsample_bytree=colsample_bytree,
             n_estimators=n_estimators,
             max_depth=max_depth,
-            is_unbalance=True,
+            scale_pos_weight=scale_pos_weight,
         )
 
         fitted_model = model.fit(

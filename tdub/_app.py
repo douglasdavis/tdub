@@ -66,7 +66,8 @@ def parse_args():
     fselexecute.add_argument("-i", "--in-pqdir", type=str, help="Directory containg the parquet files")
     fselexecute.add_argument("-n", "--nlo-method", type=str, choices=["DR", "DS"], required=True, help="tW NLO sample")
     fselexecute.add_argument("-r", "--region", type=str, choices=["1j1b", "2j1b", "2j2b"], required=True, help="Region to process")
-    fselexecute.add_argument("-o", "--out",  type=str, required=False, default="_auto", help="Output directory to save selection result")
+    fselexecute.add_argument("-t", "--type", type=str, dest="itype", choices=["split", "gain"], required=True, help="importance type")
+    fselexecute.add_argument("-o", "--out",  type=str, required=False, default="_auto", help="Output directory to save selection result (prepended with 'fsel_result.')")
     fselexecute.add_argument("--corr-threshold", dest="corrt", type=float, default=0.85, help="Correlation threshold")
     fselexecute.add_argument("--importance-n-fits", dest="nfits", type=int, default=5, help="Number of fitting rounds for importance calc.")
     fselexecute.add_argument("--max-features", dest="maxf", type=int, default=25, help="maximum number of features to test iteratively")
@@ -98,20 +99,26 @@ def _fselexecute(args):
     from tdub.features import prepare_from_parquet, FeatureSelector
 
     if args.out == "_auto":
-        outdir = f"fsres_{args.nlo_method}_{args.region}"
+        name = f"{args.nlo_method}_{args.region}_{args.itype}"
     else:
-        outdir = args.out
+        name = args.out
 
     full_df, full_labels, full_weights = prepare_from_parquet(
         args.in_pqdir, region=args.region, nlo_method=args.nlo_method
     )
-    fs = FeatureSelector(df=full_df, labels=full_labels, weights=full_weights)
+    fs = FeatureSelector(
+        df=full_df,
+        labels=full_labels,
+        weights=full_weights,
+        importance_type=args.itype,
+        name=name,
+    )
     fs.check_for_uniques()
-    fs.check_collinearity(threshold=args.corrt)
     fs.check_importances(n_fits=args.nfits)
+    fs.check_collinearity(threshold=args.corrt)
     fs.check_candidates(n=args.maxf)
     fs.check_iterative_aucs(max_features=args.maxf)
-    fs.save_result(outdir)
+    fs.save_result()
 
 
 def _foldedtraining(args):

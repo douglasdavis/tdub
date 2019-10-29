@@ -41,11 +41,15 @@ class FeatureSelector:
        metadata and weights).
     weights : numpy.ndarray
        the weights array compatible with the dataframe
+    importance_type : str
+       the importance type ("gain" or "split")
     labels : numpy.ndarray
        array of labels compatible with the dataframe (``1`` for
        :math:`tW` and ``0`` for :math:`t\\bar{t}`.
     corr_threshold : float
        the threshold for excluding features based on correlations
+    name : str, optional
+       give the selector a name
 
     Attributes
     ----------
@@ -59,6 +63,8 @@ class FeatureSelector:
        :math:`t\\bar{t}`).
     raw_features : list(str)
        the list of all features determined at initialization
+    name : str, optional
+       a name for the selector pipeline, required to save the result)
     corr_threshold : float
        the threshold for excluding features based on correlations
     default_clf_opts : dict
@@ -94,7 +100,9 @@ class FeatureSelector:
         df: pandas.DataFrame,
         labels: np.ndarray,
         weights: numpy.ndarray,
+        importance_type: str = "gain",
         corr_threshold: float = 0.85,
+        name: Optional[str] = None,
     ) -> None:
         assert np.unique(labels).shape[0] == 2, "labels should have 2 unique values"
         assert labels.shape == weights.shape, "labels and weights must have identical shape"
@@ -109,19 +117,22 @@ class FeatureSelector:
         self._labels = labels
         self._raw_features = df.columns.to_list()
 
+        ## completely hidden
+        self._nsig = self._labels[self._labels == 1].shape[0]
+        self._nbkg = self._labels[self._labels == 0].shape[0]
+        self._scale_pos_weight = self._nbkg / self._nsig
+
         ## public attributes
+        self.name = name
         self.corr_threshold = corr_threshold
         self.default_clf_opts = dict(
             boosting_type="gbdt",
+            importance_type=importance_type,
             num_leaves=42,
             learning_rate=0.05,
-            subsample_for_bin=180000,
-            min_child_samples=40,
-            reg_alpha=0.4,
-            reg_lambda=0.5,
-            colsample_bytree=0.8,
             n_estimators=250,
-            max_depth=5,
+            max_depth=6,
+            scale_pos_weight=self._scale_pos_weight,
         )
 
         ## Calculated later by some member functions
@@ -295,7 +306,14 @@ class FeatureSelector:
         clf_opts = copy.deepcopy(self.default_clf_opts)
         if extra_clf_opts is not None:
             for k, v in extra_clf_opts.items():
-                clf_ops[k] = v
+                clf_opts[k] = v
+
+        log.info(f"Classifier is configured with parameters:")
+        model = lgbm.LGBMClassifier(**clf_opts)
+        for k, v in model.get_params().items():
+            if v is not None:
+                log.info(f"{k:>20} | {v:<12}")
+        del model
 
         importance_counter = np.zeros(len(self.raw_features))
 
@@ -313,10 +331,9 @@ class FeatureSelector:
             )
             fit_opts = dict(
                 eval_metric="auc",
-                sample_weight=train_w,
                 eval_set=[(test_df, test_y)],
                 eval_sample_weight=[test_w],
-                early_stopping_rounds=10,
+                early_stopping_rounds=15,
                 verbose=20,
             )
             if extra_fit_opts is not None:
@@ -453,7 +470,11 @@ class FeatureSelector:
         clf_opts = copy.deepcopy(self.default_clf_opts)
         if extra_clf_opts is not None:
             for k, v in extra_clf_opts.items():
-                clf_ops[k] = v
+                clf_opts[k] = v
+
+        log.info(f"Classifier is configured with parameters:")
+        for k, v in clf_opts.items():
+            log.info(f"{k:>20} | {v:<12}")
 
         self._iterative_aucs = []
         for i in range(1, max_features + 1):
@@ -464,7 +485,6 @@ class FeatureSelector:
             model = lgbm.LGBMClassifier(**clf_opts)
             fit_opts = dict(
                 eval_metric="auc",
-                sample_weight=train_w,
                 eval_set=[(itest_df, test_y)],
                 eval_sample_weight=[test_w],
                 early_stopping_rounds=10,
@@ -482,7 +502,7 @@ class FeatureSelector:
 
         self._iterative_aucs = np.array(self._iterative_aucs)
 
-    def save_result(self, output_dir: Union[str, os.PathLike]) -> None:
+    def save_result(self) -> None:
         """save the results to a directory
 
         Parameters
@@ -501,21 +521,17 @@ class FeatureSelector:
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
         >>> fs.check_candidates(n=25)
         >>> fs.check_iterative_aucs(max_features=20)
-        >>> fs.save_result("feature_select_DR_2j1b")
+        >>> fs.name = "2j1b_DR"
+        >>> fs.save_result()
 
         """
-        outdir = PosixPath(output_dir)
+        if self.name is None:
+            raise ValueError("name attribute cannot be None to save result")
+        outdir = PosixPath(f"fsel_result.{self.name}")
         try:
-            outdir.mkdir(exist_ok=False, parents=True)
+            outdir.mkdir(exist_ok=False)
         except FileExistsError:
-            import random
-            import string
-            randstr = "".join(
-                random.choice(string.ascii_uppercase + string.digits) for _ in range(5)
-            )
-            outdir = outdir.resolve().parent / f"{outdir.name}_{randstr}"
-            outdir.mkdir(exist_ok=False, parents=True)
-            log.warn(f"{output_dir} already exists; creating output {output_dir}_{randstr}")
+            log.warn(f"{output_dir} already exists; contents will be overwritten")
 
         out_raw_aucs = outdir / "raw_aucs.txt"
         out_raw_tf = outdir / "raw_top_features.txt"
