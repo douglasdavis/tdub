@@ -1,3 +1,5 @@
+import pytest
+
 from tdub.utils import (
     SampleInfo,
     Region,
@@ -5,6 +7,9 @@ from tdub.utils import (
     get_branches,
     get_features,
     get_selection,
+)
+
+from tdub.constants import (
     FEATURESET_1j1b,
     FEATURESET_2j1b,
     FEATURESET_2j2b,
@@ -12,8 +17,6 @@ from tdub.utils import (
     SELECTION_2j1b,
     SELECTION_2j2b,
 )
-
-import pytest
 
 
 def test_sample_info():

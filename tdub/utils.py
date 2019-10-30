@@ -5,6 +5,7 @@ Module for general utilities
 from __future__ import annotations
 
 # stdlib
+import logging
 import numbers
 import os
 import re
@@ -16,6 +17,12 @@ from pathlib import PosixPath
 # external
 import numpy as np
 import uproot
+import yaml
+
+# tdub
+import tdub.constants
+
+log = logging.getLogger(__name__)
 
 
 class Region(Enum):
@@ -473,9 +480,9 @@ def conservative_branches(
 
     good_branches = set(
         {"reg1j1b", "reg2j1b", "reg2j2b", "OS"}
-        | set(FEATURESET_1j1b)
-        | set(FEATURESET_2j1b)
-        | set(FEATURESET_2j2b)
+        | set(tdub.constants.FEATURESET_1j1b)
+        | set(tdub.constants.FEATURESET_2j1b)
+        | set(tdub.constants.FEATURESET_2j2b)
     )
     good_branches = bs & good_branches
 
@@ -511,9 +518,9 @@ def get_selection(region: Union[str, Region]) -> str:
 
     """
     options = {
-        Region.r1j1b: SELECTION_1j1b,
-        Region.r2j1b: SELECTION_2j1b,
-        Region.r2j2b: SELECTION_2j2b,
+        Region.r1j1b: tdub.constants.SELECTION_1j1b,
+        Region.r2j1b: tdub.constants.SELECTION_2j1b,
+        Region.r2j2b: tdub.constants.SELECTION_2j2b,
     }
     if isinstance(region, str):
         return options.get(Region.from_str(region))
@@ -553,113 +560,69 @@ def get_features(region: Union[str, Region]) -> List[str]:
 
     """
     options = {
-        Region.r1j1b: FEATURESET_1j1b,
-        Region.r2j1b: FEATURESET_2j1b,
-        Region.r2j2b: FEATURESET_2j2b,
+        Region.r1j1b: tdub.constants.FEATURESET_1j1b,
+        Region.r2j1b: tdub.constants.FEATURESET_2j1b,
+        Region.r2j2b: tdub.constants.FEATURESET_2j2b,
     }
     if isinstance(region, str):
         return options.get(Region.from_str(region))
     return options.get(region)
 
 
-SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
-"""
-str: The pandas flavor selection string for the 1j1b region
-"""
+def override_features(input_file: Union[str, os.PathLike]) -> None:
+    """override the ``tdub.constants.FEATURESET_{1j1b, 2j1b, 2j2b}`` constants
 
+    given a YAML format file of the form:
 
-SELECTION_2j1b = "(reg2j1b == True) & (OS == True)"
-"""
-str: The pandas flavor selection string for the 2j1b region
-"""
+    .. code-block:: yaml
 
+        r1j1b:
+        - new_feature1
+        - new_feature2
+        r2j1b:
+        - new_feature1
+        - new_feature2
+        - new_feature3
+        r2j2b:
+        - new_feature1
+        - new_feature2
+        - new_feature3
 
-SELECTION_2j2b = "(reg2j2b == True) & (OS == True)"
-"""
-str: The pandas flavor selection string for the 2j2b region
-"""
+    we override the module constants
 
+    - :py:data:`tdub.constants.FEATURESET_1j1b`
+    - :py:data:`tdub.constants.FEATURESET_2j1b`
+    - :py:data:`tdub.constants.FEATURESET_2j2b`
 
-FEATURESET_1j1b = sorted(
-    [
-        "pTsys_lep1lep2jet1met",
-        "mass_lep2jet1",
-        "mass_lep1jet1",
-        "pTsys_lep1lep2",
-        "deltaR_lep2_jet1",
-        "nsoftjets",
-        "deltaR_lep1_lep2",
-        "deltapT_lep1_jet1",
-        "mT_lep2met",
-        "nsoftbjets",
-        "cent_lep1lep2",
-        "pTsys_lep1lep2jet1",
-    ],
-    key=str.lower,
-)
-"""
-list(str): list of features we use for classifiers in the 1j1b region
-"""
+    Parameters
+    ----------
+    input_file : str or os.PathLike
+       the input YAML file
 
+    Examples
+    --------
 
-FEATURESET_2j1b = sorted(
-    [
-        "mass_lep1jet2",
-        "psuedoContTagBin_jet1",
-        "mass_lep1jet1",
-        "mass_lep2jet1",
-        "mass_lep2jet2",
-        "pTsys_lep1lep2jet1jet2met",
-        "psuedoContTagBin_jet2",
-        "pT_jet2",
-    ],
-    key=str.lower,
-)
-"""
-list(str): list of features we use for classifiers in the 2j1b region
-"""
+    An example where the file ``new_features.yml`` overrides the
+    ``1j1b`` features:
 
+    >>> from tdub.utils import override_features
+    >>> from tdub.constants import FEATURESET_1j1b
+    >>> FEATURESET_1j1b
+    ["old1", "old2"]
+    >>> override_features("new_features.yml")
+    >>> FEATURESET_1j1b
+    ["new1", "new2"]
 
-FEATURESET_2j2b = sorted(
-    [
-        "mass_lep1jet2",
-        "mass_lep1jet1",
-        "deltaR_lep1_jet1",
-        "mass_lep2jet1",
-        "pTsys_lep1lep2met",
-        "pT_jet2",
-        "mass_lep2jet2",
-    ],
-    key=str.lower,
-)
-"""
-list(str): list of features we use for classifiers in the 2j2b region
-"""
-
-
-AVOID_IN_CLF = sorted(
-    [
-        "bdt_response",
-        "eta_met",
-        "eta_jetL1",
-        "eta_jetS1",
-        "sumet",
-        "mass_jet1",
-        "mass_jet2",
-        "mass_jetF",
-        "mass_jetL1",
-        "mass_jetS1",
-        "E_jetL1",
-        "E_jetS1",
-        "E_jet1",
-        "E_jet2",
-        "pT_lep3",
-        "pT_jetL1",
-        "nbjets",
-        "njets",
-    ],
-    key=str.lower,
-)
-"""
-list(str): list of features to avoid in classifiers
-"""
+    """
+    path = PosixPath(input_file)
+    with path.open("r") as f:
+        table = yaml.safe_load(f)
+        if "r1j1b" in table:
+            log.info("Overriding tdub.constants.FEATURESET_1j1b")
+            tdub.constants.FEATURESET_1j1b = table["r1j1b"]
+        if "r2j1b" in table:
+            log.info("Overriding tdub.constants.FEATURESET_2j1b")
+            tdub.constants.FEATURESET_2j1b = table["r2j1b"]
+        if "r2j2b" in table:
+            log.info("Overriding tdub.constants.FEATURESET_2j2b")
+            tdub.constants.FEATURESET_2j2b = table["r2j2b"]

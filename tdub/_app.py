@@ -48,6 +48,7 @@ def parse_args():
     trainfold.add_argument("-o", "--out-dir", type=str, default="_folded", help="output directory for saving optimizatin results")
     trainfold.add_argument("-s", "--seed", type=int, default=414, help="random seed for folding")
     trainfold.add_argument("-n", "--n-splits", type=int, default=3, help="number of splits for folding")
+    trainfold.add_argument("--override-features", type=str, help="a YAML file containing feature lists for overriding default features")
 
     trainoptimize = subparsers.add_parser("train-optimize", help="Gaussian processes minimization for HP optimization")
     trainoptimize.add_argument("region", type=str, help="Region to train", choices=["1j1b", "2j1b", "2j2b"])
@@ -56,6 +57,7 @@ def parse_args():
     trainoptimize.add_argument("-o", "--out-dir", type=str, default="_optim", help="output directory for saving optimizatin results")
     trainoptimize.add_argument("-n", "--n-calls", type=int, default=15, help="number of calls for the optimization procedure")
     trainoptimize.add_argument("-r", "--esr", type=int, default=20, help="early stopping rounds for the training")
+    trainoptimize.add_argument("--override-features", type=str, help="a YAML file containing feature lists for overriding default features")
 
     fselprepare = subparsers.add_parser("fsel-prepare", help="Prepare a set of parquet files for feature selection")
     fselprepare.add_argument("-i", "--in", dest="indir", type=str, required=True, help="Directory containing ROOT files")
@@ -79,7 +81,10 @@ def parse_args():
 
 def _optimize(args):
     from tdub.train import gp_minimize_auc
+    from tdub.utils import override_features
 
+    if args.override_features:
+        override_features(args.override_features)
     return gp_minimize_auc(
         args.datadir,
         args.region,
@@ -128,8 +133,10 @@ def _fselexecute(args):
 
 def _foldedtraining(args):
     from tdub.train import folded_training, prepare_from_root
-    from tdub.utils import quick_files
+    from tdub.utils import quick_files, override_features
 
+    if args.override_features:
+        override_features(args.override_features)
     with open(f"{args.optimdir}/summary.json", "r") as f:
         summary = json.load(f)
     nlo_method = summary["nlo_method"]

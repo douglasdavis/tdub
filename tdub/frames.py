@@ -16,8 +16,8 @@ import pandas as pd
 import uproot
 
 # tdub
+from tdub.constants import AVOID_IN_CLF
 from tdub.utils import (
-    AVOID_IN_CLF,
     Region,
     categorize_branches,
     conservative_branches,
@@ -634,14 +634,14 @@ def iterative_selection(
 
     >>> from tdub.frames import iterative_selection
     >>> from tdub.utils import quick_files
-    >>> from tdub.utils import SELECTION_2j2b
+    >>> from tdub.utils import get_selection
     >>> qf = quick_files("/path/to/files")
-    >>> ttbar_dfs = iterative_selection(qf["ttbar"], SELECTION_2j2b, entrysteps="1 GB")
-    >>> tW_df = iterative_selection(qf["tW_DR"], SELECTION_2j2b, concat=True)
+    >>> ttbar_dfs = iterative_selection(qf["ttbar"], get_selection("2j2b"), entrysteps="1 GB")
+    >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"), concat=True)
 
     Keep only the kinematic branches after selection and ignore avoided columns:
 
-    >>> tW_df = iterative_selection(qf["tW_DR"], SELECTION_2j2b, concat=True,
+    >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"), concat=True,
     ...                             keep_category="kinematics", ignore_avoid=True)
 
     """

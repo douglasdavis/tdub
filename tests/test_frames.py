@@ -1,7 +1,7 @@
 from pathlib import PosixPath
 
+from tdub.constants import AVOID_IN_CLF
 from tdub.frames import iterative_selection, drop_avoid, conservative_dataframe
-from tdub.utils import AVOID_IN_CLF
 
 test_file_root = PosixPath(__file__).parent / "test_data"
 

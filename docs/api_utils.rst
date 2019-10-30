@@ -25,20 +25,8 @@ Function Summary
    get_branches
    get_features
    get_selection
+   override_features
    quick_files
-
-Constant Summary
-^^^^^^^^^^^^^^^^
-
-.. autosummary::
-
-   AVOID_IN_CLF
-   FEATURESET_1j1b
-   FEATURESET_2j1b
-   FEATURESET_2j2b
-   SELECTION_1j1b
-   SELECTION_2j1b
-   SELECTION_2j2b
 
 Reference
 ^^^^^^^^^
@@ -58,19 +46,5 @@ Reference
 .. autofunction:: get_branches
 .. autofunction:: get_features
 .. autofunction:: get_selection
+.. autofunction:: override_features
 .. autofunction:: quick_files
-
-.. autodata:: AVOID_IN_CLF
-   :annotation:
-.. autodata:: FEATURESET_1j1b
-   :annotation:
-.. autodata:: FEATURESET_2j1b
-   :annotation:
-.. autodata:: FEATURESET_2j2b
-   :annotation:
-.. autodata:: SELECTION_1j1b
-   :annotation:
-.. autodata:: SELECTION_2j1b
-   :annotation:
-.. autodata:: SELECTION_2j2b
-   :annotation:
