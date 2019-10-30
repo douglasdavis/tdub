@@ -482,7 +482,7 @@ def conservative_branches(
     return sorted(good_branches)
 
 
-def get_selection(region: str) -> str:
+def get_selection(region: Union[str, Region]) -> str:
     """get the selection given a region
 
     see :py:func:`tdub.utils.Region.from_str` for the compatible
@@ -490,8 +490,8 @@ def get_selection(region: str) -> str:
 
     Parameters
     ----------
-    region : str
-       the region as a string
+    region : str or tdub.utils.Region
+       the region as a string or enum entry
 
     Returns
     -------
@@ -501,8 +501,8 @@ def get_selection(region: str) -> str:
     Examples
     --------
 
-    >>> from tdub.utils import get_selection
-    >>> get_selection("r2j1b")
+    >>> from tdub.utils import get_selection, Region
+    >>> get_selection(Region.r2j1b)
     '(reg2j1b == True) & (OS == True)'
     >>> get_selection("reg1j1b")
     '(reg1j1b == True) & (OS == True)'
@@ -510,7 +510,14 @@ def get_selection(region: str) -> str:
     '(reg2j2b == True) & (OS == True)'
 
     """
-    return SELECTIONS[Region.from_str(region)]
+    options = {
+        Region.r1j1b: SELECTION_1j1b,
+        Region.r2j1b: SELECTION_2j1b,
+        Region.r2j2b: SELECTION_2j2b,
+    }
+    if isinstance(region, str):
+        return options.get(Region.from_str(region))
+    return options.get(region)
 
 
 def get_features(region: Union[str, Region]) -> List[str]:
@@ -570,16 +577,6 @@ str: The pandas flavor selection string for the 2j1b region
 SELECTION_2j2b = "(reg2j2b == True) & (OS == True)"
 """
 str: The pandas flavor selection string for the 2j2b region
-"""
-
-
-SELECTIONS = {
-    Region.r1j1b: SELECTION_1j1b,
-    Region.r2j1b: SELECTION_2j1b,
-    Region.r2j2b: SELECTION_2j2b,
-}
-"""
-dict(Region, str): key-value pairs for regions to their selection string
 """
 
 

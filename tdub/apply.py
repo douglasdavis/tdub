@@ -19,7 +19,7 @@ from sklearn.model_selection import KFold
 
 # tdub
 from tdub.frames import specific_dataframe
-from tdub.utils import Region, SELECTIONS
+from tdub.utils import Region, get_selection
 
 
 log = logging.getLogger(__name__)
@@ -179,8 +179,8 @@ class FoldedResult:
             df[column_name] = -9999.0
 
         if query:
-            log.info(f"applying selection filter [ {SELECTIONS[self.region]} ]")
-            mask = df.eval(SELECTIONS[self.region])
+            log.info(f"applying selection filter [ {get_selection(self.region)} ]")
+            mask = df.eval(get_selection(self.region))
             X = df[self.features].to_numpy()[mask]
         else:
             X = df[self.features].to_numpy()

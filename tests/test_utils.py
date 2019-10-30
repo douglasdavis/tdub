@@ -2,11 +2,15 @@ from tdub.utils import (
     SampleInfo,
     Region,
     categorize_branches,
-    get_features,
     get_branches,
+    get_features,
+    get_selection,
     FEATURESET_1j1b,
     FEATURESET_2j1b,
     FEATURESET_2j2b,
+    SELECTION_1j1b,
+    SELECTION_2j1b,
+    SELECTION_2j2b,
 )
 
 import pytest
@@ -132,3 +136,13 @@ def test_get_features():
     assert get_features(Region.r2j2b) == FEATURESET_2j2b
     assert get_features("reg1j1b") == FEATURESET_1j1b
     assert get_features("1j1b") == FEATURESET_1j1b
+
+
+def test_get_selection():
+    assert get_selection("reg2j1b") == SELECTION_2j1b
+    assert get_selection("2j2b") == SELECTION_2j2b
+    assert get_selection(Region.r1j1b) == SELECTION_1j1b
+    assert get_selection("r2j1b") == SELECTION_2j1b
+    assert get_selection(Region.r2j2b) == SELECTION_2j2b
+    assert get_selection("reg1j1b") == SELECTION_1j1b
+    assert get_selection("1j1b") == SELECTION_1j1b

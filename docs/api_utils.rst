@@ -39,7 +39,6 @@ Constant Summary
    SELECTION_1j1b
    SELECTION_2j1b
    SELECTION_2j2b
-   SELECTIONS
 
 Reference
 ^^^^^^^^^
@@ -74,6 +73,4 @@ Reference
 .. autodata:: SELECTION_2j1b
    :annotation:
 .. autodata:: SELECTION_2j2b
-   :annotation:
-.. autodata:: SELECTIONS
    :annotation:

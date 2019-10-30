@@ -18,12 +18,12 @@ import uproot
 # tdub
 from tdub.utils import (
     AVOID_IN_CLF,
-    SELECTIONS,
     Region,
     categorize_branches,
     conservative_branches,
     get_branches,
     get_features,
+    get_selection,
 )
 
 
@@ -157,7 +157,6 @@ class SelectedDataFrame:
     --------
     specific_dataframe
     selected_dataframes
-    stdregion_dataframes
 
     """
 
@@ -519,7 +518,7 @@ def specific_dataframe(
             set(region_branches) | set(extra_branches) | {"reg2j2b", "OS"}, key=str.lower
         )
 
-    q = SELECTIONS[reg]
+    q = get_selection(reg)
 
     if bypass_dask:
         raw_df = raw_dataframe(files, tree, weight_name, branches=branches)
@@ -542,63 +541,6 @@ def specific_dataframe(
     if to_ram:
         return sdf.to_ram(**kwargs)
     return sdf
-
-
-def stdregion_dataframes(
-    files: Union[str, List[str]],
-    tree: str = "WtLoop_nominal",
-    branches: Optional[List[str]] = None,
-    partitioning: Optional[Union[int, str]] = None,
-) -> Dict[str, SelectedDataFrame]:
-    """Prepare our standard regions (selections) from a master dataframe
-
-    This is just a call of :meth:`selected_dataframes` with hardcoded
-    selections (using our standard regions): 1j1b, 2j1b, 2j2b.
-
-    Parameters
-    ----------
-    files : list(str) or str
-       a single ROOT file or list of ROOT files
-    tree : str
-       the tree name to turn into a dataframe
-    branches : list(str), optional
-       a list of branches to include as columns in the dataframe,
-       default is ``None`` (all branches)
-    partitioning : int or str, optional
-       partion size for the dask dataframes
-
-    Returns
-    -------
-    dict(str, :obj:`SelectedDataFrame`)
-       dictionary containing queried dataframes.
-
-    Examples
-    --------
-
-    >>> from tdub.utils import quick_files
-    >>> from tdub.frames import stdregion_dataframes
-    >>> files = quick_files("/path/to/files")["tW_DR"]
-    >>> standard_regions = stdregion_dataframes(files)
-
-    """
-
-    use_branches = None
-    if branches is not None:
-        use_branches = sorted(
-            set(branches) | set(["reg1j1b", "reg2j1b", "reg2j2b", "OS"]), key=str.lower
-        )
-    repart_kw = None
-    if isinstance(partitioning, str):
-        repart_kw = {"partition_size": partitioning}
-    elif isinstance(partitioning, int):
-        repart_kw = {"npartitions": partitioning}
-    return selected_dataframes(
-        files,
-        SELECTIONS,
-        tree,
-        use_branches,
-        delayed_dataframe_kw={"repartition_kw": repart_kw, "experimental": False},
-    )
 
 
 def satisfying_selection(*dfs: pandas.DataFrame, selection: str) -> List[pandas.DataFrame]:

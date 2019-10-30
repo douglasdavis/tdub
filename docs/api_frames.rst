@@ -28,7 +28,6 @@ Function Summary
    satisfying_selection
    selected_dataframes
    specific_dataframe
-   stdregion_dataframes
 
 Reference
 ^^^^^^^^^
@@ -47,4 +46,3 @@ Reference
 .. autofunction:: satisfying_selection
 .. autofunction:: selected_dataframes
 .. autofunction:: specific_dataframe
-.. autofunction:: stdregion_dataframes
