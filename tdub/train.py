@@ -122,7 +122,6 @@ def folded_training(
     fit_kw: Dict[str, Any],
     output_dir: Union[str, os.PathLike],
     region: str,
-    use_sample_weights: bool = False,
     kfold_kw: Dict[str, Any] = None,
 ) -> float:
     """Train a :obj:`lightgbm.LGBMClassifier` model using :math:`k`-fold
@@ -153,10 +152,6 @@ def folded_training(
        directory to save results of training
     region : str
         string representing the region
-    use_sample_weights : bool
-       if ``True``, use the sample weights in training instead of the
-       ``is_unbalance=True`` (which is the default case when this
-       argument is ``False``)
     kfold_kw : optional dict(str, Any)
        arguments fed to :obj:`sklearn.model_selection.KFold`
 
@@ -176,15 +171,10 @@ def folded_training(
     >>> params = dict(
     ...     boosting_type="gbdt",
     ...     num_leaves=42,
-    ...     learning_rate=0.1
-    ...     subsample_for_bin=180000,
-    ...     min_child_samples=40,
-    ...     reg_alpha=0.4,
-    ...     reg_lambda=0.5,
-    ...     colsample_bytree=0.8,
-    ...     n_estimators=200,
+    ...     learning_rate=0.05
+    ...     reg_alpha=0.2,
+    ...     reg_lambda=0.8,
     ...     max_depth=5,
-    ...     is_unbalance=True,
     ... )
     >>> folded_training(
     ...     df,
@@ -221,27 +211,18 @@ def folded_training(
         validation_data = [(X_test, y_test)]
         validation_w = w_test
 
-        if use_sample_weights:
-            params["is_unbalance"] = False
-            model = lgbm.LGBMClassifier(**params)
-            fitted_model = model.fit(
-                X_train,
-                y_train,
-                sample_weight=w_train,
-                eval_set=validation_data,
-                eval_sample_weight=[validation_w],
-                **fit_kw,
-            )
-        else:
-            params["is_unbalance"] = True
-            model = lgbm.LGBMClassifier(**params)
-            fitted_model = model.fit(
-                X_train,
-                y_train,
-                eval_set=validation_data,
-                eval_sample_weight=[validation_w],
-                **fit_kw,
-            )
+        scale_pos_weight = np.sum(w_train[y_train == 0]) / np.sum(w_train[y_train == 1])
+        log.info(f"scale_pos_weight for fold {fold_number}: {scale_pos_weight}")
+
+        params["scale_pos_weight"] = scale_pos_weight
+        model = lgbm.LGBMClassifier(**params)
+        fitted_model = model.fit(
+            X_train,
+            y_train,
+            eval_set=validation_data,
+            eval_sample_weight=[validation_w],
+            **fit_kw,
+        )
 
         joblib.dump(
             fitted_model, f"model_fold{fold_number}.joblib.gz", compress=("gzip", 3)
@@ -498,7 +479,7 @@ def gp_minimize_auc(
     nlo_method: str,
     output_dir: Union[str, os.PathLike] = "_unnamed_optimization",
     n_calls: int = 15,
-    esr: int = 20,
+    esr: int = 15,
 ):
     """Minimize AUC using Gaussian processes
 
@@ -555,20 +536,19 @@ def gp_minimize_auc(
     n_sig = y_train[y_train == 1].shape[0]
     n_bkg = y_train[y_train == 0].shape[0]
     scale_pos_weight = n_bkg / n_sig
+    sample_size = n_bkg + n_sig
     log.info(f"n_bkg / n_sig = {n_bkg} / {n_sig} = {scale_pos_weight}")
 
     dimensions = [
-        Integer(low=30, high=150, name="num_leaves"),
+        Integer(low=7, high=4095, name="num_leaves"),
         Real(low=1e-3, high=2e-1, prior="log-uniform", name="learning_rate"),
-        Integer(low=20000, high=300000, name="subsample_for_bin"),
-        Integer(low=20, high=500, name="min_child_samples"),
+        Real(low=0.01, high=(sample_size/1000), name="min_child_weight"),
+        Integer(low=20, high=200, name="min_child_samples"),
         Real(low=0, high=1, prior="uniform", name="reg_alpha"),
         Real(low=0, high=1, prior="uniform", name="reg_lambda"),
-        Real(low=0.6, high=1, prior="uniform", name="colsample_bytree"),
-        Integer(low=20, high=1000, name="n_estimators"),
-        Integer(low=3, high=8, name="max_depth"),
+        Integer(low=3, high=64, name="max_depth"),
     ]
-    default_parameters = [42, 1e-1, 180000, 40, 0.4, 0.5, 0.8, 200, 5]
+    default_parameters = [20, 1e-1, 0.6, 30, 0.1, 0.9, 8]
 
     run_from_dir = os.getcwd()
     save_dir = PosixPath(output_dir)
@@ -590,12 +570,10 @@ def gp_minimize_auc(
     def afit(
         num_leaves,
         learning_rate,
-        subsample_for_bin,
+        min_child_weight,
         min_child_samples,
         reg_alpha,
         reg_lambda,
-        colsample_bytree,
-        n_estimators,
         max_depth,
     ):
         global ifit
@@ -606,12 +584,10 @@ def gp_minimize_auc(
 
         log.info(f"num_leaves: {num_leaves}")
         log.info(f"learning_rate: {learning_rate}")
-        log.info(f"subsample_for_bin: {subsample_for_bin}")
-        log.info(f"min_child_samples: {min_child_samples}")
+        log.info(f"min_child_weight: {min_child_weight}")
+        log.info(f"min_child_weight: {min_child_samples}")
         log.info(f"reg_alpha: {reg_alpha}")
         log.info(f"reg_lambda: {reg_lambda}")
-        log.info(f"colsample_bytree: {colsample_bytree}")
-        log.info(f"n_estimators: {n_estimators}")
         log.info(f"max_depth: {max_depth}")
 
         curdir = os.getcwd()
@@ -627,14 +603,13 @@ def gp_minimize_auc(
             boosting_type="gbdt",
             num_leaves=num_leaves,
             learning_rate=learning_rate,
-            subsample_for_bin=subsample_for_bin,
+            min_child_weight=min_child_weight,
             min_child_samples=min_child_samples,
             reg_alpha=reg_alpha,
             reg_lambda=reg_lambda,
-            colsample_bytree=colsample_bytree,
-            n_estimators=n_estimators,
             max_depth=max_depth,
             scale_pos_weight=scale_pos_weight,
+            n_estimators=500,
         )
 
         fitted_model = model.fit(

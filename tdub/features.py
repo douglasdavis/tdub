@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import gc
 import logging
+import json
 from dataclasses import dataclass, field
 from pathlib import PosixPath
 
@@ -128,10 +129,10 @@ class FeatureSelector:
         self.default_clf_opts = dict(
             boosting_type="gbdt",
             importance_type=importance_type,
-            num_leaves=42,
             learning_rate=0.05,
             n_estimators=250,
-            max_depth=6,
+            max_depth=5,
+            num_leaves=42,
             scale_pos_weight=self._scale_pos_weight,
         )
 
@@ -142,6 +143,7 @@ class FeatureSelector:
         self._importances = None
         self._candidates = None
         self._iterative_aucs = None
+        self._model_params = None
 
     @property
     def df(self) -> pandas.DataFrame:
@@ -178,6 +180,10 @@ class FeatureSelector:
     @property
     def iterative_aucs(self) -> List[str]:
         return self._iterative_aucs
+
+    @property
+    def model_params(self) -> Dict[str, Any]:
+        return self._model_params
 
     def check_for_uniques(self, and_drop: bool = True) -> None:
         """check the dataframe for features that have a single unique value
@@ -310,6 +316,7 @@ class FeatureSelector:
 
         log.info(f"Classifier is configured with parameters:")
         model = lgbm.LGBMClassifier(**clf_opts)
+        self._model_params = copy.deepcopy(model.get_params())
         for k, v in model.get_params().items():
             if v is not None:
                 log.info(f"{k:>20} | {v:<12}")
@@ -535,11 +542,14 @@ class FeatureSelector:
 
         out_raw_aucs = outdir / "raw_aucs.txt"
         out_raw_tf = outdir / "raw_top_features.txt"
+        out_params = outdir / "model_params.json"
         with out_raw_aucs.open("w") as f2w:
             np.savetxt(f2w, self.iterative_aucs, fmt="%.10f")
         with out_raw_tf.open("w") as f2w:
             f2w.write("\n".join(self.candidates))
             f2w.write("\n")
+        with out_params.open("w") as f2w:
+            json.dump(self.model_params, f2w, indent=4)
 
 
 def create_parquet_files(
