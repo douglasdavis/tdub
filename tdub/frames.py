@@ -18,12 +18,12 @@ import uproot
 # tdub
 from tdub.utils import (
     AVOID_IN_CLF,
-    FEATURESETS,
     SELECTIONS,
     Region,
     categorize_branches,
     conservative_branches,
     get_branches,
+    get_features,
 )
 
 
@@ -503,19 +503,20 @@ def specific_dataframe(
         reg = region
     else:
         raise TypeError("region argument must be tdub.utils.Region or str")
+    region_branches = get_features(reg)
     if extra_branches is None:
         extra_branches = []
     if reg == Region.r1j1b:
         branches = sorted(
-            set(FEATURESETS[reg]) | set(extra_branches) | {"reg1j1b", "OS"}, key=str.lower
+            set(region_branches) | set(extra_branches) | {"reg1j1b", "OS"}, key=str.lower
         )
     elif reg == Region.r2j1b:
         branches = sorted(
-            set(FEATURESETS[reg]) | set(extra_branches) | {"reg2j1b", "OS"}, key=str.lower
+            set(region_branches) | set(extra_branches) | {"reg2j1b", "OS"}, key=str.lower
         )
     elif reg == Region.r2j2b:
         branches = sorted(
-            set(FEATURESETS[reg]) | set(extra_branches) | {"reg2j2b", "OS"}, key=str.lower
+            set(region_branches) | set(extra_branches) | {"reg2j2b", "OS"}, key=str.lower
         )
 
     q = SELECTIONS[reg]

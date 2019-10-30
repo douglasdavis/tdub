@@ -18,29 +18,6 @@ import numpy as np
 import uproot
 
 
-__all__ = [
-    "Region",
-    "SampleInfo",
-    "categorize_branches",
-    "quick_files",
-    "bin_centers",
-    "edges_and_centers",
-    "get_branches",
-    "conservative_branches",
-]
-
-
-_detail_sample_info_re = re.compile(
-    r"""(?P<phy_process>\w+)_
-        (?P<dsid>[0-9]{6})_
-        (?P<sim_type>(FS|AFII))_
-        (?P<campaign>MC16(a|d|e))_
-        (?P<tree>\w+)
-        (\.\w+|$)""",
-    re.X,
-)
-
-
 class Region(Enum):
     """A simple enum class for easily using region information
 
@@ -163,6 +140,16 @@ class SampleInfo:
     campaign: str
     tree: str
 
+    _sample_info_extract_re = re.compile(
+        r"""(?P<phy_process>\w+)_
+        (?P<dsid>[0-9]{6})_
+        (?P<sim_type>(FS|AFII))_
+        (?P<campaign>MC16(a|d|e))_
+        (?P<tree>\w+)
+        (\.\w+|$)""",
+        re.X,
+    )
+
     def __init__(self, input_file: str) -> SampleInfo:
         if "Data_Data" in input_file:
             self.phy_process = "Data"
@@ -171,7 +158,7 @@ class SampleInfo:
             self.campaign = "Data"
             self.tree = "nominal"
         else:
-            m = _detail_sample_info_re.match(input_file)
+            m = self._sample_info_extract_re.match(input_file)
             if not m:
                 raise ValueError(f"{input_file} cannot be parsed by SampleInfo regex")
             self.phy_process = m.group("phy_process")
@@ -526,7 +513,7 @@ def get_selection(region: str) -> str:
     return SELECTIONS[Region.from_str(region)]
 
 
-def get_features(region: str) -> List[str]:
+def get_features(region: Union[str, Region]) -> List[str]:
     """get the feature list for a region
 
     see :py:func:`tdub.utils.Region.from_str` for the compatible
@@ -534,8 +521,8 @@ def get_features(region: str) -> List[str]:
 
     Parameters
     ----------
-    region : str
-       the region as a string
+    region : str or tdub.utils.Region
+       the region as a string or enum entry
 
     Returns
     -------
@@ -558,7 +545,14 @@ def get_features(region: str) -> List[str]:
      'psuedoContTagBin_jet2']
 
     """
-    return FEATURESETS[Region.from_str(region)]
+    options = {
+        Region.r1j1b: FEATURESET_1j1b,
+        Region.r2j1b: FEATURESET_2j1b,
+        Region.r2j2b: FEATURESET_2j2b,
+    }
+    if isinstance(region, str):
+        return options.get(Region.from_str(region))
+    return options.get(region)
 
 
 SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
@@ -566,10 +560,12 @@ SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
 str: The pandas flavor selection string for the 1j1b region
 """
 
+
 SELECTION_2j1b = "(reg2j1b == True) & (OS == True)"
 """
 str: The pandas flavor selection string for the 2j1b region
 """
+
 
 SELECTION_2j2b = "(reg2j2b == True) & (OS == True)"
 """
@@ -608,6 +604,7 @@ FEATURESET_1j1b = sorted(
 list(str): list of features we use for classifiers in the 1j1b region
 """
 
+
 FEATURESET_2j1b = sorted(
     [
         "mass_lep1jet2",
@@ -640,16 +637,6 @@ FEATURESET_2j2b = sorted(
 )
 """
 list(str): list of features we use for classifiers in the 2j2b region
-"""
-
-
-FEATURESETS = {
-    Region.r1j1b: FEATURESET_1j1b,
-    Region.r2j1b: FEATURESET_2j1b,
-    Region.r2j2b: FEATURESET_2j2b,
-}
-"""
-dict(Region, list(str)): key-value pairs for regions to their feature set
 """
 
 

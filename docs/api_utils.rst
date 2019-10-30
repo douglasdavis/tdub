@@ -36,7 +36,6 @@ Constant Summary
    FEATURESET_1j1b
    FEATURESET_2j1b
    FEATURESET_2j2b
-   FEATURESETS
    SELECTION_1j1b
    SELECTION_2j1b
    SELECTION_2j2b
@@ -69,8 +68,6 @@ Reference
 .. autodata:: FEATURESET_2j1b
    :annotation:
 .. autodata:: FEATURESET_2j2b
-   :annotation:
-.. autodata:: FEATURESETS
    :annotation:
 .. autodata:: SELECTION_1j1b
    :annotation:

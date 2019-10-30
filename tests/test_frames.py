@@ -1,6 +1,6 @@
 from pathlib import PosixPath
 
-from tdub.frames import iterative_selection, drop_avoid
+from tdub.frames import iterative_selection, drop_avoid, conservative_dataframe
 from tdub.utils import AVOID_IN_CLF
 
 test_file_root = PosixPath(__file__).parent / "test_data"
@@ -49,3 +49,9 @@ def test_drop_jet2():
     df.drop_jet2()
     for j in j2s:
         assert j not in df.columns
+
+
+def test_conservative_frame():
+    files = [str(test_file_root / "testfile1.root"), str(test_file_root / "testfile3.root")]
+    df = conservative_dataframe(files)
+    assert len(df.columns) > 0

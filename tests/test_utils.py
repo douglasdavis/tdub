@@ -1,4 +1,14 @@
-from tdub.utils import *
+from tdub.utils import (
+    SampleInfo,
+    Region,
+    categorize_branches,
+    get_features,
+    get_branches,
+    FEATURESET_1j1b,
+    FEATURESET_2j1b,
+    FEATURESET_2j2b,
+)
+
 import pytest
 
 
@@ -112,3 +122,13 @@ def test_Region_from_str():
     assert Region.from_str("reg2j2b") == Region.r2j2b
     assert Region.from_str("reg1j1b") == Region.r1j1b
     assert Region.from_str("reg2j1b") == Region.r2j1b
+
+
+def test_get_features():
+    assert get_features("reg2j1b") == FEATURESET_2j1b
+    assert get_features("2j2b") == FEATURESET_2j2b
+    assert get_features(Region.r1j1b) == FEATURESET_1j1b
+    assert get_features("r2j1b") == FEATURESET_2j1b
+    assert get_features(Region.r2j2b) == FEATURESET_2j2b
+    assert get_features("reg1j1b") == FEATURESET_1j1b
+    assert get_features("1j1b") == FEATURESET_1j1b
