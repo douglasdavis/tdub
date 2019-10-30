@@ -5,6 +5,7 @@ Module for general utilities
 from __future__ import annotations
 
 # stdlib
+import copy
 import logging
 import numbers
 import os
@@ -569,24 +570,18 @@ def get_features(region: Union[str, Region]) -> List[str]:
     return options.get(region)
 
 
-def override_features(input_file: Union[str, os.PathLike]) -> None:
-    """override the ``tdub.constants.FEATURESET_{1j1b, 2j1b, 2j2b}`` constants
+def override_features(table: Dict[str, List[str]]) -> None:
+    """override feature constants ``tdub.constants.FEATURESET_{1j1b, 2j1b, 2j2b}``
 
-    given a YAML format file of the form:
+    Given a dictionary of the form
 
-    .. code-block:: yaml
+    .. code-block:: python
 
-        r1j1b:
-        - new_feature1
-        - new_feature2
-        r2j1b:
-        - new_feature1
-        - new_feature2
-        - new_feature3
-        r2j2b:
-        - new_feature1
-        - new_feature2
-        - new_feature3
+        overrides = {
+            "r1j1b": ["new1", "new2", "new3"],
+            "r2j1b": ["new1", "new2", "new3", "new4"],
+            "r2j2b": ["new1", "new2"],
+        }
 
     we override the module constants
 
@@ -594,35 +589,41 @@ def override_features(input_file: Union[str, os.PathLike]) -> None:
     - :py:data:`tdub.constants.FEATURESET_2j1b`
     - :py:data:`tdub.constants.FEATURESET_2j2b`
 
+    Note
+    ----
+
+    Not all regions need to be defined; only those you wish to
+    override.
+
     Parameters
     ----------
-    input_file : str or os.PathLike
+    table : dict(str, list(str))
        the input YAML file
 
     Examples
     --------
 
-    An example where the file ``new_features.yml`` overrides the
-    ``1j1b`` features:
+    Using the dictionary above as an example
 
-    >>> from tdub.utils import override_features
-    >>> from tdub.constants import FEATURESET_1j1b
-    >>> FEATURESET_1j1b
+    >>> from tdub.utils import override_features, get_features
+    >>> import tdub.constants
+    >>> tdub.constants.FEATURESET_1j1b
     ["old1", "old2"]
-    >>> override_features("new_features.yml")
-    >>> FEATURESET_1j1b
-    ["new1", "new2"]
+    >>> get_features("1j1b")
+    ["old1", "old2"]
+    >>> override_features(overrides)
+    >>> get_features("1j1b")
+    ["new1", "new2", "new3"]
+    >>> tdub.constants.FEATURESET_1j1b
+    ["new1", "new2", "new3"]
 
     """
-    path = PosixPath(input_file)
-    with path.open("r") as f:
-        table = yaml.safe_load(f)
-        if "r1j1b" in table:
-            log.info("Overriding tdub.constants.FEATURESET_1j1b")
-            tdub.constants.FEATURESET_1j1b = table["r1j1b"]
-        if "r2j1b" in table:
-            log.info("Overriding tdub.constants.FEATURESET_2j1b")
-            tdub.constants.FEATURESET_2j1b = table["r2j1b"]
-        if "r2j2b" in table:
-            log.info("Overriding tdub.constants.FEATURESET_2j2b")
-            tdub.constants.FEATURESET_2j2b = table["r2j2b"]
+    if "r1j1b" in table:
+        log.info("Overriding tdub.constants.FEATURESET_1j1b")
+        tdub.constants.FEATURESET_1j1b = copy.deepcopy(table["r1j1b"])
+    if "r2j1b" in table:
+        log.info("Overriding tdub.constants.FEATURESET_2j1b")
+        tdub.constants.FEATURESET_2j1b = copy.deepcopy(table["r2j1b"])
+    if "r2j2b" in table:
+        log.info("Overriding tdub.constants.FEATURESET_2j2b")
+        tdub.constants.FEATURESET_2j2b = copy.deepcopy(table["r2j2b"])

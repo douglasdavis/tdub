@@ -8,6 +8,9 @@ import json
 import logging
 import pathlib
 
+# external
+import yaml
+
 # tdub
 from tdub import setup_logging
 
@@ -84,7 +87,8 @@ def _optimize(args):
     from tdub.utils import override_features
 
     if args.override_features:
-        override_features(args.override_features)
+        with pathlib.PosixPath(args.override_features).open("r") as f:
+            override_features(yaml.safe_load(f))
     return gp_minimize_auc(
         args.datadir,
         args.region,
@@ -136,7 +140,8 @@ def _foldedtraining(args):
     from tdub.utils import quick_files, override_features
 
     if args.override_features:
-        override_features(args.override_features)
+        with pathlib.PosixPath(args.override_features).open("r") as f:
+            override_features(yaml.safe_load(f))
     with open(f"{args.optimdir}/summary.json", "r") as f:
         summary = json.load(f)
     nlo_method = summary["nlo_method"]
