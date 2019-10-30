@@ -71,6 +71,7 @@ def parse_args():
     fselexecute.add_argument("--corr-threshold", dest="corrt", type=float, default=0.85, help="Correlation threshold")
     fselexecute.add_argument("--importance-n-fits", dest="nfits", type=int, default=5, help="Number of fitting rounds for importance calc.")
     fselexecute.add_argument("--max-features", dest="maxf", type=int, default=25, help="maximum number of features to test iteratively")
+    fselexecute.add_argument("--exclude", type=str, nargs="+", help="features to exclude from consideration")
 
     # fmt: on
     return (parser.parse_args(), parser)
@@ -97,6 +98,7 @@ def _fselprepare(args):
 
 def _fselexecute(args):
     from tdub.features import prepare_from_parquet, FeatureSelector
+    from tdub.frames import drop_cols
 
     if args.out == "_auto":
         name = f"{args.nlo_method}_{args.region}_{args.itype}"
@@ -106,6 +108,9 @@ def _fselexecute(args):
     full_df, full_labels, full_weights = prepare_from_parquet(
         args.in_pqdir, region=args.region, nlo_method=args.nlo_method
     )
+    if args.exclude:
+        drop_cols(full_df, *args.exclude)
+
     fs = FeatureSelector(
         df=full_df,
         labels=full_labels,
