@@ -7,7 +7,7 @@ from __future__ import annotations
 # std
 from dataclasses import dataclass
 
-#external
+# external
 import matplotlib
 
 

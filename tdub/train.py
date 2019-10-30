@@ -542,7 +542,7 @@ def gp_minimize_auc(
     dimensions = [
         Integer(low=7, high=4095, name="num_leaves"),
         Real(low=1e-3, high=2e-1, prior="log-uniform", name="learning_rate"),
-        Real(low=0.01, high=(sample_size/1000), name="min_child_weight"),
+        Real(low=0.01, high=(sample_size / 1000), name="min_child_weight"),
         Integer(low=20, high=200, name="min_child_samples"),
         Real(low=0, high=1, prior="uniform", name="reg_alpha"),
         Real(low=0, high=1, prior="uniform", name="reg_lambda"),

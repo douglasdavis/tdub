@@ -4,6 +4,7 @@ tW analysis tools
 
 __version__ = "0.0.3"
 
+
 def setup_logging():
     import logging
 
