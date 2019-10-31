@@ -13,21 +13,28 @@ Class Summary
    DataFramesInMemory
    SelectedDataFrame
 
-Function Summary
-^^^^^^^^^^^^^^^^
+Factory Function Summary
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
 
    conservative_dataframe
    delayed_dataframe
+   iterative_selection
+   raw_dataframe
+   selected_dataframes
+   specific_dataframe
+
+Helper Function Summary
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autosummary::
+
    drop_avoid
    drop_cols
    drop_jet2
-   iterative_selection
-   raw_dataframe
    satisfying_selection
-   selected_dataframes
-   specific_dataframe
+
 
 Reference
 ^^^^^^^^^
@@ -36,13 +43,16 @@ Reference
    :members:
 .. autoclass:: SelectedDataFrame
    :members:
+
 .. autofunction:: conservative_dataframe
 .. autofunction:: delayed_dataframe
+.. autofunction:: iterative_selection
+.. autofunction:: raw_dataframe
+.. autofunction:: selected_dataframes
+.. autofunction:: specific_dataframe
+
+
 .. autofunction:: drop_avoid
 .. autofunction:: drop_cols
 .. autofunction:: drop_jet2
-.. autofunction:: iterative_selection
-.. autofunction:: raw_dataframe
 .. autofunction:: satisfying_selection
-.. autofunction:: selected_dataframes
-.. autofunction:: specific_dataframe

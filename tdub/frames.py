@@ -567,8 +567,9 @@ def satisfying_selection(*dfs: pandas.DataFrame, selection: str) -> List[pandas.
     >>> dfim_tW_DR = specific_dataframe(qf["tW_DR"], to_ram=True)
     >>> dfim_ttbar = specific_dataframe(qf["ttbar"], to_ram=True)
     >>> low_bdt = "(bdt_response < 0.4)"
-    >>> tW_DR_selected, ttbar_selected = satisfying_selection(dfim_tW_DR.df, dfim_ttbar.df,
-    ...                                                       selection=low_bdt)
+    >>> tW_DR_selected, ttbar_selected = satisfying_selection(
+    ...     dfim_tW_DR.df, dfim_ttbar.df, selection=low_bdt
+    ... )
 
     """
     return [df.query(selection) for df in dfs]
