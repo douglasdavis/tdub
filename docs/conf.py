@@ -49,7 +49,7 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # syntax highlighting style
-pygments_style = "default"
+pygments_style = "sphinx"
 
 autodoc_typehints = "none"
 
