@@ -5,6 +5,7 @@ API Reference
    :maxdepth: 2
 
    api_apply.rst
+   api_bnl.rst
    api_constants.rst
    api_frames.rst
    api_features.rst
