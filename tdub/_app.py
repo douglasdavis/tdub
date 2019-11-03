@@ -18,9 +18,10 @@ from tdub import setup_logging
 def parse_args():
     # fmt: off
     parser = argparse.ArgumentParser(prog="tdub", description="tdub CLI")
-    subparsers = parser.add_subparsers(dest="action", help="Action")
-
-    common_parser = argparse.ArgumentParser(add_help=False)
+    subparsers = parser.add_subparsers(dest="action", help="")
+    subparsers.metavar = "action           "
+    formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=60)
+    common_parser = argparse.ArgumentParser(add_help=False, formatter_class=formatter)
     common_parser.add_argument("--debug", action="store_true", help="set logging level to debug")
 
     applygennpy = subparsers.add_parser("apply-gennpy", help="Calculate samples BDT response and save to .npy file")
