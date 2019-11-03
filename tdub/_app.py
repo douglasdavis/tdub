@@ -24,11 +24,13 @@ def parse_args():
     common_parser.add_argument("--debug", action="store_true", help="set logging level to debug")
 
     applygennpy = subparsers.add_parser("apply-gennpy", help="Calculate samples BDT response and save to .npy file")
+    applygennpy.add_argument("--bnl-dir", type=str, help="directory on BNL parse for generating a condor submission script")
     applygennpy.add_argument("--single-file", type=str, help="input ROOT file")
     applygennpy.add_argument("--all-in-dir", type=str, help="Process all files in a directory")
     applygennpy.add_argument("-f", "--folds", type=str, nargs="+", help="directories with outputs from folded trainings", required=True)
     applygennpy.add_argument("-n", "--arr-name", type=str, default="pbdt_response", help="name for the array")
     applygennpy.add_argument("-o", "--out-dir", type=str, help="save output to a specific directory")
+    applygennpy.add_argument("-b", "--bnl-script-name", type=str, help="name for output condor submission script when using '--bnl-dir")
 
     rexpulls = subparsers.add_parser("rex-pulls", help="create matplotlib pull plots from TRExFitter output", parents=[common_parser])
     rexpulls.add_argument("workspace", type=str, help="TRExFitter workspace")
@@ -174,7 +176,18 @@ def _pred2npy(args):
     from tdub.apply import FoldedResult, generate_npy
     from tdub.frames import raw_dataframe
     from tdub.utils import SampleInfo
+    from tdub.bnl import gen_submit_script
     import logging
+
+    n_opts = 0
+    if args.single_file is not None:
+        n_opts += 1
+    if args.all_in_dir is not None:
+        n_opts += 1
+    if args.single_file is not None:
+        n_opts += 1
+    if n_opts != 1:
+        raise ValueError("only choose one of '--single-file', '--all-in-dir', '--bnl-dir'")
 
     frs = [FoldedResult(p) for p in args.folds]
     necessary_branches = ["OS", "elmu", "reg1j1b", "reg2j1b", "reg2j2b"]
@@ -199,11 +212,13 @@ def _pred2npy(args):
         npyfilename = outdir / f"{stem}.{args.arr_name}.npy"
         generate_npy(frs, df, npyfilename)
 
-    if args.single_file is not None and args.all_in_dir is not None:
-        raise ValueError("--single-file and --all-in-dir cannot be used together")
-
     if args.single_file is not None:
         process_sample(args.single_file)
+        return 0
+    elif args.bnl_dir is not None:
+        gen_submit_script(
+            args.bnl_dir, args.folds, outdir, args.arr_name, args.bnl_script_name
+        )
         return 0
     elif args.all_in_dir is not None:
         for child in pathlib.PosixPath(args.all_in_dir).iterdir():

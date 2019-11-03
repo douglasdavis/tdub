@@ -5,17 +5,17 @@ Module to help running things on BNL machines
 from __future__ import annotations
 
 # stdlib
+import logging
 import pathlib
 import shutil
 
-# tdub
-from tdub.utils import SampleInfo
 
+log = logging.getLogger(__name__)
 
-CONDOR_HEADER = """Universe        = vanilla
+CONDOR_HEADER = """
+Universe        = vanilla
 notification    = Error
 notify_user     = ddavis@phy.duke.edu
-x509userproxy   = $ENV(X509_USER_PROXY)
 GetEnv          = True
 Executable      = {tdub_exe_path}
 Output          = job.out.apply-gennpy.$(cluster).$(process)
@@ -25,32 +25,28 @@ request_memory  = 2.0G
 """
 
 
-def get_tdub_exe() -> str:
-    """get the tdub executable
-
-    Returns
-    -------
-    str
-       full path of the tdub executable
-
-    """
-    return shutil.which("tdub")
-
-
-def parse_samples(bnl_path: Union[str, os.PathLike]) -> List[str]:
+def parse_samples(usatlasdata_path: Union[str, os.PathLike]) -> List[str]:
     """get a list of all ROOT samples in a directory on BNL
 
     Parameters
     ----------
-    bnl_path : str or os.PathLike
-       the
+    usatlasdata_path : str or os.PathLike
+       the path to the datasets inside the ``usatlasdata`` area.
 
     Returns
     -------
     list(str)
        all sample in the directory
+
+    Examples
+    --------
+
+    >>> from tdub.bnl import parse_samples
+    >>> samples = parse_samples("/path/to/usaltasdata/some_root_files")
+
     """
-    path = pathlib.PosixPath(bnl_path).resolve()
+    log.info(f"parsing samples in {usatlasdata_path}")
+    path = pathlib.PosixPath(usatlasdata_path).resolve()
     return [p for p in path.iterdir() if (p.is_file() and p.suffix == ".root")]
 
 
@@ -59,7 +55,7 @@ def gen_submit_script(
     fold_dirs: List[Union[str, os.PathLike]],
     output_dir: Union[str, os.PathLike],
     arr_name: str = "bdt_res",
-    script_name: str = "apply-gennpy.condor.submit",
+    script_name: Optional[str] = None,
 ) -> None:
     """generate a condor submission script
 
@@ -76,18 +72,32 @@ def gen_submit_script(
     script_name : str
        name for the output submissions script
 
-    """
-    output_script = pathlib.PosixPath(script_name)
-    header = CONDOR_HEADER.format(tdub_exe_path=get_tdub_exe())
-    folds = [str(pathlib.PosixPath(fold).resolve()) for fold in fold_dirs]
-    folds = " ".join(folds)
-    out = pathlib.PosixPath(output_dir)
-    out.mkdir(exist_ok=True, parents=True)
-    outdir = str(out.resolve())
+    Examples
+    --------
 
+    >>> from tdub.bnl import gen_submit_script
+    >>> gen_submit_script(
+    ...    "/path/to/usaltasdata/some_root_files",
+    ...    ["fold1", "fold2", "fold3"],
+    ...    "/path/to/npy_output_dir",
+    ...    "bdt_res",
+    ...    "my.condor.sub.script",
+    ... )
+    >>> exit()
+    $ condor_submit my.condor.sub.script
+
+    """
+    if script_name is None:
+        script_name = "apply-gennpy.condor.submit",
+    output_script = pathlib.PosixPath(script_name)
+    header = CONDOR_HEADER.format(tdub_exe_path=shutil.which("tdub"))
+    folds = " ".join([str(pathlib.PosixPath(fold).resolve()) for fold in fold_dirs])
+    action = "apply-gennpy"
+    outdir = pathlib.PosixPath(output_dir)
+    outdir.mkdir(exist_ok=True, parents=True)
     with output_script.open("w") as f:
         print(header, file=f)
-        opt = "apply-gennpy"
         for sample in parse_samples(input_dir):
-            line = f"{opt} --single-file {sample.resolve()} -f {folds} -n {arr_name} -o {outdir}"
-            print(f"Arguments = {line}\nQueue\n\n", file=f)
+            opts = f"--single-file {sample.resolve()} -f {folds} -n {arr_name} -o {outdir}"
+            print(f"Arguments = {action} {opts}\nQueue\n\n", file=f)
+    log.info(f"generated condor submission script {output_script}")
