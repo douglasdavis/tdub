@@ -7,14 +7,11 @@ from __future__ import annotations
 # stdlib
 import json
 import logging
-from dataclasses import dataclass, field
 from pathlib import PosixPath
 
 # external
 import numpy as np
 import joblib
-import uproot
-from lightgbm import LGBMClassifier
 from sklearn.model_selection import KFold
 
 # tdub

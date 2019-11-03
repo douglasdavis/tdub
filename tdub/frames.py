@@ -9,7 +9,6 @@ import logging
 from dataclasses import dataclass, field
 
 # externals
-import cachetools
 import dask
 import dask.dataframe as dd
 import pandas as pd

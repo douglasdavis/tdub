@@ -545,7 +545,6 @@ def draw_pulls(
     ax : matplotlib.axes.Axes
        matplotlib axis
     """
-    Y_OFFSET_PT = 0.00
     Y_OFFSET_TEXT = 0.095
     Y_OFFSET_TEXT_MEAN = 0.165
     X_OFFSET_TEXT = 0.035

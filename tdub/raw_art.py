@@ -4,9 +4,6 @@ Module for art from raw data
 
 from __future__ import annotations
 
-# stdlib
-from dataclasses import dataclass
-
 # external
 import numpy as np
 import matplotlib.pyplot as plt

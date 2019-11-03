@@ -9,7 +9,6 @@ import copy
 import gc
 import logging
 import json
-from dataclasses import dataclass, field
 from pathlib import PosixPath
 
 log = logging.getLogger(__name__)

@@ -5,7 +5,6 @@ Command line application
 # stdlib
 import argparse
 import json
-import logging
 import pathlib
 
 # external
@@ -211,7 +210,6 @@ def cli():
         return 0
 
     setup_logging()
-    log = logging.getLogger("tdub.cli")
 
     # fmt: off
     if args.action == "rex-stacks":

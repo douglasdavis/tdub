@@ -18,7 +18,6 @@ from pathlib import PosixPath
 # external
 import numpy as np
 import uproot
-import yaml
 
 # tdub
 import tdub.constants
@@ -598,7 +597,7 @@ def override_features(table: Dict[str, List[str]]) -> None:
     Parameters
     ----------
     table : dict(str, list(str))
-       the input YAML file
+       region to feature list table
 
     Examples
     --------
