@@ -176,7 +176,6 @@ def _pred2npy(args):
     from tdub.apply import FoldedResult, generate_npy
     from tdub.frames import raw_dataframe
     from tdub.utils import SampleInfo
-    from tdub.bnl import gen_submit_script
     import logging
 
     n_opts = 0
@@ -184,10 +183,12 @@ def _pred2npy(args):
         n_opts += 1
     if args.all_in_dir is not None:
         n_opts += 1
-    if args.single_file is not None:
+    if args.bnl_dir is not None:
         n_opts += 1
     if n_opts != 1:
-        raise ValueError("only choose one of '--single-file', '--all-in-dir', '--bnl-dir'")
+        raise ValueError(
+            "must choose one (and only one) of '--single-file', '--all-in-dir', '--bnl-dir'"
+        )
 
     frs = [FoldedResult(p) for p in args.folds]
     necessary_branches = ["OS", "elmu", "reg1j1b", "reg2j1b", "reg2j2b"]
@@ -216,6 +217,8 @@ def _pred2npy(args):
         process_sample(args.single_file)
         return 0
     elif args.bnl_dir is not None:
+        from tdub.bnl import gen_submit_script
+
         gen_submit_script(
             args.bnl_dir, args.folds, outdir, args.arr_name, args.bnl_script_name
         )
