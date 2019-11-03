@@ -190,6 +190,19 @@ def _pred2npy(args):
             "must choose one (and only one) of '--single-file', '--all-in-dir', '--bnl-dir'"
         )
 
+    if args.out_dir:
+        outdir = pathlib.PosixPath(args.out_dir)
+    else:
+        outdir = pathlib.PosixPath(".")
+
+    if args.bnl_dir is not None:
+        from tdub.bnl import gen_submit_script
+
+        gen_submit_script(
+            args.bnl_dir, args.folds, outdir, args.arr_name, args.bnl_script_name
+        )
+        return 0
+
     frs = [FoldedResult(p) for p in args.folds]
     necessary_branches = ["OS", "elmu", "reg1j1b", "reg2j1b", "reg2j2b"]
     for fold in frs:
@@ -199,11 +212,6 @@ def _pred2npy(args):
     log.info("Loading necessary branches:")
     for nb in necessary_branches:
         log.info(f" - {nb}")
-
-    if args.out_dir:
-        outdir = pathlib.PosixPath(args.out_dir)
-    else:
-        outdir = pathlib.PosixPath(".")
 
     def process_sample(sample_name):
         stem = pathlib.PosixPath(sample_name).stem
@@ -215,13 +223,6 @@ def _pred2npy(args):
 
     if args.single_file is not None:
         process_sample(args.single_file)
-        return 0
-    elif args.bnl_dir is not None:
-        from tdub.bnl import gen_submit_script
-
-        gen_submit_script(
-            args.bnl_dir, args.folds, outdir, args.arr_name, args.bnl_script_name
-        )
         return 0
     elif args.all_in_dir is not None:
         for child in pathlib.PosixPath(args.all_in_dir).iterdir():
