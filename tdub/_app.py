@@ -172,10 +172,19 @@ def _foldedtraining(args):
 
 def _pred2npy(args):
     from tdub.apply import FoldedResult, generate_npy
-    from tdub.frames import conservative_dataframe
+    from tdub.frames import raw_dataframe
     from tdub.utils import SampleInfo
+    import logging
 
     frs = [FoldedResult(p) for p in args.folds]
+    necessary_branches = ["OS", "elmu", "reg1j1b", "reg2j1b", "reg2j2b"]
+    for fold in frs:
+        necessary_branches += fold.features
+    necessary_branches = sorted(set(necessary_branches), key=str.lower)
+    log = logging.getLogger("tdub.apply")
+    log.info("Loading necessary branches:")
+    for nb in necessary_branches:
+        log.info(f" - {nb}")
 
     if args.out_dir:
         outdir = pathlib.PosixPath(args.out_dir)
@@ -186,7 +195,7 @@ def _pred2npy(args):
         stem = pathlib.PosixPath(sample_name).stem
         sampinfo = SampleInfo(stem)
         tree = f"WtLoop_{sampinfo.tree}"
-        df = conservative_dataframe(sample_name, tree=tree)
+        df = raw_dataframe(sample_name, tree=tree, branches=necessary_branches)
         npyfilename = outdir / f"{stem}.{args.arr_name}.npy"
         generate_npy(frs, df, npyfilename)
 

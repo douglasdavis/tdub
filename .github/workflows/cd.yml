@@ -18,12 +18,6 @@ jobs:
         python -m pip install pip setuptools wheel twine pytest -U
         python -m pip install .
         python setup.py sdist bdist_wheel
-    - name: publish to test
-      uses: pypa/gh-action-pypi-publish@master
-      with:
-        user: __token__
-        password: ${{ secrets.tdubpypi }}
-        repository_url: https://test.pypi.org/legacy/
     - name: publish
       if: startsWith(github.event.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@master
