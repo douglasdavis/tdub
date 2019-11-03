@@ -211,8 +211,10 @@ def folded_training(
         validation_data = [(X_test, y_test)]
         validation_w = w_test
 
-        scale_pos_weight = np.sum(w_train[y_train == 0]) / np.sum(w_train[y_train == 1])
-        log.info(f"scale_pos_weight for fold {fold_number}: {scale_pos_weight}")
+        n_sig = y_train[y_train == 1].shape[0]
+        n_bkg = y_train[y_train == 0].shape[0]
+        scale_pos_weight = n_bkg / n_sig
+        log.info(f"n_bkg / n_sig = {n_bkg} / {n_sig} = {scale_pos_weight}")
 
         params["scale_pos_weight"] = scale_pos_weight
         model = lgbm.LGBMClassifier(**params)
@@ -512,7 +514,9 @@ def gp_minimize_auc(
     """
 
     from skopt.utils import use_named_args
-    from skopt.space import Real, Integer, Categorical
+    from skopt.space import Real, Integer
+    from skopt.plots import plot_convergence
+
     from skopt import gp_minimize
 
     qfiles = quick_files(f"{data_dir}")
@@ -692,7 +696,7 @@ def gp_minimize_auc(
     search_result = gp_minimize(
         func=afit,
         dimensions=dimensions,
-        acq_func="EI",
+        acq_func="gp_hedge",
         n_calls=n_calls,
         x0=default_parameters,
     )
@@ -708,6 +712,10 @@ def gp_minimize_auc(
 
     with open("summary.json", "w") as f:
         json.dump(summary, f, indent=4)
+
+    fig, ax = plt.subplots()
+    plot_convergence(search_result, ax=ax)
+    fig.savefig("gpmin_convergence.pdf")
 
     os.chdir(run_from_dir)
     return 0
