@@ -31,6 +31,7 @@ def parse_args():
     applygennpy.add_argument("-n", "--arr-name", type=str, default="pbdt_response", help="name for the array")
     applygennpy.add_argument("-o", "--out-dir", type=str, help="save output to a specific directory")
     applygennpy.add_argument("-b", "--bnl-script-name", type=str, help="name for output condor submission script when using '--bnl-dir")
+    applygennpy.add_argument("-i", "--ignore-main", action="store_true", help="ignore 'main' samples (ttbar nominal FS and tW_(DR,DS) nominal FS)")
 
     rexpulls = subparsers.add_parser("rex-pulls", help="create matplotlib pull plots from TRExFitter output", parents=[common_parser])
     rexpulls.add_argument("workspace", type=str, help="TRExFitter workspace")
@@ -226,6 +227,16 @@ def _pred2npy(args):
         return 0
     elif args.all_in_dir is not None:
         for child in pathlib.PosixPath(args.all_in_dir).iterdir():
+            if args.ignore_main and child.name.startswith(
+                (
+                    "tW_DR_410648_FS",
+                    "tW_DR_410649_FS",
+                    "tW_DS_410656_FS",
+                    "tW_DS_410657_FS",
+                    "ttbar_410472_FS",
+                )
+            ):
+                continue
             if child.suffix == ".root":
                 process_sample(str(child.resolve()))
         return 0
