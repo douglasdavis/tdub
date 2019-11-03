@@ -1,12 +1,9 @@
 # tdub
 
 [![Actions Status](https://github.com/douglasdavis/tdub/workflows/Linux/macOS/badge.svg)](https://github.com/douglasdavis/tdub/actions)
-[![Build Status](https://dev.azure.com/ddavis0485/tdub/_apis/build/status/douglasdavis.tdub?branchName=master)](https://dev.azure.com/ddavis0485/tdub/_build/latest?definitionId=3&branchName=master)
 [![Documentation Status](https://readthedocs.org/projects/tdub/badge/?version=latest)](https://tdub.readthedocs.io/)
 [![PyPI](https://img.shields.io/pypi/v/tdub?color=teal)](https://pypi.org/project/tdub/)
 [![Python Version](https://img.shields.io/pypi/pyversions/tdub)](https://pypi.org/project/tdub/)
-
----
 
 `tdub` is a Python project for handling some downstsream steps in the
 ATLAS Run 2 tW inclusive cross section analysis. The project provides
