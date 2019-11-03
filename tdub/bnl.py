@@ -88,7 +88,7 @@ def gen_submit_script(
 
     """
     if script_name is None:
-        script_name = "apply-gennpy.condor.submit",
+        script_name = "apply-gennpy.condor.submit"
     output_script = pathlib.PosixPath(script_name)
     header = CONDOR_HEADER.format(tdub_exe_path=shutil.which("tdub"))
     folds = " ".join([str(pathlib.PosixPath(fold).resolve()) for fold in fold_dirs])
@@ -98,6 +98,6 @@ def gen_submit_script(
     with output_script.open("w") as f:
         print(header, file=f)
         for sample in parse_samples(input_dir):
-            opts = f"--single-file {sample.resolve()} -f {folds} -n {arr_name} -o {outdir}"
+            opts = f"--single-file {sample.resolve()} -f {folds} -n {arr_name} -o {outdir.resolve()}"
             print(f"Arguments = {action} {opts}\nQueue\n\n", file=f)
     log.info(f"generated condor submission script {output_script}")
