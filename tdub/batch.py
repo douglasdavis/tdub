@@ -18,8 +18,8 @@ notification    = Error
 notify_user     = ddavis@phy.duke.edu
 GetEnv          = True
 Executable      = {tdub_exe_path}
-Output          = job.out.apply-gennpy.$(cluster).$(process)
-Error           = job.err.apply-gennpy.$(cluster).$(process)
+Output          = .condor_stdout/job.out.apply-gennpy.$(cluster).$(process)
+Error           = .condor_stderr/job.err.apply-gennpy.$(cluster).$(process)
 Log             = /tmp/ddavis/log.$(cluster).$(process)
 request_memory  = 2.0G
 """
@@ -89,6 +89,8 @@ def gen_submit_script(
     """
     if script_name is None:
         script_name = "apply-gennpy.condor.submit"
+    pathlib.PosixPath(".condor_stderr").mkdir(exist_ok=True)
+    pathlib.PosixPath(".condor_stdout").mkdir(exist_ok=True)
     output_script = pathlib.PosixPath(script_name)
     header = BNL_CONDOR_HEADER.format(tdub_exe_path=shutil.which("tdub"))
     folds = " ".join([str(pathlib.PosixPath(fold).resolve()) for fold in fold_dirs])
