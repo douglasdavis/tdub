@@ -12,7 +12,8 @@ Class Summary
 
    FeatureSelector
 
-Function Summary:
+Function Summary
+^^^^^^^^^^^^^^^^
 
 .. autosummary::
 
