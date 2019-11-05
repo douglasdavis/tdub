@@ -197,7 +197,7 @@ def _pred2npy(args):
         outdir = pathlib.PosixPath(".")
 
     if args.bnl_dir is not None:
-        from tdub.bnl import gen_submit_script
+        from tdub.batch import gen_submit_script
 
         gen_submit_script(
             args.bnl_dir, args.folds, outdir, args.arr_name, args.bnl_script_name

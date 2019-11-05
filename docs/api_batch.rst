@@ -1,9 +1,10 @@
-tdub.bnl
---------
+tdub.batch
+----------
 
-A module for running steps on USATLAS BNL cluster
+A module for running batch jobs (currently compatible with USATLAS BNL
+cluster).
 
-.. currentmodule:: tdub.bnl
+.. currentmodule:: tdub.batch
 
 Function Summary
 ^^^^^^^^^^^^^^^^
