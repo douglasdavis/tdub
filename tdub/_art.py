@@ -81,8 +81,12 @@ class AxisMeta:
 def var_to_axis_meta():
     return {
         "bdt_response": AxisMeta("Classifier Response", ""),
-        "bdt_response_DR": AxisMeta("Classifier Response", ""),
-        "bdt_response_DS": AxisMeta("Classifier Response", ""),
+        "bdt_response_DR": AxisMeta("Classifier Response (DR)", ""),
+        "bdt_response_DS": AxisMeta("Classifier Response (DS)", ""),
+        "bdt_DR_nonsoft": AxisMeta("Classifier Response (DR)", ""),
+        "bdt_DR_wnsoft": AxisMeta("Classifier Response (DR)", ""),
+        "bdt_DS_nonsoft": AxisMeta("Classifier Response (DS)", ""),
+        "bdt_DS_wnsoft": AxisMeta("Classifier Response (DS)", ""),
         "cent_lep1lep2": AxisMeta("Centrality($\\ell_1\\ell_2$)", ""),
         "mT_lep2met": AxisMeta("$m_{\\mathrm{T}}(\\ell_2E_\\mathrm{T}^{\\mathrm{miss}})$", "GeV"),
         "nloosejets": AxisMeta("$N_j^{\\mathrm{soft}}$", "", True),
