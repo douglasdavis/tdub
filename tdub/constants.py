@@ -20,6 +20,77 @@ str: The pandas flavor selection string for the 2j2b region
 """
 
 
+FEATURESET_1j1b_DR = sorted(
+    [
+        "pT_lep1",
+        "pT_lep2",
+    ],
+    key=str.lower,
+)
+"""
+list(str) : set of features used in the 1j1b DR BDT
+"""
+
+FEATURESET_2j1b_DR = sorted(
+    [
+        "pT_lep1",
+        "pT_lep2",
+    ],
+    key=str.lower,
+)
+"""
+list(str) : set of features used in the 2j1b DR BDT
+"""
+
+
+FEATURESET_2j2b_DR = sorted(
+    [
+        "pT_lep1",
+        "pT_lep2",
+    ],
+    key=str.lower,
+)
+"""
+list(str) : set of features used in the 2j2b DR BDT
+"""
+
+
+FEATURESET_1j1b_DS = sorted(
+    [
+        "pT_lep1",
+        "pT_lep2",
+    ],
+    key=str.lower,
+)
+"""
+list(str) : set of features used in the 1j1b DS BDT
+"""
+
+
+FEATURESET_2j1b_DS = sorted(
+    [
+        "pT_lep1",
+        "pT_lep2",
+    ],
+    key=str.lower,
+)
+"""
+list(str) : set of features used in the 2j1b DS BDT
+"""
+
+
+FEATURESET_2j2b_DS = sorted(
+    [
+        "pT_lep1",
+        "pT_lep2",
+    ],
+    key=str.lower,
+)
+"""
+list(str) : set of features used in the 2j2b DS BDT
+"""
+
+
 FEATURESET_1j1b = sorted(
     [
         "pTsys_lep1lep2jet1met",
