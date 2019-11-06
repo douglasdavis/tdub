@@ -266,9 +266,9 @@ def quick_files(datapath: Union[str, os.PathLike]) -> Dict[str, List[str]]:
     samples are currently tested:
 
     - ``ttbar`` (410472 full sim)
-    - ``ttbar_AFII` (410472 fast sim)
-    - ``ttbar_PS` (410558 fast sim)
-    - ``ttbar_hdamp` (410482 fast sim)
+    - ``ttbar_AFII`` (410472 fast sim)
+    - ``ttbar_PS`` (410558 fast sim)
+    - ``ttbar_hdamp`` (410482 fast sim)
     - ``tW_DR`` (410648, 410649 full sim)
     - ``tW_DR_AFII`` (410648, 410648 fast sim)
     - ``tW_DR_PS`` (411038, 411039 fast sim)
@@ -312,7 +312,7 @@ def quick_files(datapath: Union[str, os.PathLike]) -> Dict[str, List[str]]:
     Zjets_files = sorted(glob(f"{path}/Zjets_*FS*nominal.root"))
     MCNP_files = sorted(glob(f"{path}/MCNP_*FS*nominal.root"))
     Data_files = sorted(glob(f"{path}/*Data_Data_nominal.root"))
-    return {
+    file_lists = {
         "ttbar": ttbar_files,
         "ttbar_AFII": ttbar_AFII_files,
         "ttbar_PS": ttbar_PS_files,
@@ -326,6 +326,52 @@ def quick_files(datapath: Union[str, os.PathLike]) -> Dict[str, List[str]]:
         "MCNP": MCNP_files,
         "Data": Data_files,
     }
+    for k, v in file_lists.items():
+        if len(v) == 0:
+            log.debug(f"we didn't find any files for {k}")
+    return file_lists
+
+
+def files_for_tree(
+    datapath: Union[str, os.PathLike], sample_prefix: str, tree_name: str
+) -> List[str]:
+    """get a list of files for the sample and desired tree
+
+    Parameters
+    ----------
+    datapath : str or os.PathLike
+       path where all of the ROOT files live
+    sample_prefix : str
+       the prefix for the sample we want (``"ttbar"`` or ``"tW_DR"`` or ``"tW_DS"``)
+    tree_name : str
+       the name of the ATLAS systematic tree (e.g. ``"nominal"`` or ``"EG_RESOLUTION_ALL__1up"``)
+
+    Returns
+    -------
+    list(str)
+       the list of desired files (if they exist)
+
+    Examples
+    --------
+
+    >>> from tdub.utils import files_for_tree
+    >>> files_for_tree("/data/path", "ttbar", "JET_CategoryReduction_JET_JER_EffectiveNP_4__1up")
+    ['/data/path/ttbar_410472_FS_MC16a_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root',
+     '/data/path/ttbar_410472_FS_MC16d_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root',
+     '/data/path/ttbar_410472_FS_MC16e_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root']
+
+    """
+    path = str(PosixPath(datapath).resolve())
+    if sample_prefix == "ttbar":
+        return sorted(glob(f"{path}/ttbar_410472_FS*{tree_name}.root"))
+    elif sample_prefix == "tW_DR":
+        return sorted(glob(f"{path}/tW_DR_41064*FS*{tree_name}.root"))
+    elif sample_prefix == "tW_DS":
+        return sorted(glob(f"{path}/tW_DS_41065*FS*{tree_name}.root"))
+    else:
+        raise ValueError(
+            f"bad sample_prefix '{sample_prefix}', must be one of: ['tW_DR', 'tW_DS', 'ttbar']"
+        )
 
 
 def bin_centers(bin_edges: numpy.ndarray) -> numpy.ndarray:

@@ -22,6 +22,7 @@ Function Summary
    categorize_branches
    conservative_branches
    edges_and_centers
+   files_for_tree
    get_branches
    get_features
    get_selection
@@ -43,6 +44,7 @@ Reference
 .. autofunction:: categorize_branches
 .. autofunction:: conservative_branches
 .. autofunction:: edges_and_centers
+.. autofunction:: files_for_tree
 .. autofunction:: get_branches
 .. autofunction:: get_features
 .. autofunction:: get_selection
