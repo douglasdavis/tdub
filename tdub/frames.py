@@ -83,7 +83,7 @@ class DataFramesInMemory:
         skeleton: bool = False,
         dropnonkin: bool = False,
         consolidate: bool = False,
-    ) -> DataFramesInMemory:
+    ) -> None:
         if skeleton:
             self.name = name
             self._df = pd.DataFrame()

@@ -55,7 +55,7 @@ class FoldedResult:
 
     """
 
-    def __init__(self, fold_output: str) -> FoldedResult:
+    def __init__(self, fold_output: str) -> None:
         fold_path = PosixPath(fold_output)
         if not fold_path.exists():
             raise ValueError(f"{fold_output} does not exit")

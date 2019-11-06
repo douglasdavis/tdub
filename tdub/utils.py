@@ -157,7 +157,7 @@ class SampleInfo:
         re.X,
     )
 
-    def __init__(self, input_file: str) -> SampleInfo:
+    def __init__(self, input_file: str) -> None:
         if "Data_Data" in input_file:
             self.phy_process = "Data"
             self.dsid = 0
