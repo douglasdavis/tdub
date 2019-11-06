@@ -265,9 +265,14 @@ def quick_files(datapath: Union[str, os.PathLike]) -> Dict[str, List[str]]:
     The lists of files are sorted alphabetically. These types of
     samples are currently tested:
 
-    - ``ttbar`` (nominal 410472)
-    - ``tW_DR`` (nominal 410648, 410649)
-    - ``tW_DS`` (nominal 410656, 410657)
+    - ``ttbar`` (410472 full sim)
+    - ``ttbar_AFII` (410472 fast sim)
+    - ``ttbar_PS` (410558 fast sim)
+    - ``ttbar_hdamp` (410482 fast sim)
+    - ``tW_DR`` (410648, 410649 full sim)
+    - ``tW_DR_AFII`` (410648, 410648 fast sim)
+    - ``tW_DR_PS`` (411038, 411039 fast sim)
+    - ``tW_DS`` (410656, 410657 full sim)
     - ``Diboson``
     - ``Zjets``
     - ``MCNP``
@@ -296,7 +301,12 @@ def quick_files(datapath: Union[str, os.PathLike]) -> Dict[str, List[str]]:
     """
     path = str(PosixPath(datapath).resolve())
     ttbar_files = sorted(glob(f"{path}/ttbar_410472_FS*nominal.root"))
+    ttbar_AFII_files = sorted(glob(f"{path}/ttbar_410472_AFII*nominal.root"))
+    ttbar_PS_files = sorted(glob(f"{path}/ttbar_410558*AFII*nominal.root"))
+    ttbar_hdamp_files = sorted(glob(f"{path}/ttbar_410482_AFII*nominal.root"))
+    tW_DR_AFII_files = sorted(glob(f"{path}/tW_DR_41064*AFII*nominal.root"))
     tW_DR_files = sorted(glob(f"{path}/tW_DR_41064*FS*nominal.root"))
+    tW_DR_PS_files = sorted(glob(f"{path}/tW_DR_41103*AFII*nominal.root"))
     tW_DS_files = sorted(glob(f"{path}/tW_DS_41065*FS*nominal.root"))
     Diboson_files = sorted(glob(f"{path}/Diboson_*FS*nominal.root"))
     Zjets_files = sorted(glob(f"{path}/Zjets_*FS*nominal.root"))
@@ -304,7 +314,12 @@ def quick_files(datapath: Union[str, os.PathLike]) -> Dict[str, List[str]]:
     Data_files = sorted(glob(f"{path}/*Data_Data_nominal.root"))
     return {
         "ttbar": ttbar_files,
+        "ttbar_AFII": ttbar_AFII_files,
+        "ttbar_PS": ttbar_PS_files,
+        "ttbar_hdamp": ttbar_hdamp_files,
         "tW_DR": tW_DR_files,
+        "tW_DR_AFII": tW_DR_AFII_files,
+        "tW_DR_PS": tW_DR_PS_files,
         "tW_DS": tW_DS_files,
         "Diboson": Diboson_files,
         "Zjets": Zjets_files,
