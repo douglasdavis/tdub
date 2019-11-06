@@ -2,7 +2,7 @@
 tW analysis tools
 """
 
-__version__ = "0.0.7"
+__version__ = "0.0.8"
 
 
 def setup_logging():
