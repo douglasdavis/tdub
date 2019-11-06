@@ -17,6 +17,11 @@ with (project_root / "tdub" / "__init__.py").open("r") as f:
         if "__version__ = " in line:
             version = line.strip().split(" = ")[-1][1:-1]
 
+with (project_root / "docs" / "requirements.txt").open("r") as f:
+    dev_requirements = f.read().splitlines()
+
+print(dev_requirements)
+
 setup(
     name="tdub",
     version=version,
@@ -35,6 +40,7 @@ setup(
     test_suite="tests",
     python_requires=">=3.7",
     install_requires=requirements,
+    extras_require={"hist": ["numba >= 0.45"]},
     tests_require=["pytest>=4.0"],
     classifiers=[
         "Development Status :: 3 - Alpha",

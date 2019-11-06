@@ -5,18 +5,21 @@ A module to aid working with histograms
 from __future__ import annotations
 
 # ext
-from numba import njit
+import numba
+import numba.types
 import numpy as np
 from uproot_methods.classes import TH1
 
 
 class CustomTH1(TH1.Methods, list):
     """A TH1 like skeleton object"""
+
     pass
 
 
 class CustomTAxis:
     """A TAxis like object"""
+
     def __init__(self, edges: np.ndarray) -> None:
         self._fNbins = len(edges) - 1
         self._fXmin = edges[0]
@@ -24,8 +27,10 @@ class CustomTAxis:
         self._fXbins = edges.astype(np.float64)
 
 
-@njit(numba.types.UniTuple(numba.float64[:], 2)(numba.float64[:], numba.float64[:]))
-def prepare_padded(content: np.ndarray, errors: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+@numba.njit(numba.types.UniTuple(numba.float64[:], 2)(numba.float64[:], numba.float64[:]))
+def prepare_padded(
+    content: numpy.ndarray, errors: numpy.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
     """Prepare arrays for saving to ROOT histogram with over/underflow
 
     This is accelerated with numba because it's 4x faster than
