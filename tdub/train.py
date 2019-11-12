@@ -24,7 +24,7 @@ from sklearn.metrics import auc, roc_auc_score, roc_curve
 
 # tdub
 from tdub.frames import specific_dataframe
-from tdub.utils import Region, bin_centers, quick_files
+from tdub.utils import Region, bin_centers, quick_files, ks_twosample_binned
 
 
 log = logging.getLogger(__name__)
@@ -222,6 +222,7 @@ def folded_training(
             X_train,
             y_train,
             eval_set=validation_data,
+            eval_metric="auc",
             eval_sample_weight=[validation_w],
             **fit_kw,
         )
@@ -431,6 +432,8 @@ def folded_training(
         fold_number += 1
 
     relative_importances = importances / nfits
+    relative_importances = relative_importances / relative_importances.sum()
+
     mean_tpr = np.mean(tprs, axis=0)
     mean_tpr[-1] = 1.0
     mean_auc = auc(mean_fpr, mean_tpr)
@@ -671,6 +674,40 @@ def gp_minimize_auc(
         fig.savefig("histograms.pdf")
         plt.close(fig)
 
+        binning_sig_min = min(np.min(pred[y_test == 1]), np.min(train_pred[y_train == 1]))
+        binning_sig_max = max(np.max(pred[y_test == 1]), np.max(train_pred[y_train == 1]))
+        binning_bkg_min = min(np.min(pred[y_test == 0]), np.min(train_pred[y_train == 0]))
+        binning_bkg_max = max(np.max(pred[y_test == 0]), np.max(train_pred[y_train == 0]))
+        binning_sig = np.linspace(binning_sig_min, binning_sig_max, 41)
+        binning_bkg = np.linspace(binning_bkg_min, binning_bkg_max, 41)
+
+        h_sig_test, err_sig_test = pygram11.histogram(
+            pred[y_test == 1], bins=binning_sig, weights=w_test[y_test == 1]
+        )
+        h_sig_train, err_sig_train = pygram11.histogram(
+            train_pred[y_train == 1], bins=binning_sig, weights=w_train[y_train == 1]
+        )
+
+        h_bkg_test, err_bkg_test = pygram11.histogram(
+            pred[y_test == 0], bins=binning_bkg, weights=w_test[y_test == 0]
+        )
+        h_bkg_train, err_bkg_train = pygram11.histogram(
+            train_pred[y_train == 0], bins=binning_bkg, weights=w_train[y_train == 0]
+        )
+
+        ks_statistic_sig, ks_pvalue_sig = ks_twosample_binned(
+            h_sig_test, h_sig_train, err_sig_test, err_sig_train
+        )
+        ks_statistic_bkg, ks_pvalue_bkg = ks_twosample_binned(
+            h_bkg_test, h_bkg_train, err_bkg_test, err_bkg_train
+        )
+
+        if ks_pvalue_sig < 0.1 or ks_pvalue_bkg < 0.1:
+            score = score * 0.9
+
+        log.info(f"ksp sig: {ks_pvalue_sig}")
+        log.info(f"ksp bkg: {ks_pvalue_bkg}")
+
         curp = pformat(model.get_params())
         curp = eval(curp)
 
@@ -679,6 +716,10 @@ def gp_minimize_auc(
 
         with open("auc.txt", "w") as f:
             print(f"{score}", file=f)
+
+        with open("ks.txt", "w") as f:
+            print(f"sig: {ks_pvalue_sig}", file=f)
+            print(f"bkg: {ks_pvalue_bkg}", file=f)
 
         os.chdir(curdir)
 

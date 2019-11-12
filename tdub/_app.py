@@ -54,6 +54,7 @@ def parse_args():
     trainfold.add_argument("-o", "--out-dir", type=str, default="_folded", help="output directory for saving optimizatin results")
     trainfold.add_argument("-s", "--seed", type=int, default=414, help="random seed for folding")
     trainfold.add_argument("-n", "--n-splits", type=int, default=3, help="number of splits for folding")
+    trainfold.add_argument("-r", "--esr", type=int, default=15, help="early stopping rounds")
     trainfold.add_argument("--override-features", type=str, help="a YAML file containing feature lists for overriding default features")
 
     trainoptimize = subparsers.add_parser("train-optimize", help="Gaussian processes minimization for HP optimization")
@@ -62,7 +63,7 @@ def parse_args():
     trainoptimize.add_argument("datadir", type=str, help="Directory with ROOT files")
     trainoptimize.add_argument("-o", "--out-dir", type=str, default="_optim", help="output directory for saving optimizatin results")
     trainoptimize.add_argument("-n", "--n-calls", type=int, default=15, help="number of calls for the optimization procedure")
-    trainoptimize.add_argument("-r", "--esr", type=int, default=20, help="early stopping rounds for the training")
+    trainoptimize.add_argument("-r", "--esr", type=int, default=15, help="early stopping rounds for the training")
     trainoptimize.add_argument("--override-features", type=str, help="a YAML file containing feature lists for overriding default features")
 
     fselprepare = subparsers.add_parser("fsel-prepare", help="Prepare a set of parquet files for feature selection")
@@ -165,7 +166,7 @@ def _foldedtraining(args):
         labels,
         weights,
         summary["best_params"],
-        {"verbose": 20},
+        {"verbose": 20, "early_stopping_rounds": args.esr},
         args.out_dir,
         summary["region"],
         kfold_kw={"n_splits": args.n_splits, "shuffle": True, "random_state": args.seed},
