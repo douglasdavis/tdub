@@ -731,8 +731,8 @@ def kolmogorov_prob(z: float) -> float:
         fj = np.array([-2, -8, -18, -32], dtype=np.float64)
         r = np.zeros((4,), dtype=np.float64)
         v = u * u
-        maxj = max(1, round(3.0 / u))
-        for j in range(maxj):
+        maxj = max(1.0, round(3.0 / u))
+        for j in range(int(maxj)):
             r[j] = math.exp(fj[j] * v)
         return 2 * (r[0] - r[1] + r[2] - r[3])
     else:
