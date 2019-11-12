@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import logging
 import numbers
+import math
 import os
 import re
 from dataclasses import dataclass
@@ -687,3 +688,104 @@ def override_features(table: Dict[str, List[str]]) -> None:
     if "r2j2b" in table:
         log.info("Overriding tdub.constants.FEATURESET_2j2b")
         tdub.constants.FEATURESET_2j2b = copy.deepcopy(table["r2j2b"])
+
+
+def kolmogorov_prob(z: float) -> float:
+    """Calculates the Kolmogorov distribution function
+
+    See ROOT's implementation in TMath_ (TMath::KolmogorovProb).
+
+    .. _TMath: https://root.cern.ch/doc/master/namespaceTMath.html
+
+    Parameters
+    ----------
+    z : float
+       the value to test
+
+    Returns
+    -------
+    float
+       the probability that the test statistic exceeds :math:`z`
+       (assuming the null hypothesis).
+
+    Examples
+    --------
+
+    >>> from tdub.utils import kolmogorov_prob
+    >>> kolmogorov_prob(1.13)
+    0.15549781841748692
+
+    """
+    w = 2.50662827
+    # c1 - -pi**2/8, c2 = 9*c1, c3 = 25*c1
+    c1 = -1.2337005501361697
+    c2 = -11.103304951225528
+    c3 = -30.842513753404244
+    u = abs(z)
+    if u < 0.2:
+        return 1.0
+    elif u < 0.755:
+        v = 1.0 / (u * u)
+        return 1 - w * (math.exp(c1 * v) + math.exp(c2 * v) + math.exp(c3 * v)) / u
+    elif u < 6.8116:
+        fj = np.array([-2, -8, -18, -32], dtype=np.float64)
+        r = np.zeros((4,), dtype=np.float64)
+        v = u * u
+        maxj = max(1, round(3.0 / u))
+        for j in range(maxj):
+            r[j] = math.exp(fj[j] * v)
+        return 2 * (r[0] - r[1] + r[2] - r[3])
+    else:
+        return 0.0
+
+
+def ks_twosample_binned(
+    hist1: numpy.ndarray, hist2: numpy.ndarray, err1: numpy.ndarray, err2: np.ndarray
+) -> Tuple[float, float]:
+    """Calculate KS statistic and p-value for two binned distributions
+
+    See ROOT's implementation in TH1_ (TH1::KolmogorovTest).
+
+    .. _TH1: https://root.cern.ch/doc/master/classTH1.html
+
+    Parameters
+    ----------
+    hist1 : numpy.ndarray
+       the histogram counts for the first distribution
+    hist2 : numpy.ndarray
+       the histogram counts for the second distribution
+    err1 : numpy.ndarray
+       the error on the histogram counts for the first distribution
+    err2 : numpy.ndarray
+       the error on the histogram counts for the second distribution
+
+    Returns
+    -------
+    (float, float)
+       first: the test-statistic; second: the probability of the test
+       (much less than 1 means distributions are incompatible)
+
+    Examples
+    --------
+
+    >>> import pygram11
+    >>> from tdub.utils import ks_twosample_binned
+    >>> data1, data2, w1, w2 = some_function_to_get_data()
+    >>> h1, err1 = pygram11.histogram(data1, weights=w1, bins=40, range=(-3, 3))
+    >>> h2, err2 = pygram11.histogram(data2, weights=w2, bins=40, range=(-3, 3))
+    >>> kst, ksp = ks_twosample_binned(h1, h2, err1, err2)
+
+    """
+    sum1 = np.sum(hist1)
+    sum2 = np.sum(hist2)
+    w1 = np.sum(err1 * err1)
+    w2 = np.sum(err2 * err2)
+    esum1 = sum1 * sum1 / w1
+    esum2 = sum2 * sum2 / w2
+    s1 = 1 / sum1
+    s2 = 1 / sum2
+    rsum1 = s1 * hist1
+    rsum2 = s2 * hist2
+    dfmax = np.max(np.abs(rsum1 - rsum2))
+    z = dfmax * math.sqrt(esum1 * esum2 / (esum1 + esum2))
+    return dfmax, kolmogorov_prob(z)

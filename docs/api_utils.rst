@@ -26,6 +26,8 @@ Function Summary
    get_branches
    get_features
    get_selection
+   kolmogorov_prob
+   ks_twosample_binned
    override_features
    quick_files
 
@@ -48,5 +50,7 @@ Reference
 .. autofunction:: get_branches
 .. autofunction:: get_features
 .. autofunction:: get_selection
+.. autofunction:: kolmogorov_prob
+.. autofunction:: ks_twosample_binned
 .. autofunction:: override_features
 .. autofunction:: quick_files
