@@ -255,10 +255,14 @@ def folded_training(
         w_sig_train = w_train[y_train == 1]
         w_bkg_train = w_train[y_train == 0]
 
-        proba_bins = np.linspace(proba_bkg_test.min(), proba_sig_test.max(), 41)
+        proba_bins = np.linspace(0, 1, 41)
         proba_bc = bin_centers(proba_bins)
-        pred_bins = np.linspace(pred_bkg_test.min(), pred_sig_test.max(), 41)
+        pred_bins = np.linspace(0, 1, 41)
         pred_bc = bin_centers(pred_bins)
+        # proba_bins = np.linspace(proba_bkg_test.min(), proba_sig_test.max(), 41)
+        # proba_bc = bin_centers(proba_bins)
+        # pred_bins = np.linspace(pred_bkg_test.min(), pred_sig_test.max(), 41)
+        # pred_bc = bin_centers(pred_bins)
 
         ### Axis with all folds (proba histograms)
         ax_proba_hists.hist(
@@ -484,7 +488,8 @@ def gp_minimize_auc(
     nlo_method: str,
     output_dir: Union[str, os.PathLike] = "_unnamed_optimization",
     n_calls: int = 15,
-    esr: int = 15,
+    esr: Optional[int] = 15,
+    random_state: int = 414,
 ):
     """Minimize AUC using Gaussian processes
 
@@ -503,8 +508,10 @@ def gp_minimize_auc(
        path to save optimization output
     n_calls : int
        number of times to train during the minimization procedure
-    esr : int
+    esr : int, optional
        early stopping rounds for fitting the model
+    random_state: int
+       random state for splitting data into training/testing
 
     Examples
     --------
@@ -535,7 +542,7 @@ def gp_minimize_auc(
 
     df, labels, weights = prepare_from_root(tW_files, qfiles["ttbar"], region)
     X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-        df, labels, weights, train_size=0.333, random_state=414, shuffle=True
+        df, labels, weights, train_size=0.333, random_state=random_state, shuffle=True
     )
     validation_data = [(X_test, y_test)]
     validation_w = w_test
@@ -547,15 +554,12 @@ def gp_minimize_auc(
     log.info(f"n_bkg / n_sig = {n_bkg} / {n_sig} = {scale_pos_weight}")
 
     dimensions = [
-        Integer(low=7, high=4095, name="num_leaves"),
-        Real(low=1e-3, high=2e-1, prior="log-uniform", name="learning_rate"),
-        Real(low=0.01, high=(sample_size / 1000), name="min_child_weight"),
-        Integer(low=20, high=200, name="min_child_samples"),
-        Real(low=0, high=1, prior="uniform", name="reg_alpha"),
-        Real(low=0, high=1, prior="uniform", name="reg_lambda"),
-        Integer(low=3, high=64, name="max_depth"),
+        Real(low=0.01, high=0.2, prior="log-uniform", name="learning_rate"),
+        Integer(low=40, high=250, name="num_leaves"),
+        Integer(low=20, high=250, name="min_child_samples"),
+        Integer(low=3, high=10, name="max_depth"),
     ]
-    default_parameters = [20, 1e-1, 0.6, 30, 0.1, 0.9, 8]
+    default_parameters = [0.1, 100, 50, 5]
 
     run_from_dir = os.getcwd()
     save_dir = PosixPath(output_dir)
@@ -575,12 +579,9 @@ def gp_minimize_auc(
 
     @use_named_args(dimensions=dimensions)
     def afit(
-        num_leaves,
         learning_rate,
-        min_child_weight,
+        num_leaves,
         min_child_samples,
-        reg_alpha,
-        reg_lambda,
         max_depth,
     ):
         global ifit
@@ -589,12 +590,10 @@ def gp_minimize_auc(
         global best_parameters
         global best_paramdict
 
-        log.info(f"num_leaves: {num_leaves}")
+
         log.info(f"learning_rate: {learning_rate}")
-        log.info(f"min_child_weight: {min_child_weight}")
-        log.info(f"min_child_weight: {min_child_samples}")
-        log.info(f"reg_alpha: {reg_alpha}")
-        log.info(f"reg_lambda: {reg_lambda}")
+        log.info(f"num_leaves: {num_leaves}")
+        log.info(f"min_child_samples: {min_child_samples}")
         log.info(f"max_depth: {max_depth}")
 
         curdir = os.getcwd()
@@ -608,15 +607,12 @@ def gp_minimize_auc(
 
         model = lgbm.LGBMClassifier(
             boosting_type="gbdt",
-            num_leaves=num_leaves,
             learning_rate=learning_rate,
-            min_child_weight=min_child_weight,
+            num_leaves=num_leaves,
             min_child_samples=min_child_samples,
-            reg_alpha=reg_alpha,
-            reg_lambda=reg_lambda,
             max_depth=max_depth,
-            scale_pos_weight=scale_pos_weight,
             n_estimators=500,
+            scale_pos_weight=scale_pos_weight,
         )
 
         fitted_model = model.fit(
@@ -636,7 +632,7 @@ def gp_minimize_auc(
         fig, ax = plt.subplots()
         xmin = np.min(pred[y_test == 0])
         xmax = np.max(pred[y_test == 1])
-        bins = np.linspace(xmin, xmax, 26)
+        bins = np.linspace(0, 1, 41)
         ax.hist(
             train_pred[y_train == 0],
             bins=bins,
@@ -678,8 +674,10 @@ def gp_minimize_auc(
         binning_sig_max = max(np.max(pred[y_test == 1]), np.max(train_pred[y_train == 1]))
         binning_bkg_min = min(np.min(pred[y_test == 0]), np.min(train_pred[y_train == 0]))
         binning_bkg_max = max(np.max(pred[y_test == 0]), np.max(train_pred[y_train == 0]))
-        binning_sig = np.linspace(binning_sig_min, binning_sig_max, 41)
-        binning_bkg = np.linspace(binning_bkg_min, binning_bkg_max, 41)
+        # binning_sig = np.linspace(binning_sig_min, binning_sig_max, 41)
+        # binning_bkg = np.linspace(binning_bkg_min, binning_bkg_max, 41)
+        binning_sig = np.linspace(0, 1, 41)
+        binning_bkg = np.linspace(0, 1, 41)
 
         h_sig_test, err_sig_test = pygram11.histogram(
             pred[y_test == 1], bins=binning_sig, weights=w_test[y_test == 1]

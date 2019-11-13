@@ -129,9 +129,9 @@ class FeatureSelector:
             boosting_type="gbdt",
             importance_type=importance_type,
             learning_rate=0.05,
-            n_estimators=250,
+            num_leaves=100,
+            n_estimators=500,
             max_depth=5,
-            num_leaves=42,
             scale_pos_weight=self._scale_pos_weight,
         )
 
@@ -493,7 +493,7 @@ class FeatureSelector:
                 eval_metric="auc",
                 eval_set=[(itest_df, test_y)],
                 eval_sample_weight=[test_w],
-                early_stopping_rounds=10,
+                early_stopping_rounds=15,
                 verbose=20,
             )
             if extra_fit_opts is not None:
