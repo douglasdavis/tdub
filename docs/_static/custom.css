@@ -1,3 +1,15 @@
-.align-default {
-    text-align: left;
+@import url('https://fonts.googleapis.com/css?family=Inconsolata&display=swap');
+
+pre {
+    padding: 9px 17px;
+    font-family: "Inconsolata", monospace;
+}
+
+code {
+    font-family: "Inconsolata", monospace;
+}
+
+dl pre, blockquote pre, li pre {
+    padding-left: 15px;
+    font-family: "Inconsolata", monospace;
 }

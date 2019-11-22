@@ -1,3 +1,4 @@
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -49,31 +50,29 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # syntax highlighting style
-pygments_style = "sphinx"
+pygments_style = "default"
 
 autodoc_typehints = "none"
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = "pandas_sphinx_theme"
+html_theme = "alabaster"
 
-# html_theme = "alabaster"
-
-# html_theme_options = {
-#     "description": "tW analysis",
-#     "github_user": "douglasdavis",
-#     "github_repo": "tdub",
-#     "github_type": "star",
-#     "github_count": False,
-#     "font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Symbol"',
-#     "head_font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Symbol"' ,
-#     "font_size": "14px",
-#     "page_width": "980px",
-#     "sidebar_width": "240px",
-#     "fixed_sidebar": True,
-#     "show_relbars": True,
-#     "code_font_size": "1.0em",
-# }
+html_theme_options = {
+    "description": "tW analysis",
+    "github_user": "douglasdavis",
+    "github_repo": "tdub",
+    "github_type": "star",
+    "github_count": False,
+    "font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Symbol"',
+    "head_font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Symbol"' ,
+    "font_size": "14px",
+    "page_width": "980px",
+    "sidebar_width": "240px",
+    "fixed_sidebar": True,
+    "show_relbars": True,
+    "code_font_size": "1.0em",
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
