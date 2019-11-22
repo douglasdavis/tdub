@@ -20,136 +20,7 @@ str: The pandas flavor selection string for the 2j2b region
 """
 
 
-FEATURESET_1j1b_DR = sorted(
-    [
-        "pT_lep1",
-        "pT_lep2",
-    ],
-    key=str.lower,
-)
-"""
-list(str) : set of features used in the 1j1b DR BDT
-"""
-
-FEATURESET_2j1b_DR = sorted(
-    [
-        "pT_lep1",
-        "pT_lep2",
-    ],
-    key=str.lower,
-)
-"""
-list(str) : set of features used in the 2j1b DR BDT
-"""
-
-
-FEATURESET_2j2b_DR = sorted(
-    [
-        "pT_lep1",
-        "pT_lep2",
-    ],
-    key=str.lower,
-)
-"""
-list(str) : set of features used in the 2j2b DR BDT
-"""
-
-
-FEATURESET_1j1b_DS = sorted(
-    [
-        "pT_lep1",
-        "pT_lep2",
-    ],
-    key=str.lower,
-)
-"""
-list(str) : set of features used in the 1j1b DS BDT
-"""
-
-
-FEATURESET_2j1b_DS = sorted(
-    [
-        "pT_lep1",
-        "pT_lep2",
-    ],
-    key=str.lower,
-)
-"""
-list(str) : set of features used in the 2j1b DS BDT
-"""
-
-
-FEATURESET_2j2b_DS = sorted(
-    [
-        "pT_lep1",
-        "pT_lep2",
-    ],
-    key=str.lower,
-)
-"""
-list(str) : set of features used in the 2j2b DS BDT
-"""
-
-
 FEATURESET_1j1b = sorted(
-    [
-        "cent_lep1lep2",
-        "deltapT_lep1_lep2",
-        "mass_lep1jet1",
-        "mass_lep2jet1",
-        "mass_lep2jet1met",
-        "mT_jet1met",
-        "nsoftbjets",
-        "nsoftjets",
-        "pT_jetS1",
-        "pTsys_jet1met",
-        "pTsys_lep1lep2",
-        "pTsys_lep1lep2jet1met"
-    ],
-    key=str.lower,
-)
-"""
-list(str): list of features we use for classifiers in the 1j1b region
-"""
-
-
-FEATURESET_2j1b = sorted(
-    [
-        "deltaR_lep1lep2_jet1jet2met",
-        "HT_jet1jet2",
-        "mass_lep1jet1",
-        "mass_lep1jet2",
-        "mass_lep2jet1",
-        "mass_lep2jet2",
-        "psuedoContTagBin_jet1",
-        "psuedoContTagBin_jet2",
-        "pT_jet2",
-        "pTsys_lep1lep2jet1jet2met",
-    ],
-    key=str.lower,
-)
-"""
-list(str): list of features we use for classifiers in the 2j1b region
-"""
-
-
-FEATURESET_2j2b = sorted(
-    [
-        "deltaR_jet1_jet2",
-        "mass_lep1jet1",
-        "mass_lep1jet2",
-        "mass_lep2jet1",
-        "mass_lep2jet2",
-        "pT_jet2",
-        "pTsys_jet1jet2",
-    ],
-    key=str.lower,
-)
-"""
-list(str): list of features we use for classifiers in the 2j2b region
-"""
-
-FEATURESET_1j1b_TMVA = sorted(
     [
         "pTsys_lep1lep2jet1met",
         "mass_lep2jet1",
@@ -171,7 +42,7 @@ list(str): list of features we use for classifiers in the 1j1b region
 """
 
 
-FEATURESET_2j1b_TMVA = sorted(
+FEATURESET_2j1b = sorted(
     [
         "mass_lep1jet2",
         "psuedoContTagBin_jet1",
@@ -189,7 +60,7 @@ list(str): list of features we use for classifiers in the 2j1b region
 """
 
 
-FEATURESET_2j2b_TMVA = sorted(
+FEATURESET_2j2b = sorted(
     [
         "mass_lep1jet2",
         "mass_lep1jet1",
@@ -198,6 +69,65 @@ FEATURESET_2j2b_TMVA = sorted(
         "pTsys_lep1lep2met",
         "pT_jet2",
         "mass_lep2jet2",
+    ],
+    key=str.lower,
+)
+"""
+list(str): list of features we use for classifiers in the 2j2b region
+"""
+
+
+FEATURESET_1j1b_LGBM = sorted(
+    [
+        "cent_lep1lep2",
+        "deltapT_lep1_lep2",
+        "mass_lep1jet1",
+        "mass_lep2jet1",
+        "mass_lep2jet1met",
+        "mT_jet1met",
+        "nsoftbjets",
+        "nsoftjets",
+        "pT_jetS1",
+        "pTsys_jet1met",
+        "pTsys_lep1lep2",
+        "pTsys_lep1lep2jet1met"
+    ],
+    key=str.lower,
+)
+"""
+list(str): list of features we use for classifiers in the 1j1b region
+"""
+
+
+FEATURESET_2j1b_LGBM = sorted(
+    [
+        "deltaR_lep1lep2_jet1jet2met",
+        "HT_jet1jet2",
+        "mass_lep1jet1",
+        "mass_lep1jet2",
+        "mass_lep2jet1",
+        "mass_lep2jet2",
+        "psuedoContTagBin_jet1",
+        "psuedoContTagBin_jet2",
+        "pT_jet2",
+        "pTsys_lep1lep2jet1jet2met",
+    ],
+    key=str.lower,
+)
+"""
+list(str): list of features we use for classifiers in the 2j1b region
+"""
+
+
+FEATURESET_2j2b_LGBM = sorted(
+    [
+        "deltaR_jet1_jet2",
+        "mass_lep1jet1",
+        "mass_lep1jet2",
+        "mass_lep2jet1",
+        "mass_lep2jet2",
+        "pT_jet2",
+        "pTsys_jet1jet2",
     ],
     key=str.lower,
 )

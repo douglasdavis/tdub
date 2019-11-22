@@ -169,8 +169,7 @@ class SelectedDataFrame:
         Parameters
         ----------
         dfim_opts
-           options passed to the :py:obj:`DataFramesInMemory`
-           initializer
+           options passed to the :py:obj:`DataFramesInMemory` init
 
         Returns
         -------
