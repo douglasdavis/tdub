@@ -20,8 +20,6 @@ with (project_root / "tdub" / "__init__.py").open("r") as f:
 with (project_root / "docs" / "requirements.txt").open("r") as f:
     dev_requirements = f.read().splitlines()
 
-print(dev_requirements)
-
 setup(
     name="tdub",
     version=version,
