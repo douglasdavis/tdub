@@ -1,6 +1,6 @@
 # tdub
 
-[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fdouglasdavis%2Ftdub%2Fbadge&style=flat)](https://actions-badge.atrox.dev/douglasdavis/tdub/goto)
+[![Actions Status](https://github.com/douglasdavis/tdub/workflows/Linux/macOS/badge.svg)](https://github.com/douglasdavis/tdub/actions)
 [![Documentation Status](https://readthedocs.org/projects/tdub/badge/?version=latest)](https://tdub.readthedocs.io/)
 [![PyPI](https://img.shields.io/pypi/v/tdub?color=teal)](https://pypi.org/project/tdub/)
 [![Python Version](https://img.shields.io/pypi/pyversions/tdub)](https://pypi.org/project/tdub/)
