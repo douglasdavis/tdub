@@ -8,6 +8,7 @@ from tdub.utils import (
     get_branches,
     get_features,
     get_selection,
+    get_avoids,
 )
 
 from tdub.constants import (
@@ -17,6 +18,9 @@ from tdub.constants import (
     SELECTION_1j1b,
     SELECTION_2j1b,
     SELECTION_2j2b,
+    AVOID_IN_CLF_1j1b,
+    AVOID_IN_CLF_2j1b,
+    AVOID_IN_CLF_2j2b,
 )
 
 
@@ -159,3 +163,18 @@ def test_get_selection():
     assert get_selection(Region.r2j2b) == SELECTION_2j2b
     assert get_selection("reg1j1b") == SELECTION_1j1b
     assert get_selection("1j1b") == SELECTION_1j1b
+
+
+def test_get_avoids():
+    assert get_avoids("reg1j1b") == AVOID_IN_CLF_1j1b
+    assert get_avoids("r1j1b") == AVOID_IN_CLF_1j1b
+    assert get_avoids("1j1b") == AVOID_IN_CLF_1j1b
+    assert get_avoids(Region.r1j1b) == AVOID_IN_CLF_1j1b
+    assert get_avoids("reg2j1b") == AVOID_IN_CLF_2j1b
+    assert get_avoids("r2j1b") == AVOID_IN_CLF_2j1b
+    assert get_avoids("2j1b") == AVOID_IN_CLF_2j1b
+    assert get_avoids(Region.r2j1b) == AVOID_IN_CLF_2j1b
+    assert get_avoids("reg2j2b") == AVOID_IN_CLF_2j2b
+    assert get_avoids("r2j2b") == AVOID_IN_CLF_2j2b
+    assert get_avoids("2j2b") == AVOID_IN_CLF_2j2b
+    assert get_avoids(Region.r2j2b) == AVOID_IN_CLF_2j2b

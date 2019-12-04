@@ -26,7 +26,7 @@ except ImportError:
 
 # tdub
 from tdub.frames import iterative_selection
-from tdub.utils import quick_files, get_selection
+from tdub.utils import quick_files, get_selection, get_avoids
 
 
 class FeatureSelector:
@@ -596,6 +596,7 @@ def create_parquet_files(
         always_drop = ["eta_met", "bdt_response"]
         if r == "1j1b":
             always_drop.append("minimaxmbl")
+        always_drop += get_avoids(r)
         for sample in ("tW_DR", "tW_DS", "ttbar"):
             log.info(f"preparing to save a {sample} {r} parquet file using the files:")
             for f in qf[sample]:

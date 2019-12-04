@@ -124,8 +124,9 @@ class DataFramesInMemory:
         """consolidate the data into a single dataframe
 
         this will remove the weights from the separate dataframe and
-        move the data to the ``df`` attribute; the ``weights attribute
-        will be reassigned to ``None``.
+        move the data to the ``df`` attribute; the ``weights``
+        attribute will be reassigned to ``None``.
+
         """
         weight_cols = list(self.weights.columns)
         for weight_col in weight_cols:

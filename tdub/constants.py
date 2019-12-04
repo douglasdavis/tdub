@@ -90,7 +90,7 @@ FEATURESET_1j1b_LGBM = sorted(
         "pT_jetS1",
         "pTsys_jet1met",
         "pTsys_lep1lep2",
-        "pTsys_lep1lep2jet1met"
+        "pTsys_lep1lep2jet1met",
     ],
     key=str.lower,
 )
@@ -161,4 +161,24 @@ AVOID_IN_CLF = sorted(
 )
 """
 list(str): list of features to avoid in classifiers
+"""
+
+
+AVOID_IN_CLF_1j1b = sorted(["_nothing"])
+"""
+list(str): list of features to avoid specifically in 1j1b classifiers
+"""
+
+
+AVOID_IN_CLF_2j1b = sorted(
+    ["HT_jet1jet2", "deltaR_lep1lep2_jet1jet2met", "mass_lep2jet1", "pT_jet2"]
+)
+"""
+list(str): list of features to avoid specifically in 2j1b classifiers
+"""
+
+
+AVOID_IN_CLF_2j2b = sorted(["deltaR_jet1_jet2"])
+"""
+list(str): list of features to avoid specifically in 2j2b classifiers
 """

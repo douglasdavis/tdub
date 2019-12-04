@@ -589,6 +589,39 @@ def get_selection(region: Union[str, Region]) -> str:
     return options.get(region)
 
 
+def get_avoids(region: Union[str, Region]) -> List[str]:
+    """get the featuers to avoid for the given region
+
+    Parameters
+    ----------
+    region : str or tdub.utils.Region
+       the region as a string or enum entry
+
+    Returns
+    -------
+    list(str)
+       the list of features to avoid for the region
+
+    Examples
+    --------
+
+    >>> from tdub.utils import get_avoids, Region
+    >>> get_avoids(Region.r2j1b)
+    ['HT_jet1jet2', 'deltaR_lep1lep2_jet1jet2met', 'mass_lep2jet1', 'pT_jet2']
+    >>> get_avoids("2j2b")
+    ['deltaR_jet1_jet2']
+
+    """
+    options = {
+        Region.r1j1b: tdub.constants.AVOID_IN_CLF_1j1b,
+        Region.r2j1b: tdub.constants.AVOID_IN_CLF_2j1b,
+        Region.r2j2b: tdub.constants.AVOID_IN_CLF_2j2b,
+    }
+    if isinstance(region, str):
+        return options.get(Region.from_str(region))
+    return options.get(region)
+
+
 def get_features(region: Union[str, Region]) -> List[str]:
     """get the feature list for a region
 
