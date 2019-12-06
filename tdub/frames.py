@@ -724,6 +724,9 @@ def drop_cols(df: pandas.DataFrame, *cols: str) -> None:
     in_dataframe = set(df.columns)
     in_cols = set(cols)
     in_both = list(in_dataframe & in_cols)
+    log.debug("Dropping columns:")
+    for c in in_both:
+        log.debug(f" - {c}")
     df.drop(columns=in_both, inplace=True)
 
 

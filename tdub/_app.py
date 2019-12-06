@@ -6,11 +6,19 @@ Command line application
 import argparse
 import json
 import pathlib
+import logging
 
 # external
 import yaml
 
 # tdub
+from tdub.apply import FoldedResult, generate_npy
+from tdub.batch import gen_submit_script
+from tdub.features import create_parquet_files, prepare_from_parquet, FeatureSelector
+from tdub.frames import raw_dataframe, drop_cols
+from tdub.rex_art import run_stacks, run_pulls
+from tdub.train import gp_minimize_auc, folded_training, prepare_from_root
+from tdub.utils import SampleInfo, quick_files, override_features
 from tdub import setup_logging
 
 
@@ -23,7 +31,7 @@ def parse_args():
     common_parser = argparse.ArgumentParser(add_help=False, formatter_class=formatter)
     common_parser.add_argument("--debug", action="store_true", help="set logging level to debug")
 
-    applygennpy = subparsers.add_parser("apply-gennpy", help="Calculate samples BDT response and save to .npy file")
+    applygennpy = subparsers.add_parser("apply-gennpy", help="Calculate samples BDT response and save to .npy file", parents=[common_parser])
     applygennpy.add_argument("--bnl-dir", type=str, help="directory on BNL parse for generating a condor submission script")
     applygennpy.add_argument("--single-file", type=str, help="input ROOT file")
     applygennpy.add_argument("--all-in-dir", type=str, help="Process all files in a directory")
@@ -48,7 +56,7 @@ def parse_args():
     rexstacks.add_argument("--band-style", type=str, choices=["hatch", "shade"], default="hatch", help="systematic band style")
     rexstacks.add_argument("--legend-ncol", type=int, choices=[1, 2], default=1, help="number of legend columns")
 
-    trainfold = subparsers.add_parser("train-fold", help="Perform a folded training")
+    trainfold = subparsers.add_parser("train-fold", help="Perform a folded training", parents=[common_parser])
     trainfold.add_argument("optimdir", type=str, help="directory containing optimization information")
     trainfold.add_argument("datadir", type=str, help="Directory with ROOT files")
     trainfold.add_argument("-o", "--out-dir", type=str, default="_folded", help="output directory for saving optimizatin results")
@@ -57,7 +65,7 @@ def parse_args():
     trainfold.add_argument("-r", "--esr", type=int, default=15, help="early stopping rounds")
     trainfold.add_argument("--override-features", type=str, help="a YAML file containing feature lists for overriding default features")
 
-    trainoptimize = subparsers.add_parser("train-optimize", help="Gaussian processes minimization for HP optimization")
+    trainoptimize = subparsers.add_parser("train-optimize", help="Gaussian processes minimization for HP optimization", parents=[common_parser])
     trainoptimize.add_argument("region", type=str, help="Region to train", choices=["1j1b", "2j1b", "2j2b"])
     trainoptimize.add_argument("nlomethod", type=str, help="NLO method samples to use", choices=["DR", "DS", "Both"])
     trainoptimize.add_argument("datadir", type=str, help="Directory with ROOT files")
@@ -66,12 +74,12 @@ def parse_args():
     trainoptimize.add_argument("-r", "--esr", type=int, default=15, help="early stopping rounds for the training")
     trainoptimize.add_argument("--override-features", type=str, help="a YAML file containing feature lists for overriding default features")
 
-    fselprepare = subparsers.add_parser("fsel-prepare", help="Prepare a set of parquet files for feature selection")
+    fselprepare = subparsers.add_parser("fsel-prepare", help="Prepare a set of parquet files for feature selection", parents=[common_parser])
     fselprepare.add_argument("-i", "--in", dest="indir", type=str, required=True, help="Directory containing ROOT files")
     fselprepare.add_argument("-o", "--out", dest="outdir", type=str, required=True, help="Output directory to save parquet files")
     fselprepare.add_argument("--entrysteps", type=str, required=False, help="entrysteps argument for create_parquet_files function")
 
-    fselexecute = subparsers.add_parser("fsel-execute", help="Execute a round of feature selection")
+    fselexecute = subparsers.add_parser("fsel-execute", help="Execute a round of feature selection", parents=[common_parser])
     fselexecute.add_argument("-i", "--in-pqdir", type=str, help="Directory containg the parquet files")
     fselexecute.add_argument("-n", "--nlo-method", type=str, choices=["DR", "DS"], required=True, help="tW NLO sample")
     fselexecute.add_argument("-r", "--region", type=str, choices=["1j1b", "2j1b", "2j2b"], required=True, help="Region to process")
@@ -87,9 +95,6 @@ def parse_args():
 
 
 def _optimize(args):
-    from tdub.train import gp_minimize_auc
-    from tdub.utils import override_features
-
     if args.override_features:
         with pathlib.PosixPath(args.override_features).open("r") as f:
             override_features(yaml.safe_load(f))
@@ -104,15 +109,10 @@ def _optimize(args):
 
 
 def _fselprepare(args):
-    from tdub.features import create_parquet_files
-
     create_parquet_files(args.indir, args.outdir, args.entrysteps)
 
 
 def _fselexecute(args):
-    from tdub.features import prepare_from_parquet, FeatureSelector
-    from tdub.frames import drop_cols
-
     if args.out == "_auto":
         name = f"{args.nlo_method}_{args.region}_{args.itype}"
     else:
@@ -140,9 +140,6 @@ def _fselexecute(args):
 
 
 def _foldedtraining(args):
-    from tdub.train import folded_training, prepare_from_root
-    from tdub.utils import quick_files, override_features
-
     if args.override_features:
         with pathlib.PosixPath(args.override_features).open("r") as f:
             override_features(yaml.safe_load(f))
@@ -175,11 +172,6 @@ def _foldedtraining(args):
 
 
 def _pred2npy(args):
-    from tdub.apply import FoldedResult, generate_npy
-    from tdub.frames import raw_dataframe
-    from tdub.utils import SampleInfo
-    import logging
-
     n_opts = 0
     if args.single_file is not None:
         n_opts += 1
@@ -198,8 +190,6 @@ def _pred2npy(args):
         outdir = pathlib.PosixPath(".")
 
     if args.bnl_dir is not None:
-        from tdub.batch import gen_submit_script
-
         gen_submit_script(
             args.bnl_dir, args.folds, outdir, args.arr_name, args.bnl_script_name
         )
@@ -251,12 +241,14 @@ def cli():
 
     setup_logging()
 
+    if args.debug:
+        for name in logging.root.manager.loggerDict:
+            logging.getLogger(name).setLevel(logging.DEBUG)
+
     # fmt: off
     if args.action == "rex-stacks":
-        from tdub.rex_art import run_stacks
         return run_stacks(args)
     elif args.action == "rex-pulls":
-        from tdub.rex_art import run_pulls
         return run_pulls(args)
     elif args.action == "train-optimize":
         return _optimize(args)
