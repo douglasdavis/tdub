@@ -596,7 +596,6 @@ def create_parquet_files(
         always_drop = ["eta_met", "bdt_response"]
         if r == "1j1b":
             always_drop.append("minimaxmbl")
-        always_drop += get_avoids(r)
         for sample in ("tW_DR", "tW_DS", "ttbar"):
             log.info(f"preparing to save a {sample} {r} parquet file using the files:")
             for f in qf[sample]:
@@ -609,7 +608,7 @@ def create_parquet_files(
                 entrysteps=entrysteps,
             )
             df.drop_cols(*always_drop)
-            df.drop_avoid()
+            df.drop_avoid(region=r)
             if r == "1j1b":
                 df.drop_jet2()
             outname = str(out_dir / f"{sample}_{r}.parquet")

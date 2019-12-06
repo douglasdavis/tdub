@@ -20,6 +20,7 @@ from tdub.utils import (
     Region,
     categorize_branches,
     conservative_branches,
+    get_avoids,
     get_branches,
     get_features,
     get_selection,
@@ -729,7 +730,9 @@ def drop_cols(df: pandas.DataFrame, *cols: str) -> None:
 pd.DataFrame.drop_cols = drop_cols
 
 
-def drop_avoid(df: pandas.DataFrame) -> None:
+def drop_avoid(
+    df: pandas.DataFrame, region: Optional[Union[str, tdub.utils.Region]] = None
+) -> None:
     """drop columns that we avoid in classifiers
 
     this uses :py:func:`tdub.frames.drop_cols` with a predefined set
@@ -741,6 +744,9 @@ def drop_avoid(df: pandas.DataFrame) -> None:
     ----------
     df : :py:obj:`pandas.DataFrame`
        the df which we want to slim
+    region : optional, str or tdub.utils.Region
+       region to augment the list of dropped columns (see the region
+       specific AVOID constants in the constants module).
 
     Examples
     --------
@@ -755,7 +761,10 @@ def drop_avoid(df: pandas.DataFrame) -> None:
     False
 
     """
-    drop_cols(df, *AVOID_IN_CLF)
+    to_drop = AVOID_IN_CLF
+    if region is not None:
+        to_drop += get_avoids(region)
+    drop_cols(df, *to_drop)
 
 
 pd.DataFrame.drop_avoid = drop_avoid
