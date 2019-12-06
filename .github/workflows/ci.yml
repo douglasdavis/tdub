@@ -22,6 +22,10 @@ jobs:
         python -m pip install pip setuptools pytest -U
         pip install --ignore-installed -U -q --no-cache-dir -e .
         pip list
+    - name: install libomp on macOS
+      if: startsWith(matrix.platform, 'macOS')
+      run: |
+        brew install libomp
     - name: run pytest
       run: |
         python -m tdub --help
