@@ -805,3 +805,124 @@ def drop_jet2(df: pandas.DataFrame) -> None:
 
 
 pd.DataFrame.drop_jet2 = drop_jet2
+
+
+def apply_weight(
+    df: pandas.DataFrame, weight_name: str, exclude: Optional[List[str]] = None
+) -> None:
+    """apply (multiply) a weight to all other weights in the DataFrame
+
+    This will multiply the nominal weight and all systematic weights
+    in the DataFrame by the ``weight_name`` column.
+
+    we augment :py:class:`pandas.DataFrame` with this function
+
+    Parameters
+    ----------
+    df : :py:obj:`pandas.DataFrame`
+       the df we want to operate on
+    weight_name : str
+       the column name to multiple all other weight columns by
+    exclude : list(str), optional
+       a list of columns ot exclude when determining the other weight
+       columns to operate on
+
+    Examples
+    --------
+
+    >>> import tdub.frames
+    >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
+    >>> df.apply_weight("weight_campaign")
+
+    """
+    sys_weight_cols = [c for c in df.columns if "weight_sys" in c]
+    cols = ["weight_nominal"] + sys_weight_cols
+    if exclude is not None:
+        for entry in exclude:
+            if entry in cols:
+                cols.remove(entry)
+    if weight_name in cols:
+        log.warn(f"{weight_name} is in the columns list, dropping")
+        cols.remove(weight_name)
+
+    df[cols] = df[cols].multiply(df[weight_name], axis="index")
+
+
+pd.DataFrame.apply_weight = apply_weight
+
+
+def apply_weight_campaign(
+    df: pandas.DataFrame, exclude: Optional[List[str]] = None
+) -> None:
+    """multiply nominal and systematic weights by the campaign weight
+
+    this is useful for samples that were produced without the campaign
+    weight term already applied to all other weights
+
+    we augment :py:class:`pandas.DataFrame` with this function
+
+    Parameters
+    ----------
+    df : :py:obj:`pandas.DataFrame`
+       the df we want to operate on
+    exclude : list(str), optional
+       a list of columns to exclude when determining the other weight
+       columns to operate on
+
+    Examples
+    --------
+
+    >>> import tdub.frames
+    >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
+    >>> df.weight_nominal[5]
+    0.003
+    >>> df.weight_campaign[5]
+    0.4
+    >>> df.apply_weight_campaign()
+    >>> df.weight_nominal[5]
+    0.0012
+
+    """
+    apply_weight(df, "weight_campaign", exclude=exclude)
+
+
+pd.DataFrame.apply_weight_campaign = apply_weight_campaign
+
+
+def apply_weight_tptrw(df: pandas.DataFrame, exclude: Optional[List[str]] = None) -> None:
+    """multiply nominal and systematic weights by the top pt reweight term
+
+    this is useful for samples that were produced without the top pt
+    reweighting term already applied to all other weights
+
+    we augment :py:class:`pandas.DataFrame` with this function
+
+    Parameters
+    ----------
+    df : :py:obj:`pandas.DataFrame`
+       the df we want to operate on
+    exclude : list(str), optional
+       a list of columns to exclude when determining the other weight
+       columns to operate on
+
+    Examples
+    --------
+
+    >>> import tdub.frames
+    >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
+    >>> df.weight_nominal[5]
+    0.002
+    >>> df.weight_tptrw_tool[5]
+    0.98
+    >>> df.apply_weight_tptrw()
+    >>> df.weight_nominal[5]
+    0.00196
+
+    """
+    excludes = ["weight_sys_noreweight"]
+    if exclude is not None:
+        excludes += exclude
+    apply_weight(df, "weight_tptrw_tool", exclude=excludes)
+
+
+pd.DataFrame.apply_weight_tptrw = apply_weight_tptrw

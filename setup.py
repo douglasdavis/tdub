@@ -38,8 +38,7 @@ setup(
     test_suite="tests",
     python_requires=">=3.7",
     install_requires=requirements,
-    extras_require={"hist": ["numba >= 0.45"]},
-    tests_require=["pytest>=4.0"],
+    tests_require=["pytest>=5.2"],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",

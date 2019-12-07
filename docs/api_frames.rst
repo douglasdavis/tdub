@@ -30,6 +30,9 @@ Helper Function Summary
 
 .. autosummary::
 
+   apply_weight
+   apply_weight_campaign
+   apply_weight_tptrw
    drop_avoid
    drop_cols
    drop_jet2
@@ -51,7 +54,9 @@ Reference
 .. autofunction:: selected_dataframes
 .. autofunction:: specific_dataframe
 
-
+.. autofunction:: apply_weight
+.. autofunction:: apply_weight_campaign
+.. autofunction:: apply_weight_tptrw
 .. autofunction:: drop_avoid
 .. autofunction:: drop_cols
 .. autofunction:: drop_jet2
