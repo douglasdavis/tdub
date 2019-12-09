@@ -21,4 +21,5 @@ including:
 For potentially finer-grained tasks the API is fully documented. The
 API mainly provides quick and easy access to pythonic representations
 (i.e. dataframes or NumPy arrays) of our datasets (which of course
-originate from [ROOT](https://root.cern/) files).
+originate from [ROOT](https://root.cern/) files), modularized ML
+tasks, and a nice set of utilities.
