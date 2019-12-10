@@ -314,7 +314,6 @@ def quick_files(
     """
     if campaign is None:
         camp = ""
-        datapref = ""
     else:
         if campaign not in ("MC16a", "MC16d", "MC16e"):
             raise ValueError(f"{campaign} but be either 'MC16a', 'MC16d', or 'MC16e'")
@@ -402,7 +401,6 @@ def files_for_tree(
     """
     if campaign is None:
         camp = ""
-        datapref = ""
     else:
         if campaign not in ("MC16a", "MC16d", "MC16e"):
             raise ValueError(f"{campaign} but be either 'MC16a', 'MC16d', or 'MC16e'")
