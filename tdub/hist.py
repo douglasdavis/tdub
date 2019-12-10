@@ -4,11 +4,18 @@ A module to aid working with histograms
 
 from __future__ import annotations
 
+# stdlib
+from typing import Iterable
+
 # ext
-import numba
-import numba.types
+import numba as nb
 import numpy as np
+import pandas as pd
 from uproot_methods.classes import TH1
+from pygram11 import fix1dmw
+
+# tdub
+from tdub.utils import categorize_branches
 
 
 class CustomTH1(TH1.Methods, list):
@@ -27,7 +34,7 @@ class CustomTAxis:
         self._fXbins = edges.astype(np.float64)
 
 
-@numba.njit(numba.types.UniTuple(numba.float64[:], 2)(numba.float64[:], numba.float64[:]))
+@nb.njit(nb.types.Tuple((nb.float32[:], nb.float64[:]))(nb.float32[:], nb.float32[:]))
 def prepare_padded(
     content: numpy.ndarray, errors: numpy.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -50,21 +57,22 @@ def prepare_padded(
     :py:obj:`numpy.ndarray`
        the padded sumw2
     """
-    content_padded = np.empty(len(content) + 2, dtype=content.dtype)
+    nbins = content.shape[0] + 2
+    content_padded = np.empty(nbins, dtype=content.dtype)
     content_padded[1:-1] = content
     content_padded[0] = 0.0
     content_padded[-1] = 0.0
-    sumw2_padded = np.empty(len(content) + 2, dtype=np.float64)
-    sumw2_padded[1:-1] = error ** 2
+    sumw2_padded = np.empty(nbins, dtype=np.float64)
+    sumw2_padded[1:-1] = errors ** 2
     sumw2_padded[0] = 0.0
     sumw2_padded[-1] = 0.0
     return content_padded, sumw2_padded
 
 
-def from_pygram11(
+def arrays2th1(
     content: numpy.ndarray, error: numpy.ndarray, bins: numpy.ndarray, title: str = "none"
 ) -> CustomTH1:
-    """create a TH1-like object built from pygram11 output
+    """create a TH1-like object built from arrays
 
     Parameters
     ----------
@@ -80,7 +88,7 @@ def from_pygram11(
     Returns
     -------
     :obj:`CustomTH1`
-       the ROOT like histogram structure
+       the ROOT like histogram object
     """
 
     output = CustomTH1.__new__(CustomTH1)
@@ -90,9 +98,129 @@ def from_pygram11(
         output._classname = "TH1D"
     output._fXaxis = CustomTAxis(bins)
     output._fEntries = content.sum()
-    output._fTitle = name
+    output._fTitle = title
 
     content_padded, output._fSumw2 = prepare_padded(content, error)
     output.extend(content_padded)
 
     return output
+
+
+def df2th1(
+    dfc: pandas.DataFrame,
+    dfe: pandas.DataFrame,
+    weight_col: Optional[Union[List[str], str]] = None,
+) -> Union[CustomTH1, Dict[str, CustomTH1]]:
+    """create a TH1-like object built from a dataframe structure
+
+    Parameters
+    ----------
+    dfc : pandas.DataFrame
+       the dataframe holding the bin content
+    dfe : pandas.DataFrame
+       the dataframe holding the bin errors
+    weight_name : str or list(str), optional
+       name of the weight(s) (column(s) in the dataframe) to use. If
+       ``None``, just ``weight_nominal`` is used. if "ALL", all
+       weights are used.
+
+    Returns
+    -------
+    :obj:`CustomTH1` or dict(str, :obj:`CustomTH1`)
+       the ROOT like histogram object(s)
+
+    """
+    binning = np.linspace(dfc._xmin, dfc._xmax, dfc._nbins + 1)
+    if weight_col is None:
+        weight_col = "weight_nominal"
+    if isinstance(weight_col, str):
+        if weight_col == "ALL":
+            res = {}
+            for weight_name in dfc.columns:
+                res[weight_name] = arrays2th1(
+                    dfc[weight_name].to_numpy(),
+                    dfe[weight_name].to_numpy(),
+                    binning,
+                    title=dfc._var_used,
+                )
+            return res
+        else:
+            return {
+                weight_col: arrays2th1(
+                    dfc[weight_col].to_numpy(),
+                    dfe[weight_col].to_numpy(),
+                    binning,
+                    title=dfc._var_used,
+                )
+            }
+    else:
+        res = {}
+        for weight_name in weight_col:
+            res[weight_name] = arrays2th1(
+                dfc[weight_name].to_numpy(),
+                dfe[weight_name].to_numpy(),
+                binning,
+                title=dfc._var_used,
+            )
+        return res
+
+
+def generate_from_df(
+    df: pandas.DataFrame,
+    var: str,
+    bins: int,
+    range: Tuple[float, float],
+    nominal_weight: bool = True,
+    systematic_weights: bool = False,
+) -> Any:
+    """generate histogram(s) from a dataframe
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+       the dataframe with our variable and weights of interest
+    var : str
+       the variable (name of distribution) we want to histogram
+    bins : int
+       the number of bins
+    range : tuple(float, float)
+       the axis limits (min, max) for the histogram
+    nominal_weight : bool
+       histogram the data using the nominal weight
+    systematic_weights : bool
+       histogram the data using the systematic weights in the dataframe
+
+    Returns
+    -------
+    tuple(pandas.DataFrame, pandas.DataFrame)
+       the resulting histogram bin counts are in the first dataframe
+       and the bin uncertainties are in the second frame. the columns
+       give the weight used to calculate the histograms
+
+
+    Examples
+    --------
+
+    >>> from tdub.utils import quick_files
+    >>> from tdub.frames import raw_dataframe
+    >>> from tdub.hist import generate_from_df
+    >>> qf = quick_files("/path/to/data")
+    >>> df_tW_DR = raw_dataframe(qf["tW_DR"])
+    >>> hist_result = generate_from_df(df_tW_DR, "met", bins=20, range=(0.0, 200.0), systematic_weights=True)
+
+    """
+    weight_cols = []
+    if nominal_weight:
+        weight_cols += ["weight_nominal"]
+    if systematic_weights:
+        weight_cols += [c for c in df.columns if "weight_sys" in c]
+
+    res = fix1dmw(df[var], df[weight_cols], bins=bins, range=range, flow=True, omp=True)
+    res0 = pd.DataFrame(res[0], columns=weight_cols)
+    res1 = pd.DataFrame(res[1], columns=weight_cols)
+    res0._var_used = var
+    res0._nbins = bins
+    res0._xmin = range[0]
+    res0._xmax = range[1]
+    res1.var_used = var
+    return (res0, res1)
