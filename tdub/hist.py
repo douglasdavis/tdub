@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import Iterable
 
 # ext
-import numba as nb
 import numpy as np
 import pandas as pd
 from uproot_methods.classes import TH1
@@ -34,14 +33,10 @@ class CustomTAxis:
         self._fXbins = edges.astype(np.float64)
 
 
-@nb.njit(nb.types.Tuple((nb.float32[:], nb.float64[:]))(nb.float32[:], nb.float32[:]))
 def prepare_padded(
     content: numpy.ndarray, errors: numpy.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Prepare arrays for saving to ROOT histogram with over/underflow
-
-    This is accelerated with numba because it's 4x faster than
-    non-jit'd version.
 
     Paramters
     ---------
@@ -206,7 +201,13 @@ def generate_from_df(
     >>> from tdub.hist import generate_from_df
     >>> qf = quick_files("/path/to/data")
     >>> df_tW_DR = raw_dataframe(qf["tW_DR"])
-    >>> hist_result = generate_from_df(df_tW_DR, "met", bins=20, range=(0.0, 200.0), systematic_weights=True)
+    >>> hist_result = generate_from_df(
+    ...     df_tW_DR,
+    ...     "met",
+    ...     bins=20,
+    ...     range=(0.0, 200.0),
+    ...     systematic_weights=True
+    ... )
 
     """
     weight_cols = []
