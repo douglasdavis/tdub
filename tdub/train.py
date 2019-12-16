@@ -23,8 +23,15 @@ from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import auc, roc_auc_score, roc_curve
 
 # tdub
-from tdub.frames import specific_dataframe
-from tdub.utils import Region, bin_centers, quick_files, ks_twosample_binned
+from tdub.frames import specific_dataframe, iterative_selection
+from tdub.utils import (
+    Region,
+    bin_centers,
+    quick_files,
+    ks_twosample_binned,
+    get_selection,
+    get_features,
+)
 
 
 log = logging.getLogger(__name__)
@@ -34,8 +41,10 @@ def prepare_from_root(
     sig_files: List[str],
     bkg_files: List[str],
     region: Union[Region, str],
-    weight_scale: float = 1.0e3,
+    weight_mean: Optional[float] = None,
+    weight_scale: Optional[float] = None,
     scale_sum_weights: bool = True,
+    use_campaign_weight: bool = False,
 ) -> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
     """Prepare the data for training in a region with signal and
     background ROOT files
@@ -48,10 +57,18 @@ def prepare_from_root(
        list of background ROOT files
     region : Region or str
        the region where we're going to perform the training
-    weight_scale : float
-       value to scale all weights by
+    weight_mean : float, optional
+       scale all weights such that the mean weight is this
+       value. Cannot be used with ``weight_scale``.
+    weight_scale : float, optional
+       value to scale all weights by, cannot be used with
+       ``weight_mean``.
     scale_sum_weights : bool
-       scale sum of weights of signal to be sum of weights of background
+       scale sum of weights of signal to be sum of weights of
+       background
+    use_campaign_weight : bool
+       see the parameter description for
+       :py:func:`tdub.frames.iterative_selection`
 
     Returns
     -------
@@ -71,6 +88,9 @@ def prepare_from_root(
     >>> df, labels, weights = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
 
     """
+    if weight_scale is not None and weight_mean is not None:
+        raise ValueError("weight_scale and weight_mean cannot be used together")
+
     log.info("preparing training data")
     log.info("signal files:")
     for f in sig_files:
@@ -80,36 +100,57 @@ def prepare_from_root(
         log.info(f"  - {f}")
 
     ## signal pretty much always be tW, no need for dask
-    sig_dfim = specific_dataframe(
-        sig_files, region, "train_sig", bypass_dask=True, dropnonkin=True
+    sig_df = iterative_selection(
+        files=sig_files,
+        selection=get_selection(region),
+        weight_name="weight_nominal",
+        concat=True,
+        keep_category="kinematics",
+        branches=get_features(region),
+        ignore_avoid=True,
+        use_campaign_weight=use_campaign_weight,
     )
-    ## bkg is pretty much always ttbar, so lets use daks to be careful
-    bkg_dfim = specific_dataframe(
-        bkg_files, region, "train_bkg", to_ram=True, dropnonkin=True
+    bkg_df = iterative_selection(
+        files=bkg_files,
+        selection=get_selection(region),
+        weight_name="weight_nominal",
+        concat=True,
+        keep_category="kinematics",
+        branches=get_features(region),
+        ignore_avoid=True,
+        use_campaign_weight=use_campaign_weight,
+        entrysteps="1 GB",
     )
 
-    sorted_cols = sorted(sig_dfim.df.columns.to_list(), key=str.lower)
-    sig_dfim._df = sig_dfim._df[sorted_cols]
-    bkg_dfim._df = bkg_dfim._df[sorted_cols]
+    w_sig = sig_df.pop("weight_nominal").to_numpy()
+    w_bkg = bkg_df.pop("weight_nominal").to_numpy()
+    w_sig[w_sig < 0] = 0.0
+    w_bkg[w_bkg < 0] = 0.0
+    if scale_sum_weights:
+        w_sig *= w_bkg.sum() / w_sig.sum()
+    if "weight_campaign" in sig_df:
+        drop_cols(sig_df, "weight_campaign")
+    if "weight_campaign" in bkg_df:
+        drop_cols(bkg_df, "weight_campaign")
 
-    cols = sig_dfim.df.columns.to_list()
-    assert cols == bkg_dfim.df.columns.to_list(), "sig/bkg columns are different. bad."
-    log.info("features used:")
+    sorted_cols = sorted(sig_df.columns.to_list(), key=str.lower)
+    sig_df = sig_df[sorted_cols]
+    bkg_df = bkg_df[sorted_cols]
+
+    cols = sig_df.columns.to_list()
+    assert cols == bkg_df.columns.to_list(), "sig/bkg columns are different. bad."
+    log.info("features to be available:")
     for c in cols:
         log.info(f"  - {c}")
 
-    w_sig = sig_dfim.weights.weight_nominal.to_numpy()
-    w_bkg = bkg_dfim.weights.weight_nominal.to_numpy()
-    w_sig[w_sig < 0] = 0.0
-    w_bkg[w_bkg < 0] = 0.0
-    w_sig *= weight_scale
-    w_bkg *= weight_scale
-    if scale_sum_weights:
-        w_sig *= w_bkg.sum() / w_sig.sum()
-
-    df = pd.concat([sig_dfim.df, bkg_dfim.df])
+    df = pd.concat([sig_df, bkg_df])
     y = np.concatenate([np.ones_like(w_sig), np.zeros_like(w_bkg)])
     w = np.concatenate([w_sig, w_bkg])
+
+    if weight_scale is not None:
+        w *= weight_scale
+    if weight_mean is not None:
+        w *= weight_mean * len(w) / np.sum(w)
 
     return df, y, w
 
@@ -211,16 +252,17 @@ def folded_training(
         validation_data = [(X_test, y_test)]
         validation_w = w_test
 
-        n_sig = y_train[y_train == 1].shape[0]
-        n_bkg = y_train[y_train == 0].shape[0]
-        scale_pos_weight = n_bkg / n_sig
-        log.info(f"n_bkg / n_sig = {n_bkg} / {n_sig} = {scale_pos_weight}")
+        # n_sig = y_train[y_train == 1].shape[0]
+        # n_bkg = y_train[y_train == 0].shape[0]
+        # scale_pos_weight = n_bkg / n_sig
+        # log.info(f"n_bkg / n_sig = {n_bkg} / {n_sig} = {scale_pos_weight}")
+        # params["scale_pos_weight"] = scale_pos_weight
 
-        params["scale_pos_weight"] = scale_pos_weight
         model = lgbm.LGBMClassifier(**params)
         fitted_model = model.fit(
             X_train,
             y_train,
+            sample_weight=w_train,
             eval_set=validation_data,
             eval_metric="auc",
             eval_sample_weight=[validation_w],
@@ -254,15 +296,12 @@ def folded_training(
         w_bkg_test = w_test[y_test == 0]
         w_sig_train = w_train[y_train == 1]
         w_bkg_train = w_train[y_train == 0]
-
         proba_bins = np.linspace(0, 1, 41)
         proba_bc = bin_centers(proba_bins)
-        pred_bins = np.linspace(0, 1, 41)
+        predxmin = min(pred_bkg_test.min(), pred_bkg_train.min())
+        predxmax = max(pred_sig_test.max(), pred_sig_train.max())
+        pred_bins = np.linspace(predxmin, predxmax, 41)
         pred_bc = bin_centers(pred_bins)
-        # proba_bins = np.linspace(proba_bkg_test.min(), proba_sig_test.max(), 41)
-        # proba_bc = bin_centers(proba_bins)
-        # pred_bins = np.linspace(pred_bkg_test.min(), pred_sig_test.max(), 41)
-        # pred_bc = bin_centers(pred_bins)
 
         ### Axis with all folds (proba histograms)
         ax_proba_hists.hist(
@@ -425,8 +464,14 @@ def folded_training(
             fpr, tpr, lw=1, alpha=0.45, label=f"fold {fold_number}, AUC = {roc_auc:0.3}"
         )
 
+        fold_ax_proba.set_ylabel("Arb. Units")
+        fold_ax_proba.set_xlabel("Classifier Output")
         fold_ax_proba.legend(ncol=2, loc="upper center")
+
+        fold_ax_pred.set_ylabel("Arb. Units")
+        fold_ax_pred.set_xlabel("Classifier Output")
         fold_ax_pred.legend(ncol=2, loc="upper center")
+
         fold_fig_proba.savefig(f"fold{fold_number}_histograms_proba.pdf")
         fold_fig_pred.savefig(f"fold{fold_number}_histograms_pred.pdf")
 
@@ -450,11 +495,17 @@ def folded_training(
         lw=2,
         alpha=0.8,
     )
+    ax_rocs.set_xlabel("False Positive Rate")
+    ax_rocs.set_ylabel("True Positive Rate")
 
+    ax_proba_hists.set_ylabel("Arb. Units")
+    ax_proba_hists.set_xlabel("Classifier Output")
     ax_proba_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_proba_hists.set_ylim([0, 1.5 * ax_proba_hists.get_ylim()[1]])
     fig_proba_hists.savefig("histograms_proba.pdf")
 
+    ax_pred_hists.set_ylabel("Arb. Units")
+    ax_pred_hists.set_xlabel("Classifier Output")
     ax_pred_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_pred_hists.set_ylim([0, 1.5 * ax_pred_hists.get_ylim()[1]])
     fig_pred_hists.savefig("histograms_pred.pdf")
@@ -547,11 +598,11 @@ def gp_minimize_auc(
     validation_data = [(X_test, y_test)]
     validation_w = w_test
 
-    n_sig = y_train[y_train == 1].shape[0]
-    n_bkg = y_train[y_train == 0].shape[0]
-    scale_pos_weight = n_bkg / n_sig
-    sample_size = n_bkg + n_sig
-    log.info(f"n_bkg / n_sig = {n_bkg} / {n_sig} = {scale_pos_weight}")
+    # n_sig = y_train[y_train == 1].shape[0]
+    # n_bkg = y_train[y_train == 0].shape[0]
+    # scale_pos_weight = n_bkg / n_sig
+    # sample_size = n_bkg + n_sig
+    # log.info(f"n_bkg / n_sig = {n_bkg} / {n_sig} = {scale_pos_weight}")
 
     dimensions = [
         Real(low=0.01, high=0.2, prior="log-uniform", name="learning_rate"),
@@ -579,10 +630,7 @@ def gp_minimize_auc(
 
     @use_named_args(dimensions=dimensions)
     def afit(
-        learning_rate,
-        num_leaves,
-        min_child_samples,
-        max_depth,
+        learning_rate, num_leaves, min_child_samples, max_depth,
     ):
         global ifit
         global best_fit
@@ -590,7 +638,7 @@ def gp_minimize_auc(
         global best_parameters
         global best_paramdict
 
-
+        log.info(f"on iteration {ifit} out of {n_calls}")
         log.info(f"learning_rate: {learning_rate}")
         log.info(f"num_leaves: {num_leaves}")
         log.info(f"min_child_samples: {min_child_samples}")
@@ -612,12 +660,12 @@ def gp_minimize_auc(
             min_child_samples=min_child_samples,
             max_depth=max_depth,
             n_estimators=500,
-            scale_pos_weight=scale_pos_weight,
         )
 
         fitted_model = model.fit(
             X_train,
             y_train,
+            sample_weight=w_train,
             eval_set=validation_data,
             eval_metric="auc",
             verbose=20,

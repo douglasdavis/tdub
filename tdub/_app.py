@@ -78,6 +78,7 @@ def parse_args():
     fselprepare.add_argument("-i", "--in", dest="indir", type=str, required=True, help="Directory containing ROOT files")
     fselprepare.add_argument("-o", "--out", dest="outdir", type=str, required=True, help="Output directory to save parquet files")
     fselprepare.add_argument("--entrysteps", type=str, required=False, help="entrysteps argument for create_parquet_files function")
+    fselprepare.add_argument("--use-campaign-weight", action="store_true", help="propagate weight_campaign to weight_nominal")
 
     fselexecute = subparsers.add_parser("fsel-execute", help="Execute a round of feature selection", parents=[common_parser])
     fselexecute.add_argument("-i", "--in-pqdir", type=str, help="Directory containg the parquet files")
@@ -109,7 +110,7 @@ def _optimize(args):
 
 
 def _fselprepare(args):
-    create_parquet_files(args.indir, args.outdir, args.entrysteps)
+    create_parquet_files(args.indir, args.outdir, args.entrysteps, args.use_campaign_weight)
 
 
 def _fselexecute(args):
@@ -131,7 +132,7 @@ def _fselexecute(args):
         importance_type=args.itype,
         name=name,
     )
-    fs.check_for_uniques()
+    #fs.check_for_uniques()
     fs.check_importances(n_fits=args.nfits)
     fs.check_collinearity(threshold=args.corrt)
     fs.check_candidates(n=args.maxf)
@@ -241,9 +242,11 @@ def cli():
 
     setup_logging()
 
-    if args.debug:
-        for name in logging.root.manager.loggerDict:
+    for name in logging.root.manager.loggerDict:
+        if args.debug:
             logging.getLogger(name).setLevel(logging.DEBUG)
+        else:
+            logging.getLogger(name).setLevel(logging.INFO)
 
     # fmt: off
     if args.action == "rex-stacks":

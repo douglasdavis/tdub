@@ -25,7 +25,7 @@ except ImportError:
     pyarrow = None
 
 # tdub
-from tdub.frames import iterative_selection
+from tdub.frames import iterative_selection, drop_cols
 from tdub.utils import quick_files, get_selection, get_avoids
 
 
@@ -80,7 +80,11 @@ class FeatureSelector:
     candidates : list(str)
        list of candiate featurese (sorted by importance) as determined
        by calling the ``check_candidates``
-    iterative_aucs : numpy.ndarray
+    iterative_remove_aucs : dict(str, float)
+       a dictionary of the form ``{feature : auc}`` providing the AUC
+       value for a BDT trained _without_ the feature given in the
+       key. The keys are built from the ``candidates`` list.
+    iterative_add_aucs : numpy.ndarray
        an array of AUC values built by iteratively adding the next
        best feature in the candidates list. (the first entry is
        calculated using only the top feature, the second entry uses
@@ -122,6 +126,11 @@ class FeatureSelector:
         self._nbkg = self._labels[self._labels == 0].shape[0]
         self._scale_pos_weight = self._nbkg / self._nsig
 
+        # self._sow_sig = np.sum(self._weights[self._labels == 1])
+        # self._sow_bkg = np.sum(self._weights[self._labels == 0])
+        # self._weights[self._labels == 1] *= self._sow_bkg / self._sow_sig
+        # self._weights *= len(self._weights) / np.sum(self._weights)
+
         ## public attributes
         self.name = name
         self.corr_threshold = corr_threshold
@@ -132,7 +141,6 @@ class FeatureSelector:
             num_leaves=100,
             n_estimators=500,
             max_depth=5,
-            scale_pos_weight=self._scale_pos_weight,
         )
 
         ## Calculated later by some member functions
@@ -141,7 +149,8 @@ class FeatureSelector:
         self._correlated = None
         self._importances = None
         self._candidates = None
-        self._iterative_aucs = None
+        self._iterative_remove_aucs = None
+        self._iterative_add_aucs = None
         self._model_params = None
 
     @property
@@ -177,8 +186,8 @@ class FeatureSelector:
         return self._candidates
 
     @property
-    def iterative_aucs(self) -> List[str]:
-        return self._iterative_aucs
+    def iterative_add_aucs(self) -> List[str]:
+        return self._iterative_add_aucs
 
     @property
     def model_params(self) -> Dict[str, Any]:
@@ -201,6 +210,7 @@ class FeatureSelector:
         >>> fs.check_for_uniques(and_drop=True)
 
         """
+        log.info("starting check_for_uniques step")
         uqcounts = pd.DataFrame(self.df.nunique()).T
         to_drop = []
         for col in uqcounts.columns:
@@ -244,7 +254,7 @@ class FeatureSelector:
         0.85
 
         """
-
+        log.info("starting check_collinearity step")
         if threshold is not None:
             self.corr_threshold = threshold
 
@@ -308,6 +318,7 @@ class FeatureSelector:
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
 
         """
+        log.info("starting check_importances step")
         clf_opts = copy.deepcopy(self.default_clf_opts)
         if extra_clf_opts is not None:
             for k, v in extra_clf_opts.items():
@@ -345,7 +356,7 @@ class FeatureSelector:
             if extra_fit_opts is not None:
                 for k, v in extra_fit_opts:
                     fit_opts[k] = v
-            model.fit(train_df, train_y, **fit_opts)
+            model.fit(train_df, train_y, sample_weight=train_w, **fit_opts)
             importance_counter += model.feature_importances_
             gc.enable()
             del train_df, test_df, train_y, test_y, train_w, test_w
@@ -385,6 +396,7 @@ class FeatureSelector:
         >>> fs.check_candidates(n=25)
 
         """
+        log.info("starting check_candidates step")
         if self._correlated is None:
             log.error("correlations are not calculated; call check_collinearity()")
             return None
@@ -420,7 +432,97 @@ class FeatureSelector:
         temp_dict = {f: None for f in n_top}
         self._candidates = list(temp_dict.keys())
 
-    def check_iterative_aucs(
+    def check_iterative_remove_aucs(
+        self,
+        max_features: Optional[int] = None,
+        extra_clf_opts: Optional[Dict[str, Any]] = None,
+        extra_fit_opts: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """calculate the aucs iteratively removing one feature at a time
+
+        after calling the check_candidates function we have a good
+        sete of candidate features; this function will train vanilla
+        BDTs one at a time removing one of the candidate features. We
+        rank the feature based on how impactful its removal is.
+
+        Parameters
+        ----------
+        max_features : int
+           the maximum number of features to allow to be
+           checked. default will be the length of the ``candidates``
+           list.
+        extra_clf_opts : dict
+           extra arguments forwarded to :py:class:`lightgbm.LGBMClassifier`.
+        extra_fit_opts : dict
+           extra arguments forwarded to :py:func:`lightgbm.LGBMClassifier.fit`.
+
+        Examples
+        --------
+        >>> from tdub.features import FeatureSelector, prepare_from_parquet
+        >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
+        >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
+        >>> fs.check_for_uniques(and_drop=True)
+        >>> fs.check_collinearity()
+        >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
+        >>> fs.check_candidates(n=25)
+        >>> fs.check_iterative_remove_aucs(max_features=20)
+
+        """
+        log.info("Starting check_iterative_remove_aucs step")
+        if self._candidates is None:
+            log.error("candidates are not calculated; call check_candidates()")
+            return None
+
+        if max_features is None:
+            max_features = len(self.candidates)
+
+        train_df, test_df, train_y, test_y, train_w, test_w = train_test_split(
+            self.df[self.candidates],
+            self.labels,
+            self.weights,
+            test_size=0.33,
+            random_state=414,
+            shuffle=True,
+        )
+
+        clf_opts = copy.deepcopy(self.default_clf_opts)
+        if extra_clf_opts is not None:
+            for k, v in extra_clf_opts.items():
+                clf_opts[k] = v
+
+        log.info(f"Classifier is configured with parameters:")
+        for k, v in clf_opts.items():
+            log.info(f"{k:>20} | {v:<12}")
+
+        self._iterative_remove_aucs = {}
+        for candidate in self.candidates:
+            log.info(f"removing {candidate} and training a BDT")
+            copy_of_candidates = copy.deepcopy(self.candidates[:max_features])
+            copy_of_candidates.remove(candidate)
+            assert len(copy_of_candidates) == len(self.candidates[:max_features]) - 1
+            log.info(f"iteration {i}/{max_features}")
+            ifeatures = copy_of_candidates
+            itrain_df = train_df[copy_of_candidates]
+            itest_df = test_df[copy_of_candidates]
+            model = lgbm.LGBMClassifier(**clf_opts)
+            fit_opts = dict(
+                eval_metric="auc",
+                eval_set=[(itest_df, test_y)],
+                eval_sample_weight=[test_w],
+                early_stopping_rounds=15,
+                verbose=20,
+            )
+            if extra_fit_opts is not None:
+                for k, v in extra_fit_opts:
+                    fit_opts[k] = v
+            model.fit(itrain_df, train_y, sample_weight=train_w, **fit_opts)
+            self._iterative_remove_aucs[candidate] = model.best_score_["valid_0"]["auc"]
+
+            gc.enable()
+            del ifeatures, itrain_df, itest_df
+            gc.collect()
+
+    def check_iterative_add_aucs(
         self,
         max_features: Optional[int] = None,
         extra_clf_opts: Optional[Dict[str, Any]] = None,
@@ -454,9 +556,10 @@ class FeatureSelector:
         >>> fs.check_collinearity()
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
         >>> fs.check_candidates(n=25)
-        >>> fs.check_iterative_aucs(max_features=20)
+        >>> fs.check_iterative_add_aucs(max_features=20)
 
         """
+        log.info("starting check_iterative_add_aucs step")
         if self._candidates is None:
             log.error("candidates are not calculated; call check_candidates()")
             return None
@@ -482,7 +585,7 @@ class FeatureSelector:
         for k, v in clf_opts.items():
             log.info(f"{k:>20} | {v:<12}")
 
-        self._iterative_aucs = []
+        self._iterative_add_aucs = []
         for i in range(1, max_features + 1):
             log.info(f"iteration {i}/{max_features}")
             ifeatures = self.candidates[:i]
@@ -499,14 +602,14 @@ class FeatureSelector:
             if extra_fit_opts is not None:
                 for k, v in extra_fit_opts:
                     fit_opts[k] = v
-            model.fit(itrain_df, train_y, **fit_opts)
-            self._iterative_aucs.append(model.best_score_["valid_0"]["auc"])
+            model.fit(itrain_df, train_y, sample_weight=train_w, **fit_opts)
+            self._iterative_add_aucs.append(model.best_score_["valid_0"]["auc"])
 
             gc.enable()
             del ifeatures, itrain_df, itest_df
             gc.collect()
 
-        self._iterative_aucs = np.array(self._iterative_aucs)
+        self._iterative_add_aucs = np.array(self._iterative_add_aucs)
 
     def save_result(self) -> None:
         """save the results to a directory
@@ -526,7 +629,7 @@ class FeatureSelector:
         >>> fs.check_collinearity()
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
         >>> fs.check_candidates(n=25)
-        >>> fs.check_iterative_aucs(max_features=20)
+        >>> fs.check_iterative_add_aucs(max_features=20)
         >>> fs.name = "2j1b_DR"
         >>> fs.save_result()
 
@@ -543,7 +646,7 @@ class FeatureSelector:
         out_raw_tf = outdir / "raw_top_features.txt"
         out_params = outdir / "model_params.json"
         with out_raw_aucs.open("w") as f2w:
-            np.savetxt(f2w, self.iterative_aucs, fmt="%.10f")
+            np.savetxt(f2w, self.iterative_add_aucs, fmt="%.10f")
         with out_raw_tf.open("w") as f2w:
             f2w.write("\n".join(self.candidates))
             f2w.write("\n")
@@ -555,6 +658,7 @@ def create_parquet_files(
     qf_dir: Union[str, os.PathLike],
     out_dir: Optional[Union[str, os.PathLike]] = None,
     entrysteps: Optional[Any] = None,
+    use_campaign_weight: bool = False,
 ) -> None:
     """create slimmed and selected parquet files from ROOT files
 
@@ -571,6 +675,11 @@ def create_parquet_files(
     entrysteps : any, optional
        entrysteps option forwarded to
        :py:func:`tdub.frames.iterative_selection`
+    use_campaign_weight : bool
+       multiply the nominal weight by the campaign weight. this is
+       potentially necessary if the samples were prepared without the
+       campaign weight included in the product which forms the nominal
+       weight
 
     Examples
     --------
@@ -590,7 +699,7 @@ def create_parquet_files(
         out_dir = PosixPath(out_dir)
         out_dir.mkdir(exist_ok=True, parents=True)
     if entrysteps is None:
-        entrysteps = "500 MB"
+        entrysteps = "1 GB"
 
     for r in ("1j1b", "2j1b", "2j2b"):
         always_drop = ["eta_met", "bdt_response"]
@@ -606,6 +715,7 @@ def create_parquet_files(
                 keep_category="kinematics",
                 concat=True,
                 entrysteps=entrysteps,
+                use_campaign_weight=use_campaign_weight,
             )
             df.drop_cols(*always_drop)
             df.drop_avoid(region=r)
@@ -621,7 +731,9 @@ def prepare_from_parquet(
     region: Union[str, tdub.utils.Region],
     nlo_method: str = "DR",
     ttbar_frac: Union[str, float] = "auto",
-    weight_scale: float = 1000.0,
+    weight_mean: Optional[float] = None,
+    weight_scale: Optional[float] = None,
+    scale_sum_weights: bool = True,
 ) -> Tuple[pandas.DataFrame, np.ndarray, np.ndarray]:
     """prepare feature selection data from parquet files
 
@@ -641,8 +753,15 @@ def prepare_from_parquet(
        the fraction of :math:`t\\bar{t}` events to use, "auto" (the
        default) uses some sensible defaults to fit in memory: 0.70 for
        2j2b and 0.60 for 2j1b.
-    weight_scale : float
-       factor to scale sum of weights
+    weight_mean : float, optional
+       scale all weights such that the mean weight is this
+       value. Cannot be used with ``weight_scale``.
+    weight_scale : float, optional
+       value to scale all weights by, cannot be used with
+       ``weight_mean``.
+    scale_sum_weights : bool
+       scale sum of weights of signal to be sum of weights of
+       background
 
     Returns
     -------
@@ -664,6 +783,9 @@ def prepare_from_parquet(
         log.error("pyarrow required, doing nothing")
         return None
 
+    if weight_scale is not None and weight_mean is not None:
+        raise ValueError("weight_scale and weight_mean cannot be used together")
+
     data_path = PosixPath(data_dir)
     if not data_path.exists():
         raise RuntimeError(f"{data_dir} doesn't exist")
@@ -673,6 +795,11 @@ def prepare_from_parquet(
     bkg = pd.read_parquet(bkg_file)
     log.info(f"sig file loaded: {sig_file}")
     log.info(f"bkg file loaded: {bkg_file}")
+
+    sig_wsys_cols = [c for c in sig.columns.to_list() if "weight_sys" in c]
+    bkg_wsys_cols = [c for c in bkg.columns.to_list() if "weight_sys" in c]
+    drop_cols(sig, *sig_wsys_cols)
+    drop_cols(sig, *bkg_wsys_cols)
 
     for c in sig.columns.to_list():
         if c not in bkg.columns.to_list():
@@ -692,11 +819,17 @@ def prepare_from_parquet(
     if ttbar_frac < 1:
         log.info(f"sampling a fraction ({ttbar_frac}) of the background")
         bkg = bkg.sample(frac=ttbar_frac, random_state=414)
-        weight_scale = weight_scale / ttbar_frac
 
-    sig_weights = sig.pop("weight_nominal").to_numpy() * weight_scale
-    bkg_weights = bkg.pop("weight_nominal").to_numpy() * weight_scale
-    sig_weights *= bkg_weights.sum() / sig_weights.sum()
+    sig_weights = sig_df.pop("weight_nominal").to_numpy()
+    bkg_weights = bkg_df.pop("weight_nominal").to_numpy()
+    sig_weights[sig_weights < 0] = 0.0
+    bkg_weights[bkg_weights < 0] = 0.0
+    if scale_sum_weights:
+        sig_weights *= bkg_weights.sum() / sig_weights.sum()
+    if "weight_campaign" in sig:
+        drop_cols(sig, "weight_campaign")
+    if "weight_campaign" in bkg:
+        drop_cols(bkg, "weight_campaign")
 
     sig_labels = np.ones_like(sig_weights)
     bkg_labels = np.zeros_like(bkg_weights)
@@ -707,5 +840,10 @@ def prepare_from_parquet(
     gc.enable()
     del sig, bkg, sig_labels, bkg_labels, sig_weights, bkg_weights
     gc.collect()
+
+    if weight_scale is not None:
+        weights *= weight_scale
+    if weight_mean is not None:
+        weights *= weight_mean * len(w) / np.sum(w)
 
     return df, labels, weights

@@ -581,9 +581,10 @@ def iterative_selection(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
-    concat: bool = False,
+    concat: bool = True,
     keep_category: Optional[str] = None,
     ignore_avoid: bool = False,
+    use_campaign_weight: bool = False,
     **iterate_opts,
 ) -> pandas.DataFrame:
     """build a selected dataframe via uproot's iterate
@@ -621,6 +622,11 @@ def iterative_selection(
        is always kept.
     ignore_avoid : bool
        ignore branches defined by :py:data:`tdub.utils.AVOID_IN_CLF`
+    use_campaign_weight : bool
+       multiply the nominal weight by the campaign weight. this is
+       potentially necessary if the samples were prepared without the
+       campaign weight included in the product which forms the nominal
+       weight
 
     Returns
     -------
@@ -657,7 +663,11 @@ def iterative_selection(
 
     bs = branches
     if branches is not None:
-        bs = sorted(set(branches) | set([weight_name]), key=str.lower)
+        weights_to_grab = [weight_name]
+        sel_branches = ["OS", "reg1j1b", "reg2j1b", "reg2j2b"]
+        if use_campaign_weight:
+            weights_to_grab.append("weight_campaign")
+        bs = sorted(set(branches) | set(weights_to_grab) | set(sel_branches), key=str.lower)
 
     if ignore_avoid:
         if bs is None:
@@ -674,6 +684,8 @@ def iterative_selection(
     dfs = []
     itr = uproot.pandas.iterate(files, tree, branches=bs, **iterate_opts)
     for i, df in enumerate(itr):
+        if use_campaign_weight:
+            apply_weight_campaign(df)
         idf = df.query(selection)
         if keep_category is not None:
             idf = idf[keep_branches]
@@ -845,7 +857,7 @@ def apply_weight(
         log.warn(f"{weight_name} is in the columns list, dropping")
         cols.remove(weight_name)
 
-    df[cols] = df[cols].multiply(df[weight_name], axis="index")
+    df.loc[:, cols] = df.loc[:, cols].multiply(df.loc[:, weight_name], axis="index")
 
 
 pd.DataFrame.apply_weight = apply_weight
