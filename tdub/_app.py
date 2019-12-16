@@ -90,6 +90,9 @@ def parse_args():
     fselexecute.add_argument("--importance-n-fits", dest="nfits", type=int, default=5, help="Number of fitting rounds for importance calc.")
     fselexecute.add_argument("--max-features", dest="maxf", type=int, default=25, help="maximum number of features to test iteratively")
     fselexecute.add_argument("--exclude", type=str, nargs="+", help="features to exclude from consideration")
+    fselexecute.add_argument("--weight-mean", type=float, default=1.0, help="scale weights such that the mean is this value")
+    fselexecute.add_argument("--test-case", type=int, required=False, help="when testing, get a subset of each sample of this size")
+    fselexecute.add_argument("--ttbar-frac", type=float, required=False, help="use a fraction of the ttbar sample (can't be used with --test-case")
 
     # fmt: on
     return (parser.parse_args(), parser)
@@ -120,7 +123,12 @@ def _fselexecute(args):
         name = args.out
 
     full_df, full_labels, full_weights = prepare_from_parquet(
-        args.in_pqdir, region=args.region, nlo_method=args.nlo_method
+        args.in_pqdir,
+        region=args.region,
+        nlo_method=args.nlo_method,
+        weight_mean=args.weight_mean,
+        test_case_size=args.test_case,
+        ttbar_frac=args.ttbar_frac,
     )
     if args.exclude:
         drop_cols(full_df, *args.exclude)
@@ -132,11 +140,12 @@ def _fselexecute(args):
         importance_type=args.itype,
         name=name,
     )
-    #fs.check_for_uniques()
+    # fs.check_for_uniques()
     fs.check_importances(n_fits=args.nfits)
     fs.check_collinearity(threshold=args.corrt)
     fs.check_candidates(n=args.maxf)
-    fs.check_iterative_aucs(max_features=args.maxf)
+    fs.check_iterative_remove_aucs(max_features=args.maxf)
+    fs.check_iterative_add_aucs(max_features=args.maxf)
     fs.save_result()
 
 

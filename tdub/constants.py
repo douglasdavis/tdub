@@ -139,6 +139,10 @@ list(str): list of features we use for classifiers in the 2j2b region
 AVOID_IN_CLF = sorted(
     [
         "tmva_bdt_response",
+        "phi_lep1",
+        "phi_lep2",
+        "phi_jet1",
+        "phi_jet2",
         "eta_met",
         "eta_jetL1",
         "eta_jetS1",

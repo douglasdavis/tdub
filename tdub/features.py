@@ -495,7 +495,7 @@ class FeatureSelector:
             log.info(f"{k:>20} | {v:<12}")
 
         self._iterative_remove_aucs = {}
-        for candidate in self.candidates:
+        for i, candidate in enumerate(self.candidates):
             log.info(f"removing {candidate} and training a BDT")
             copy_of_candidates = copy.deepcopy(self.candidates[:max_features])
             copy_of_candidates.remove(candidate)
@@ -521,6 +521,18 @@ class FeatureSelector:
             gc.enable()
             del ifeatures, itrain_df, itest_df
             gc.collect()
+
+        # sort by value (AUC)
+        self._iterative_remove_aucs = {
+            k: v
+            for k, v in sorted(
+                self._iterative_remove_aucs.items(), key=lambda item: item[1]
+            )
+        }
+
+        for i, (k, v) in enumerate(self._iterative_remove_aucs.items()):
+            log.info(f"without rank {i}, {k}, AUC is {v}")
+        self._candidates = list(self._iterative_remove_aucs.keys())
 
     def check_iterative_add_aucs(
         self,
@@ -730,10 +742,11 @@ def prepare_from_parquet(
     data_dir: Union[str, os.PathLike],
     region: Union[str, tdub.utils.Region],
     nlo_method: str = "DR",
-    ttbar_frac: Union[str, float] = "auto",
+    ttbar_frac: Optional[Union[str, float]] = None,
     weight_mean: Optional[float] = None,
     weight_scale: Optional[float] = None,
     scale_sum_weights: bool = True,
+    test_case_size: Optional[int] = None,
 ) -> Tuple[pandas.DataFrame, np.ndarray, np.ndarray]:
     """prepare feature selection data from parquet files
 
@@ -749,10 +762,10 @@ def prepare_from_parquet(
        the region where we're going to select features
     nlo_method : str
        the :math:`tW` sample (``DR`` or ``DS``)
-    ttbar_frac : str or float
-       the fraction of :math:`t\\bar{t}` events to use, "auto" (the
-       default) uses some sensible defaults to fit in memory: 0.70 for
-       2j2b and 0.60 for 2j1b.
+    ttbar_frac : str or float, optional
+       if not ``None``, this is the fraction of :math:`t\\bar{t}`
+       events to use, "auto" (the default) uses some sensible defaults
+       to fit in memory: 0.70 for 2j2b and 0.60 for 2j1b.
     weight_mean : float, optional
        scale all weights such that the mean weight is this
        value. Cannot be used with ``weight_scale``.
@@ -762,6 +775,10 @@ def prepare_from_parquet(
     scale_sum_weights : bool
        scale sum of weights of signal to be sum of weights of
        background
+    test_case_size : int, optional
+       if we want to perform a quick test, we use a subset of the
+       data, for ``test_case_size=N`` we use ``N`` events from both
+       signal and background. Cannot be used with ``ttbar_frac``.
 
     Returns
     -------
@@ -786,13 +803,16 @@ def prepare_from_parquet(
     if weight_scale is not None and weight_mean is not None:
         raise ValueError("weight_scale and weight_mean cannot be used together")
 
+    if ttbar_frac is not None and test_case_size is not None:
+        raise ValueError("ttbar_frac and test_case_size cannot be used together")
+
     data_path = PosixPath(data_dir)
     if not data_path.exists():
         raise RuntimeError(f"{data_dir} doesn't exist")
     sig_file = str(data_path / f"tW_{nlo_method}_{region}.parquet")
     bkg_file = str(data_path / f"ttbar_{region}.parquet")
-    sig = pd.read_parquet(sig_file)
-    bkg = pd.read_parquet(bkg_file)
+    sig = pd.read_parquet(sig_file, engine="pyarrow")
+    bkg = pd.read_parquet(bkg_file, engine="pyarrow")
     log.info(f"sig file loaded: {sig_file}")
     log.info(f"bkg file loaded: {bkg_file}")
 
@@ -808,20 +828,26 @@ def prepare_from_parquet(
         if c not in sig.columns.to_list():
             log.warn(f"{c} not in sig")
 
-    if ttbar_frac == "auto":
-        if region == "2j2b":
-            ttbar_frac = 0.70
-        if region == "2j1b":
-            ttbar_frac = 0.60
-        if region == "1j1b":
-            ttbar_frac = 1.00
+    if ttbar_frac is not None:
+        if ttbar_frac == "auto":
+            if region == "2j2b":
+                ttbar_frac = 0.70
+            elif region == "2j1b":
+                ttbar_frac = 0.60
+            elif region == "1j1b":
+                ttbar_frac = 1.00
+        if ttbar_frac < 1:
+            log.info(f"sampling a fraction ({ttbar_frac}) of the background")
+            bkg = bkg.sample(frac=ttbar_frac, random_state=414)
 
-    if ttbar_frac < 1:
-        log.info(f"sampling a fraction ({ttbar_frac}) of the background")
-        bkg = bkg.sample(frac=ttbar_frac, random_state=414)
+    if test_case_size is not None:
+        if test_case_size > 5000:
+            log.warn("why bother with test_case_size > 1000?")
+        sig = sig.sample(n=test_case_size, random_state=414)
+        bkg = bkg.sample(n=test_case_size, random_state=414)
 
-    sig_weights = sig_df.pop("weight_nominal").to_numpy()
-    bkg_weights = bkg_df.pop("weight_nominal").to_numpy()
+    sig_weights = sig.pop("weight_nominal").to_numpy()
+    bkg_weights = bkg.pop("weight_nominal").to_numpy()
     sig_weights[sig_weights < 0] = 0.0
     bkg_weights[bkg_weights < 0] = 0.0
     if scale_sum_weights:
@@ -844,6 +870,6 @@ def prepare_from_parquet(
     if weight_scale is not None:
         weights *= weight_scale
     if weight_mean is not None:
-        weights *= weight_mean * len(w) / np.sum(w)
+        weights *= weight_mean * len(weights) / np.sum(weights)
 
     return df, labels, weights
