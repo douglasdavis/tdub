@@ -842,7 +842,7 @@ def prepare_from_parquet(
 
     if test_case_size is not None:
         if test_case_size > 5000:
-            log.warn("why bother with test_case_size > 1000?")
+            log.warn("why bother with test_case_size > 5000?")
         sig = sig.sample(n=test_case_size, random_state=414)
         bkg = bkg.sample(n=test_case_size, random_state=414)
 
