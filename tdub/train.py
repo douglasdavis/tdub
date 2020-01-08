@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from dataclasses import dataclass
 from pathlib import PosixPath
 from pprint import pformat
 
@@ -15,6 +16,7 @@ from pprint import pformat
 import joblib
 import lightgbm as lgbm
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import pygram11
@@ -23,7 +25,7 @@ from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import auc, roc_auc_score, roc_curve
 
 # tdub
-from tdub.frames import specific_dataframe, iterative_selection
+from tdub.frames import iterative_selection
 from tdub.utils import (
     Region,
     bin_centers,
@@ -35,6 +37,7 @@ from tdub.utils import (
 
 
 log = logging.getLogger(__name__)
+matplotlib.use("Agg")
 
 
 def prepare_from_root(
@@ -45,6 +48,7 @@ def prepare_from_root(
     weight_scale: Optional[float] = None,
     scale_sum_weights: bool = True,
     use_campaign_weight: bool = False,
+    test_case_size: Optional[int] = None,
 ) -> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
     """Prepare the data for training in a region with signal and
     background ROOT files
@@ -69,6 +73,9 @@ def prepare_from_root(
     use_campaign_weight : bool
        see the parameter description for
        :py:func:`tdub.frames.iterative_selection`
+    test_case_size : int, optional
+       if defined, prepare a small "test case" dataset using this many
+       background and training samples
 
     Returns
     -------
@@ -94,10 +101,10 @@ def prepare_from_root(
     log.info("preparing training data")
     log.info("signal files:")
     for f in sig_files:
-        log.info(f"  - {f}")
+        log.info(" - %s" % f)
     log.info("background files:")
     for f in bkg_files:
-        log.info(f"  - {f}")
+        log.info(" - %s" % f)
 
     ## signal pretty much always be tW, no need for dask
     sig_df = iterative_selection(
@@ -122,6 +129,12 @@ def prepare_from_root(
         entrysteps="1 GB",
     )
 
+    if test_case_size is not None:
+        if test_case_size > 5000:
+            log.warn("why bother with test_case_size > 5000?")
+        sig_df = sig_df.sample(n=test_case_size, random_state=414)
+        bkg_df = bkg_df.sample(n=test_case_size, random_state=414)
+
     w_sig = sig_df.pop("weight_nominal").to_numpy()
     w_bkg = bkg_df.pop("weight_nominal").to_numpy()
     w_sig[w_sig < 0] = 0.0
@@ -141,7 +154,7 @@ def prepare_from_root(
     assert cols == bkg_df.columns.to_list(), "sig/bkg columns are different. bad."
     log.info("features to be available:")
     for c in cols:
-        log.info(f"  - {c}")
+        log.info(" - %s" % c)
 
     df = pd.concat([sig_df, bkg_df])
     y = np.concatenate([np.ones_like(w_sig), np.zeros_like(w_bkg)])
@@ -153,6 +166,255 @@ def prepare_from_root(
         w *= weight_mean * len(w) / np.sum(w)
 
     return df, y, w
+
+
+@dataclass
+class SingleTrainingResult:
+    """Describes the properties of a single training
+
+    Attributes
+    ----------
+    proba_auc : float
+       the AUC value for the model
+    ks_test_sig : float
+       the binned KS test value for signal
+    ks_pvalue_sig : float
+       the binned KS test p-value for signal
+    ks_test_bkg : float
+       the binned KS test value for background
+    ks_pvalue_bkg : float
+       the binned KS test p-value for background
+    """
+
+    auc: float = -1
+    ks_test_sig: float = -1
+    ks_pvalue_sig: float = -1
+    ks_test_bkg: float = -1
+    ks_pvalue_bkg: float = -1
+
+    def __repr__(self) -> str:
+        p1 = f"auc={self.auc:0.3}"
+        p2 = f"ks_test_sig={self.ks_test_sig:0.5}"
+        p3 = f"ks_pvalue_sig={self.ks_pvalue_sig:0.5}"
+        p4 = f"ks_test_bkg={self.ks_test_bkg:0.5}"
+        p5 = f"ks_pvalue_bkg={self.ks_pvalue_bkg:0.5}"
+        return f"SingleTrainingResult({p1}, {p2}, {p3}, {p4}, {p5})"
+
+
+def single_round(
+    df: pandas.DataFrame,
+    labels: numpy.ndarray,
+    weights: numpy.ndarray,
+    clf_params: Dict[str, Any],
+    output_dir: Union[str, os.PathLike],
+    test_size: float = 0.33,
+    random_state: int = 414,
+    early_stopping_rounds: int = 20,
+) -> None:
+    """Perform a single round of training
+
+    Parameters
+    ----------
+    df : :obj:`pandas.DataFrame`
+       the feature matrix in dataframe format
+    labels : :obj:`numpy.ndarray`
+       the event labels (``1`` for signal; ``0`` for background)
+    weights : :obj:`numpy.ndarray`
+       the event weights
+    clf_params : dict
+       dictionary of parameters to pass to
+       :py:obj:`lightgbm.LGBMClassifier`.
+    output_dir : str or os.PathLike
+       directory to save results of training
+    test_size : float
+       test size for splitting into training and testing sets
+    random_state : int
+       random seed for
+       :py:func:`sklearn.model_selection.train_test_split`.
+    early_stopping_rounds : int
+       number of rounds to have no improvement for stopping training
+
+    Examples
+    --------
+
+    >>> from tdub.utils import quick_files
+    >>> from tdub.train import prepare_from_root, single_round
+    >>> qfiles = quick_files("/path/to/data")
+    >>> df, labels, weights = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
+    >>> params = dict(
+    ...     boosting_type="gbdt",
+    ...     num_leaves=42,
+    ...     learning_rate=0.05
+    ...     reg_alpha=0.2,
+    ...     reg_lambda=0.8,
+    ...     max_depth=5,
+    ... )
+    >>> single_round(
+    ...     df,
+    ...     labels,
+    ...     weights,
+    ...     params,
+    ...     "training_output",
+    ... )
+
+    """
+    starting_dir = os.getcwd()
+    output_path = PosixPath(output_dir)
+    output_path.mkdir(exist_ok=True, parents=True)
+    os.chdir(output_path)
+
+    X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
+        df, labels, weights, test_size=test_size, random_state=random_state, shuffle=True
+    )
+    validation_data = [(X_test, y_test)]
+    validation_w = w_test
+    model = lgbm.LGBMClassifier(boosting_type="gbdt", **clf_params)
+    model.fit(
+        X_train,
+        y_train,
+        sample_weight=w_train,
+        eval_set=validation_data,
+        eval_metric="auc",
+        verbose=20,
+        early_stopping_rounds=early_stopping_rounds,
+        eval_sample_weight=[validation_w],
+    )
+
+    fig_proba, ax_proba = plt.subplots()
+    fig_pred, ax_pred = plt.subplots()
+    fig_roc, ax_roc = plt.subplots()
+
+    trainres = _inspect_single_training(
+        ax_proba, ax_pred, ax_roc, model, X_test, X_train, y_test, y_train, w_test, w_train,
+    )
+    fig_proba.savefig("proba.pdf")
+    fig_pred.savefig("pred.pdf")
+    fig_roc.savefig("roc.pdf")
+    os.chdir(starting_dir)
+
+    return trainres
+
+
+def _inspect_single_training(
+    ax_proba: matplotlib.axes.Axes,
+    ax_pred: matplotlib.axes.Axes,
+    ax_roc: matplotlib.axes.Axes,
+    model: lightgbm.LGBMClassifier,
+    X_test: pandas.DataFrame,
+    X_train: numpy.ndarray,
+    y_test: numpy.ndarray,
+    y_train: numpy.ndarray,
+    w_test: numpy.ndarray,
+    w_train: numpy.ndarray,
+) -> SingleTrainingResult:
+    """inspect a single training round and make some plots"""
+
+    # fmt: off
+    ## get the selection arrays
+    test_is_sig = y_test == 1
+    test_is_bkg = np.invert(test_is_sig)
+    train_is_sig = y_train == 1
+    train_is_bkg = np.invert(train_is_sig)
+
+    ## test and train output
+    test_proba = model.predict_proba(X_test)[:, 1]
+    test_pred = model.predict(X_test, raw_score=True)
+    train_proba = model.predict_proba(X_train)[:, 1]
+    train_pred = model.predict(X_train, raw_score=True)
+
+    ## test and train weights
+    test_w_sig = w_test[test_is_sig]
+    test_w_bkg = w_test[test_is_bkg]
+    train_w_sig = w_train[train_is_sig]
+    train_w_bkg = w_train[train_is_bkg]
+
+    ## test and train signal and background proba arrays
+    test_proba_sig = test_proba[test_is_sig]
+    test_proba_bkg = test_proba[test_is_bkg]
+    train_proba_sig = train_proba[train_is_sig]
+    train_proba_bkg = train_proba[train_is_bkg]
+
+    ## test and train signal and background pred arrays
+    test_pred_sig = test_pred[test_is_sig]
+    test_pred_bkg = test_pred[test_is_bkg]
+    train_pred_sig = train_pred[train_is_sig]
+    train_pred_bkg = train_pred[train_is_bkg]
+
+    ## bins for proba and for pred
+    proba_bins = np.linspace(0, 1, 41)
+    proba_bc = bin_centers(proba_bins)
+    proba_bw = proba_bins[1] - proba_bins[0]
+    pred_xmin = min(test_pred_bkg.min(), train_pred_bkg.min())
+    pred_xmax = max(test_pred_sig.max(), train_pred_sig.max())
+    pred_bins = np.linspace(pred_xmin, pred_xmax, 41)
+    pred_bc = bin_centers(pred_bins)
+    pred_bw = pred_bins[1] - pred_bins[0]
+
+    ## calculate the proba histograms
+    test_h_proba_sig = pygram11.histogram(test_proba_sig, bins=proba_bins, density=True, weights=test_w_sig)
+    test_h_proba_bkg = pygram11.histogram(test_proba_bkg, bins=proba_bins, density=True, weights=test_w_bkg)
+    train_h_proba_sig = pygram11.histogram(train_proba_sig, bins=proba_bins, density=True, weights=train_w_sig)
+    train_h_proba_bkg = pygram11.histogram(train_proba_bkg, bins=proba_bins, density=True, weights=train_w_bkg)
+
+    ## calculate the pred histograms
+    test_h_pred_sig = pygram11.histogram(test_pred_sig, bins=pred_bins, density=True, weights=test_w_sig)
+    test_h_pred_bkg = pygram11.histogram(test_pred_bkg, bins=pred_bins, density=True, weights=test_w_bkg)
+    train_h_pred_sig = pygram11.histogram(train_pred_sig, bins=pred_bins, density=True, weights=train_w_sig)
+    train_h_pred_bkg = pygram11.histogram(train_pred_bkg, bins=pred_bins, density=True, weights=train_w_bkg)
+
+
+    ## plot the proba distributions
+    ax_proba.hist(proba_bc, bins=proba_bins, weights=train_h_proba_sig[0],
+                  label="Sig (train)", histtype="stepfilled", alpha=0.5, edgecolor="C0", color="C0")
+    ax_proba.hist(proba_bc, bins=proba_bins, weights=train_h_proba_bkg[0],
+                  label="Bkg (train)", histtype="step", hatch="///", edgecolor="C3", color="C3")
+    ax_proba.errorbar(proba_bc, test_h_proba_sig[0], yerr=test_h_proba_sig[1],
+                      label="Sig (test)", color="C0", fmt="o", markersize=4)
+    ax_proba.errorbar(proba_bc, test_h_proba_bkg[0], yerr=test_h_proba_bkg[1],
+                      label="Bkg (test)", color="C3", fmt="o", markersize=4)
+    ax_proba.set_ylim([0, 1.4 * ax_proba.get_ylim()[1]])
+    ax_proba.legend(loc="upper right", ncol=2, frameon=False, numpoints=1)
+    ax_proba.set_ylabel("Arbitrary Units")
+    ax_proba.set_xlabel("Classifier Response")
+
+    ## plot the pred distributions
+    ax_pred.hist(pred_bc, bins=pred_bins, weights=train_h_pred_sig[0],
+                  label="Sig (train)", histtype="stepfilled", alpha=0.5, edgecolor="C0", color="C0")
+    ax_pred.hist(pred_bc, bins=pred_bins, weights=train_h_pred_bkg[0],
+                  label="Bkg (train)", histtype="step", hatch="///", edgecolor="C3", color="C3")
+    ax_pred.errorbar(pred_bc, test_h_pred_sig[0], yerr=test_h_pred_sig[1],
+                      label="Sig (test)", color="C0", fmt="o", markersize=4)
+    ax_pred.errorbar(pred_bc, test_h_pred_bkg[0], yerr=test_h_pred_bkg[1],
+                      label="Bkg (test)", color="C3", fmt="o", markersize=4)
+    ax_pred.set_ylim([0, 1.4 * ax_pred.get_ylim()[1]])
+    ax_pred.legend(loc="upper right", ncol=2, frameon=False, numpoints=1)
+    ax_pred.set_ylabel("Arbitrary Units")
+    ax_pred.set_xlabel("Classifier Response")
+
+    ## plot the auc
+    fpr, tpr, thresholds = roc_curve(y_test, test_proba, sample_weight=w_test)
+    roc_auc = auc(fpr, tpr)
+    ax_roc.plot(fpr, tpr, lw=1, label=f"AUC = {roc_auc:0.3}")
+    ax_roc.set_ylabel("True postive rate")
+    ax_roc.set_xlabel("False positive rate")
+    ax_roc.grid()
+    ax_roc.legend(loc="lower right")
+    # fmt: on
+
+    ks_stat_sig, ks_p_sig = ks_twosample_binned(
+        test_h_proba_sig[0], train_h_proba_sig[0], test_h_proba_sig[1], train_h_proba_sig[1]
+    )
+    ks_stat_bkg, ks_p_bkg = ks_twosample_binned(
+        test_h_proba_bkg[0], train_h_proba_bkg[0], test_h_proba_bkg[1], train_h_proba_bkg[1]
+    )
+
+    return SingleTrainingResult(
+        auc=roc_auc,
+        ks_test_sig=ks_stat_sig,
+        ks_pvalue_sig=ks_p_sig,
+        ks_test_bkg=ks_stat_bkg,
+        ks_pvalue_bkg=ks_p_bkg,
+    )
 
 
 def folded_training(
@@ -722,8 +984,6 @@ def gp_minimize_auc(
         binning_sig_max = max(np.max(pred[y_test == 1]), np.max(train_pred[y_train == 1]))
         binning_bkg_min = min(np.min(pred[y_test == 0]), np.min(train_pred[y_train == 0]))
         binning_bkg_max = max(np.max(pred[y_test == 0]), np.max(train_pred[y_train == 0]))
-        # binning_sig = np.linspace(binning_sig_min, binning_sig_max, 41)
-        # binning_bkg = np.linspace(binning_bkg_min, binning_bkg_max, 41)
         binning_sig = np.linspace(0, 1, 41)
         binning_bkg = np.linspace(0, 1, 41)
 
