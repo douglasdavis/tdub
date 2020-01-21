@@ -18,6 +18,7 @@ Function Summary
 
 .. autosummary::
 
+   augment_features
    bin_centers
    categorize_branches
    conservative_branches

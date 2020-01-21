@@ -49,7 +49,7 @@ def prepare_from_root(
     scale_sum_weights: bool = True,
     use_campaign_weight: bool = False,
     test_case_size: Optional[int] = None,
-) -> Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Prepare the data for training in a region with signal and
     background ROOT files
 
@@ -201,17 +201,17 @@ class SingleTrainingResult:
         return f"SingleTrainingResult({p1}, {p2}, {p3}, {p4}, {p5})"
 
 
-def single_round(
-    df: pandas.DataFrame,
-    labels: numpy.ndarray,
-    weights: numpy.ndarray,
+def single_training(
+    df: pd.DataFrame,
+    labels: np.ndarray,
+    weights: np.ndarray,
     clf_params: Dict[str, Any],
     output_dir: Union[str, os.PathLike],
     test_size: float = 0.33,
     random_state: int = 414,
     early_stopping_rounds: int = 20,
 ) -> None:
-    """Perform a single round of training
+    """Execute a single training with some parameters
 
     Parameters
     ----------
@@ -296,16 +296,16 @@ def single_round(
 
 
 def _inspect_single_training(
-    ax_proba: matplotlib.axes.Axes,
-    ax_pred: matplotlib.axes.Axes,
-    ax_roc: matplotlib.axes.Axes,
-    model: lightgbm.LGBMClassifier,
-    X_test: pandas.DataFrame,
-    X_train: numpy.ndarray,
-    y_test: numpy.ndarray,
-    y_train: numpy.ndarray,
-    w_test: numpy.ndarray,
-    w_train: numpy.ndarray,
+    ax_proba: plt.Axes,
+    ax_pred: plt.Axes,
+    ax_roc: plt.Axes,
+    model: lgbm.LGBMClassifier,
+    X_test: pd.DataFrame,
+    X_train: np.ndarray,
+    y_test: np.ndarray,
+    y_train: np.ndarray,
+    w_test: np.ndarray,
+    w_train: np.ndarray,
 ) -> SingleTrainingResult:
     """inspect a single training round and make some plots"""
 
@@ -418,7 +418,7 @@ def _inspect_single_training(
 
 
 def folded_training(
-    df: pandas.DataFrame,
+    df: pd.DataFrame,
     labels: numpy.ndarray,
     weights: numpy.ndarray,
     params: Dict[str, Any],
@@ -427,7 +427,9 @@ def folded_training(
     region: str,
     kfold_kw: Dict[str, Any] = None,
 ) -> float:
-    """Train a :obj:`lightgbm.LGBMClassifier` model using :math:`k`-fold
+    """Execute a folded training
+
+    Train a :obj:`lightgbm.LGBMClassifier` model using :math:`k`-fold
     cross validation using the given input data and parameters.  The
     models resulting from the training (and other important training
     information) are saved to ``output_dir``. The entries in the

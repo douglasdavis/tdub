@@ -711,6 +711,43 @@ def get_features(region: Union[str, Region]) -> List[str]:
     return options.get(region)
 
 
+def augment_features(region: Union[str, Region], to_add: List[str]) -> None:
+    """add some features to the existing lists
+
+    Parameters
+    ----------
+    region : str or tdub.utils.Region
+       the region as a string or enum entry
+    to_add : list(str)
+       the new features to add
+
+    Examples
+    --------
+
+    >>> from tdub.utils import augment_features, get_features
+    >>> "another" in get_features("2j2b")
+    False
+    >>> "feature" in get_features("2j2b")
+    False
+    >>> augment_features("2j2b", ["another", "feature"])
+    >>> "another" in get_features("2j2b")
+    True
+    >>> "feature" in get_features("2j2b")
+    True
+
+    """
+    if isinstance(region, str):
+        region = Region.from_str(region)
+    if region == Region.r1j1b:
+        tdub.constants.FEATURESET_1j1b += to_add
+    elif region == Region.r2j1b:
+        tdub.constants.FEATURESET_2j1b += to_add
+    elif region == Region.r2j2b:
+        tdub.constants.FEATURESET_2j2b += to_add
+    else:
+        return ValueError("Bad region value")
+
+
 def override_features(table: Dict[str, List[str]]) -> None:
     """override feature constants ``tdub.constants.FEATURESET_{1j1b, 2j1b, 2j2b}``
 
