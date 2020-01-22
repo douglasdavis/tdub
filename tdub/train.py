@@ -14,7 +14,6 @@ from pprint import pformat
 
 # externals
 import joblib
-import lightgbm as lgbm
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -23,6 +22,11 @@ import pygram11
 from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import auc, roc_auc_score, roc_curve
+
+try:
+    import lightgbm as lgbm
+except ImportError:
+    lgbm = None
 
 # tdub
 from tdub.frames import iterative_selection

@@ -14,7 +14,6 @@ from pathlib import PosixPath
 log = logging.getLogger(__name__)
 
 # externals
-import lightgbm as lgbm
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -23,6 +22,12 @@ try:
     import pyarrow
 except ImportError:
     pyarrow = None
+
+try:
+    import lightgbm as lgbm
+except ImportError:
+    lgbm = None
+
 
 # tdub
 from tdub.frames import iterative_selection, drop_cols
