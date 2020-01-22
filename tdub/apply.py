@@ -58,7 +58,7 @@ class FoldedResult:
     def __init__(self, fold_output: str) -> None:
         fold_path = PosixPath(fold_output)
         if not fold_path.exists():
-            raise ValueError(f"{fold_output} does not exit")
+            raise ValueError(f"{fold_output} does not exist")
         fold_path = fold_path.resolve()
         self._model0 = joblib.load(fold_path / "model_fold0.joblib.gz")
         self._model1 = joblib.load(fold_path / "model_fold1.joblib.gz")
