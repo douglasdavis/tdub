@@ -203,6 +203,9 @@ class SingleTrainingResult:
         p5 = f"ks_pvalue_bkg={self.ks_pvalue_bkg:0.5}"
         return f"SingleTrainingResult({p1}, {p2}, {p3}, {p4}, {p5})"
 
+    def __post_init__(self):
+        self.bad_ks = int(self.ks_pvalue_sig < 0.2 or self.ks_pvalue_bkg < 0.2)
+
 
 def single_training(
     df: pd.DataFrame,
@@ -293,8 +296,27 @@ def single_training(
     fig_proba.savefig("proba.pdf")
     fig_pred.savefig("pred.pdf")
     fig_roc.savefig("roc.pdf")
-    os.chdir(starting_dir)
 
+    summary = {}
+    summary["features"] = [str(c) for c in df.columns]
+    summary["set_params"] = clf_params
+    summary["all_params"] = model.get_params()
+    with open("summary.json", "w") as f:
+        json.dump(summary, f, indent=4)
+    with open("auc.txt", "w") as f:
+        print(trainres.auc, file=f)
+    with open("ks_test_sig.txt", "w") as f:
+        print(trainres.ks_test_sig, file=f)
+    with open("ks_test_bkg.txt", "w") as f:
+        print(trainres.ks_test_bkg, file=f)
+    with open("ks_pvalue_sig.txt", "w") as f:
+        print(trainres.ks_pvalue_sig, file=f)
+    with open("ks_pvalue_bkg.txt", "w") as f:
+        print(trainres.ks_pvalue_bkg, file=f)
+    with open("bad_ks.txt", "w") as f:
+        print(trainres.bad_ks, file=f)
+
+    os.chdir(starting_dir)
     return trainres
 
 
