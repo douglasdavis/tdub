@@ -5,8 +5,9 @@ Module for handling dataframes
 from __future__ import annotations
 
 # stdlib
-import logging
 from dataclasses import dataclass, field
+import logging
+import re
 
 # externals
 import dask
@@ -196,6 +197,7 @@ def raw_dataframe(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
+    drop_weight_sys: bool = False,
     entrysteps: Optional[Any] = None,
 ) -> pandas.DataFrame:
     """Construct a raw pandas flavored Dataframe with help from uproot
@@ -217,6 +219,8 @@ def raw_dataframe(
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None``, includes all branches.
+    drop_weight_sys : bool
+       drop all weight systematics from the being grabbed
     entrysteps : Any, optional
        see the ``entrysteps`` keyword for ``uproot.iterate``
 
@@ -237,6 +241,16 @@ def raw_dataframe(
     bs = branches
     if branches is not None:
         bs = sorted(set(branches) | set([weight_name]), key=str.lower)
+    else:
+        if isinstance(files, str):
+            bs = get_branches(files, tree)
+        else:
+            bs = get_branches(files[0], tree)
+    if weight_name not in bs:
+        raise RuntimeError(f"{weight_name} not present in {tree_name}")
+    if drop_weight_sys:
+        weight_sys_re = re.compile(r"^weight_sys\w+")
+        bs = sorted(set(bs) ^ set(filter(weight_sys_re.match, bs)), key=str.lower)
     return pd.concat(
         [d for d in uproot.pandas.iterate(files, tree, branches=bs, entrysteps=entrysteps)]
     )

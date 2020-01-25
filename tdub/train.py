@@ -110,7 +110,6 @@ def prepare_from_root(
     for f in bkg_files:
         log.info(" - %s" % f)
 
-    ## signal pretty much always be tW, no need for dask
     sig_df = iterative_selection(
         files=sig_files,
         selection=get_selection(region),
