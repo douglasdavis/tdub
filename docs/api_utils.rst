@@ -44,6 +44,7 @@ Reference
 .. autoclass:: SampleInfo
    :members:
 
+.. autofunction:: augment_features
 .. autofunction:: bin_centers
 .. autofunction:: categorize_branches
 .. autofunction:: conservative_branches
