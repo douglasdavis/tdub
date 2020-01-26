@@ -298,24 +298,17 @@ def single_training(
     fig_roc.savefig("roc.pdf")
 
     summary = {}
+    summary["auc"] = trainres.auc
+    summary["bad_ks"] = trainres.bad_ks
+    summary["ks_test_sig"] = trainres.ks_test_sig
+    summary["ks_test_bkg"] = trainres.ks_test_bkg
+    summary["ks_pvalue_sig"] = trainres.ks_pvalue_sig
+    summary["ks_pvalue_bkg"] = trainres.ks_pvalue_bkg
     summary["features"] = [str(c) for c in df.columns]
     summary["set_params"] = clf_params
     summary["all_params"] = model.get_params()
     with open("summary.json", "w") as f:
         json.dump(summary, f, indent=4)
-    with open("auc.txt", "w") as f:
-        print(trainres.auc, file=f)
-    with open("ks_test_sig.txt", "w") as f:
-        print(trainres.ks_test_sig, file=f)
-    with open("ks_test_bkg.txt", "w") as f:
-        print(trainres.ks_test_bkg, file=f)
-    with open("ks_pvalue_sig.txt", "w") as f:
-        print(trainres.ks_pvalue_sig, file=f)
-    with open("ks_pvalue_bkg.txt", "w") as f:
-        print(trainres.ks_pvalue_bkg, file=f)
-    with open("bad_ks.txt", "w") as f:
-        print(trainres.bad_ks, file=f)
-
     os.chdir(starting_dir)
     return trainres
 
