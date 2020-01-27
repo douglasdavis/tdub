@@ -215,7 +215,8 @@ def single_training(
     output_dir: Union[str, os.PathLike],
     test_size: float = 0.33,
     random_state: int = 414,
-    early_stopping_rounds: int = 20,
+    early_stopping_rounds: int = None,
+    extra_summary_entries: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Execute a single training with some parameters
 
@@ -237,8 +238,10 @@ def single_training(
     random_state : int
        random seed for
        :py:func:`sklearn.model_selection.train_test_split`.
-    early_stopping_rounds : int
+    early_stopping_rounds : int, optional
        number of rounds to have no improvement for stopping training
+    extra_summary_entries : dict, optional
+       extra entries to save in the JSON output summary
 
     Examples
     --------
@@ -307,6 +310,9 @@ def single_training(
     summary["features"] = [str(c) for c in df.columns]
     summary["set_params"] = clf_params
     summary["all_params"] = model.get_params()
+    if extra_summary_entries is not None:
+        for k, v in extra_summary_entries.items():
+            summary[k] = v
     with open("summary.json", "w") as f:
         json.dump(summary, f, indent=4)
     os.chdir(starting_dir)
@@ -821,7 +827,7 @@ def gp_minimize_auc(
     nlo_method: str,
     output_dir: Union[str, os.PathLike] = "_unnamed_optimization",
     n_calls: int = 15,
-    esr: Optional[int] = 15,
+    esr: Optional[int] = 10,
     random_state: int = 414,
 ):
     """Minimize AUC using Gaussian processes
