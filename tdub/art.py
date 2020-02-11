@@ -3,7 +3,7 @@ Art utilities
 """
 
 # stdlib
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 # external
 import numpy as np
@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 
 # tdub
 from tdub.utils import bin_centers
+
 
 def setup_style():
     matplotlib.use("Agg")
@@ -51,19 +52,21 @@ def canvas_from_counts(
     counts: Dict[str, np.ndarray],
     errors: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
-    figsize: Optional[Tuple[float, float]] = None,
+    stack_error_band: Optional[Any] = None,
+    ratio_error_band: Optional[Any] = None,
+    **subplots_kw,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
     """create a plot canvas given a dictionary of counts and bin edges
 
     The ``counts`` and ``errors`` dictionaries are expected to have
     the following keys:
 
-    - "Data"
-    - "tW_DR"
-    - "ttbar"
-    - "Zjets"
-    - "Diboson"
-    - "MCNP"
+    - ``"Data"``
+    - ``"tW_DR"``
+    - ``"ttbar"``
+    - ``"Zjets"``
+    - ``"Diboson"``
+    - ``"MCNP"``
 
     Parameters
     ----------
@@ -73,14 +76,20 @@ def canvas_from_counts(
         a dictionray pairing samples to bin count errors
     bin_edges : np.ndarray
         the histogram bin edges
+    stack_error_band : Any, optional
+        todo
+    ratio_error_band : Any, optional
+        todo
+    subplots_kw : dict
+        remaining keyword arguments passed to :py:func:`matplotlib.pyplot.subplots`
 
     Returns
     -------
-    fig : matplotlib.figure.Figure
+    fig : :obj:`matplotlib.figure.Figure`
         the matplotlib figure
-    ax : matplotlib.axes.Axes
+    ax : :obj:`matplotlib.axes.Axes`
         the matplotlib axes for the histogram stack
-    axr : matplotlib.axes.Axes
+    axr : :obj:`matplotlib.axes.Axes`
         the matplotlib axes for the ratio comparison
 
     """
@@ -98,7 +107,11 @@ def canvas_from_counts(
         counts["Data"] * mc_errs / (mc_counts ** 2), 2
     )
     fig, (ax, axr) = plt.subplots(
-        2, 1, sharex=True, gridspec_kw=dict(height_ratios=[3.25, 1], hspace=0.025),
+        2,
+        1,
+        sharex=True,
+        gridspec_kw=dict(height_ratios=[3.25, 1], hspace=0.025),
+        **subplots_kw,
     )
     ax.hist(
         [centers for _ in range(5)],

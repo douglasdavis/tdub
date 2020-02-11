@@ -19,11 +19,23 @@ API mainly provides quick and easy access to pythonic representations
 (i.e. dataframes or NumPy arrays) of our datasets (which of course
 originate from `ROOT <https://root.cern/>`_ files).
 
-Navigation
-----------
+.. toctree::
+   :maxdepth: 2
+   :caption: Command Line Interface
+
+   cli.rst
 
 .. toctree::
    :maxdepth: 2
+   :caption: API Reference
 
-   cli.rst
-   api.rst
+   api_apply.rst
+   api_art.rst
+   api_batch.rst
+   api_constants.rst
+   api_frames.rst
+   api_features.rst
+   api_raw_art.rst
+   api_rex_art.rst
+   api_train.rst
+   api_utils.rst

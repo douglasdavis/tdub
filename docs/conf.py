@@ -1,4 +1,3 @@
-
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -56,23 +55,28 @@ autodoc_typehints = "none"
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = "alabaster"
-
+html_theme = "sphinx_rtd_theme"
 html_theme_options = {
-    "description": "tW analysis",
-    "github_user": "douglasdavis",
-    "github_repo": "tdub",
-    "github_type": "star",
-    "github_count": False,
-    "font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Symbol"',
-    "head_font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Symbol"' ,
-    "font_size": "14px",
-    "page_width": "980px",
-    "sidebar_width": "240px",
-    "fixed_sidebar": True,
-    "show_relbars": True,
-    "code_font_size": "1.0em",
+    "collapse_navigation": True,
+    "sticky_navigation": True,
 }
+
+# html_theme = "alabaster"
+# html_theme_options = {
+#     "description": "tW analysis",
+#     "github_user": "douglasdavis",
+#     "github_repo": "tdub",
+#     "github_type": "star",
+#     "github_count": False,
+#     "font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Symbol"',
+#     "head_font_family": '-apple-system, BlinkMacSystemFont, "Segoe UI", "Segoe UI Symbol"' ,
+#     "font_size": "14px",
+#     "page_width": "980px",
+#     "sidebar_width": "240px",
+#     "fixed_sidebar": True,
+#     "show_relbars": True,
+#     "code_font_size": "1.0em",
+# }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
