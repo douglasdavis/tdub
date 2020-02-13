@@ -208,7 +208,7 @@ def generate_from_df(
     ... )
 
     """
-    weight_cols = []
+    weight_cols: List[str] = []
     if nominal_weight:
         weight_cols += ["weight_nominal"]
     if systematic_weights:

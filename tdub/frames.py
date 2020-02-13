@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 import logging
 import re
 
-from typing import Optional, Union, List, Any, Dict
+from typing import Optional, Union, List, Any, Dict, Iterable
 
 # externals
 import dask
@@ -196,7 +196,7 @@ def raw_dataframe(
     files: Union[str, List[str]],
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
-    branches: Optional[List[str]] = None,
+    branches: Optional[Iterable[str]] = None,
     drop_weight_sys: bool = False,
     entrysteps: Optional[Any] = None,
 ) -> pd.DataFrame:
@@ -238,7 +238,6 @@ def raw_dataframe(
     >>> df = raw_dataframe(files)
 
     """
-    bs = branches
     if branches is not None:
         bs = sorted(set(branches) | set([weight_name]), key=str.lower)
     else:
@@ -247,7 +246,7 @@ def raw_dataframe(
         else:
             bs = get_branches(files[0], tree)
     if weight_name not in bs:
-        raise RuntimeError(f"{weight_name} not present in {tree_name}")
+        raise RuntimeError(f"{weight_name} not present in {tree}")
     if drop_weight_sys:
         weight_sys_re = re.compile(r"^weight_sys\w+")
         bs = sorted(set(bs) ^ set(filter(weight_sys_re.match, bs)), key=str.lower)

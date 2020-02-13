@@ -24,7 +24,7 @@ request_memory  = 2.0G
 """
 
 
-def parse_samples(usatlasdata_path: Union[str, os.PathLike]) -> List[str]:
+def parse_samples(usatlasdata_path: Union[str, os.PathLike]) -> List[pathlib.Path]:
     """get a list of all ROOT samples in a directory on BNL
 
     Parameters

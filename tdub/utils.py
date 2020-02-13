@@ -180,7 +180,7 @@ class SampleInfo:
 
 def categorize_branches(
     source: Union[Union[str, os.PathLike], Iterable[str]],
-    tree: Optional[str] = "WtLoop_nominal",
+    tree: str = "WtLoop_nominal",
 ) -> Dict[str, List[str]]:
     """categorize branches into a separate lists
 
@@ -632,8 +632,8 @@ def get_selection(region: Union[str, Region]) -> str:
         Region.r2j2b: tdub.constants.SELECTION_2j2b,
     }
     if isinstance(region, str):
-        return options.get(Region.from_str(region))
-    return options.get(region)
+        return options[Region.from_str(region)]
+    return options[region]
 
 
 def get_avoids(region: Union[str, Region]) -> List[str]:
@@ -665,8 +665,8 @@ def get_avoids(region: Union[str, Region]) -> List[str]:
         Region.r2j2b: tdub.constants.AVOID_IN_CLF_2j2b,
     }
     if isinstance(region, str):
-        return options.get(Region.from_str(region))
-    return options.get(region)
+        return options[Region.from_str(region)]
+    return options[region]
 
 
 def get_features(region: Union[str, Region]) -> List[str]:
@@ -707,8 +707,8 @@ def get_features(region: Union[str, Region]) -> List[str]:
         Region.r2j2b: tdub.constants.FEATURESET_2j2b,
     }
     if isinstance(region, str):
-        return options.get(Region.from_str(region))
-    return options.get(region)
+        return options[Region.from_str(region)]
+    return options[region]
 
 
 def augment_features(region: Union[str, Region], to_add: List[str]) -> None:
@@ -745,7 +745,7 @@ def augment_features(region: Union[str, Region], to_add: List[str]) -> None:
     elif region == Region.r2j2b:
         tdub.constants.FEATURESET_2j2b += to_add
     else:
-        return ValueError("Bad region value")
+        raise ValueError("Bad region value")
 
 
 def override_features(table: Dict[str, List[str]]) -> None:
