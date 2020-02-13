@@ -26,7 +26,8 @@ from sklearn.metrics import auc, roc_auc_score, roc_curve
 try:
     import lightgbm as lgbm
 except ImportError:
-    lgbm = None
+    class lgbm:
+        LGBMClassifier = None
 
 # tdub
 from tdub.frames import iterative_selection, drop_cols
