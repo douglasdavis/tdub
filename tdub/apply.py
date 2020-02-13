@@ -14,7 +14,7 @@ import numpy as np
 import joblib
 try:
     import lightgbm as lgbm
-else:
+except ImportError:
     lgbm = None
 import pandas as pd
 from sklearn.model_selection import KFold
