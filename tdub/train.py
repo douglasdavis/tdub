@@ -238,7 +238,7 @@ def single_training(
     output_dir: Union[str, os.PathLike],
     test_size: float = 0.33,
     random_state: int = 414,
-    early_stopping_rounds: int = None,
+    early_stopping_rounds: Optional[int] = None,
     extra_summary_entries: Optional[Dict[str, Any]] = None,
 ) -> SingleTrainingResult:
     """Execute a single training with some parameters
