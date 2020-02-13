@@ -18,6 +18,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import pygram11
+import formulate
 from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import auc, roc_auc_score, roc_curve
@@ -28,7 +29,7 @@ except ImportError:
     lgbm = None
 
 # tdub
-from tdub.frames import iterative_selection
+from tdub.frames import iterative_selection, drop_cols
 from tdub.utils import (
     Region,
     bin_centers,
@@ -111,11 +112,19 @@ def prepare_from_root(
         log.info(" - %s" % f)
 
     if extra_selection is not None:
+        extra_variables = list(formulate.from_numexpr(extra_selection).variables)
         selection = "({}) & ({})".format(get_selection(region), extra_selection)
         log.info("Applying extra selection: %s" % extra_selection)
     else:
+        extra_variables = []
         selection = get_selection(region)
     log.info("Total selection is: %s" % selection)
+
+    necessary_features = list(set(get_features(region)) | set(extra_variables))
+    remove_features = list(set(extra_variables) - set(get_features(region)))
+    log.info("Variables which whill be removed after selection:")
+    for entry in remove_features:
+        log.info(" - %s" % entry)
 
     sig_df = iterative_selection(
         files=sig_files,
@@ -123,7 +132,7 @@ def prepare_from_root(
         weight_name="weight_nominal",
         concat=True,
         keep_category="kinematics",
-        branches=get_features(region),
+        branches=necessary_features,
         ignore_avoid=True,
         use_campaign_weight=use_campaign_weight,
     )
@@ -133,11 +142,13 @@ def prepare_from_root(
         weight_name="weight_nominal",
         concat=True,
         keep_category="kinematics",
-        branches=get_features(region),
+        branches=necessary_features,
         ignore_avoid=True,
         use_campaign_weight=use_campaign_weight,
         entrysteps="1 GB",
     )
+    sig_df.drop_cols(*remove_features)
+    bkg_df.drop_cols(*remove_features)
 
     if test_case_size is not None:
         if test_case_size > 5000:
@@ -224,7 +235,7 @@ def single_training(
     random_state: int = 414,
     early_stopping_rounds: int = None,
     extra_summary_entries: Optional[Dict[str, Any]] = None,
-) -> None:
+) -> SingleTrainingResult:
     """Execute a single training with some parameters
 
     Parameters
@@ -307,14 +318,14 @@ def single_training(
     fig_pred.savefig("pred.pdf")
     fig_roc.savefig("roc.pdf")
 
-    summary = {}
+    summary: Dict[str, Any] = {}
     summary["auc"] = trainres.auc
     summary["bad_ks"] = trainres.bad_ks
     summary["ks_test_sig"] = trainres.ks_test_sig
     summary["ks_test_bkg"] = trainres.ks_test_bkg
     summary["ks_pvalue_sig"] = trainres.ks_pvalue_sig
     summary["ks_pvalue_bkg"] = trainres.ks_pvalue_bkg
-    summary["features"] = [str(c) for c in df.columns]
+    summary["features"] = [c for c in df.columns]
     summary["set_params"] = clf_params
     summary["all_params"] = model.get_params()
     if extra_summary_entries is not None:
@@ -808,7 +819,7 @@ def folded_training(
     ax_rocs.legend(ncol=2, loc="lower right")
     fig_rocs.savefig("roc.pdf")
 
-    summary = {}
+    summary: Dict[str, Any] = {}
     summary["region"] = region
     summary["features"] = [str(c) for c in df.columns]
     summary["importances"] = list(relative_importances)

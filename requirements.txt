@@ -11,3 +11,4 @@ pyyaml >= 5.1
 pygram11 >= 0.7.3
 numexpr >= 2.7.0
 pandas >= 1.0.0
+formulate >= 0.0.8
