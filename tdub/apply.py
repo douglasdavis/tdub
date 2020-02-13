@@ -12,12 +12,14 @@ from typing import List, Dict, Any, Union
 # external
 import numpy as np
 import joblib
+import pandas as pd
+from sklearn.model_selection import KFold
+
 try:
     import lightgbm as lgbm
 except ImportError:
-    lgbm = None
-import pandas as pd
-from sklearn.model_selection import KFold
+    class lgbm:
+        LGBMClassifier = None
 
 # tdub
 from tdub.frames import specific_dataframe
