@@ -23,11 +23,13 @@ from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import auc, roc_auc_score, roc_curve
 
+# fmt: off
 try:
     import lightgbm as lgbm
 except ImportError:
     class lgbm:
         LGBMClassifier = None
+# fmt: on
 
 # tdub
 from tdub.frames import iterative_selection, drop_cols
@@ -56,8 +58,7 @@ def prepare_from_root(
     use_campaign_weight: bool = False,
     test_case_size: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
-    """Prepare the data for training in a region with signal and
-    background ROOT files
+    """Prepare the data for training in a region with signal and background ROOT files
 
     Parameters
     ----------
@@ -106,11 +107,11 @@ def prepare_from_root(
     if weight_scale is not None and weight_mean is not None:
         raise ValueError("weight_scale and weight_mean cannot be used together")
 
-    log.info("preparing training data")
-    log.info("signal files:")
+    log.info("Preparing a single dataset from ROOT files")
+    log.info("Signal files:")
     for f in sig_files:
         log.info(" - %s" % f)
-    log.info("background files:")
+    log.info("Background files:")
     for f in bkg_files:
         log.info(" - %s" % f)
 
@@ -125,9 +126,10 @@ def prepare_from_root(
 
     necessary_features = list(set(get_features(region)) | set(extra_variables))
     remove_features = list(set(extra_variables) - set(get_features(region)))
-    log.info("Variables which whill be removed after selection:")
-    for entry in remove_features:
-        log.info(" - %s" % entry)
+    if len(remove_features) > 0:
+        log.info("Variables which will be removed after selection:")
+        for entry in remove_features:
+            log.info(" - %s" % entry)
 
     sig_df = iterative_selection(
         files=sig_files,
@@ -176,7 +178,7 @@ def prepare_from_root(
 
     cols = sig_df.columns.to_list()
     assert cols == bkg_df.columns.to_list(), "sig/bkg columns are different. bad."
-    log.info("features to be available:")
+    log.info("Features in prepared dataset:")
     for c in cols:
         log.info(" - %s" % c)
 
