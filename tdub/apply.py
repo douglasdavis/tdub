@@ -12,7 +12,10 @@ from typing import List, Dict, Any, Union
 # external
 import numpy as np
 import joblib
-import lightgbm as lgbm
+try:
+    import lightgbm as lgbm
+else:
+    lgbm = None
 import pandas as pd
 from sklearn.model_selection import KFold
 
