@@ -67,6 +67,8 @@ def prepare_from_root(
        list of background ROOT files
     region : Region or str
        the region where we're going to perform the training
+    extra_selection : str, optional
+       an additional selection string to apply to the dataset
     weight_mean : float, optional
        scale all weights such that the mean weight is this
        value. Cannot be used with ``weight_scale``.
