@@ -2,8 +2,6 @@
 Module for general utilities
 """
 
-from __future__ import annotations
-
 # stdlib
 import copy
 import logging
@@ -15,6 +13,8 @@ from dataclasses import dataclass
 from enum import Enum
 from glob import glob
 from pathlib import PosixPath
+
+from typing import Union, Iterable, Optional, Dict, List, Tuple
 
 # external
 import numpy as np
@@ -55,7 +55,7 @@ class Region(Enum):
     r2j2b = 2
 
     @staticmethod
-    def from_str(s: str) -> Region:
+    def from_str(s: str) -> "Region":
         """get enum value for the given string
 
         This function supports three ways to define a region; prefixed
@@ -422,7 +422,7 @@ def files_for_tree(
         )
 
 
-def bin_centers(bin_edges: numpy.ndarray) -> numpy.ndarray:
+def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
     """get bin centers given bin edges
 
     Parameters
@@ -453,7 +453,7 @@ def bin_centers(bin_edges: numpy.ndarray) -> numpy.ndarray:
 
 def edges_and_centers(
     bins: Union[int, Iterable], range: Optional[Tuple[float, float]] = None
-) -> numpy.array:
+) -> np.array:
     """create arrays for edges and bin centers
 
     Parameters
@@ -843,7 +843,7 @@ def kolmogorov_prob(z: float) -> float:
         return 1.0
     elif u < 0.755:
         v = 1.0 / (u * u)
-        return 1 - w * (math.exp(c1 * v) + math.exp(c2 * v) + math.exp(c3 * v)) / u
+        return float(1 - w * (math.exp(c1 * v) + math.exp(c2 * v) + math.exp(c3 * v)) / u)
     elif u < 6.8116:
         fj = np.array([-2, -8, -18, -32], dtype=np.float64)
         r = np.zeros((4,), dtype=np.float64)
@@ -851,13 +851,13 @@ def kolmogorov_prob(z: float) -> float:
         maxj = max(1.0, round(3.0 / u))
         for j in range(int(maxj)):
             r[j] = math.exp(fj[j] * v)
-        return 2 * (r[0] - r[1] + r[2] - r[3])
+        return float(2 * (r[0] - r[1] + r[2] - r[3]))
     else:
-        return 0.0
+        return float(0.0)
 
 
 def ks_twosample_binned(
-    hist1: numpy.ndarray, hist2: numpy.ndarray, err1: numpy.ndarray, err2: np.ndarray
+    hist1: np.ndarray, hist2: np.ndarray, err1: np.ndarray, err2: np.ndarray
 ) -> Tuple[float, float]:
     """Calculate KS statistic and p-value for two binned distributions
 
@@ -903,6 +903,6 @@ def ks_twosample_binned(
     s2 = 1 / sum2
     rsum1 = s1 * hist1
     rsum2 = s2 * hist2
-    dfmax = np.max(np.abs(rsum1 - rsum2))
-    z = dfmax * math.sqrt(esum1 * esum2 / (esum1 + esum2))
+    dfmax = float(np.max(np.abs(rsum1 - rsum2)))
+    z = float(dfmax * math.sqrt(esum1 * esum2 / (esum1 + esum2)))
     return dfmax, kolmogorov_prob(z)

@@ -2,13 +2,13 @@
 Backend art utilities
 """
 
-from __future__ import annotations
-
 # std
 from dataclasses import dataclass
+from typing import Optional, List
 
 # external
 import matplotlib
+import matplotlib.pyplot as plt
 
 
 def setup_style():
@@ -45,7 +45,7 @@ def setup_style():
 
 
 def draw_atlas_label(
-    ax: matplotlib.axes.Axis,
+    ax: plt.Axes,
     internal: bool = True,
     extra_lines: Optional[List[str]] = None,
     x: float = 0.050,

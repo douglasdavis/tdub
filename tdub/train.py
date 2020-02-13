@@ -2,8 +2,6 @@
 Module for training BDTs
 """
 
-from __future__ import annotations
-
 # stdlib
 import json
 import logging
@@ -11,6 +9,7 @@ import os
 from dataclasses import dataclass
 from pathlib import PosixPath
 from pprint import pformat
+from typing import Optional, Tuple, List, Union, Dict, Any
 
 # externals
 import joblib
@@ -48,12 +47,13 @@ def prepare_from_root(
     sig_files: List[str],
     bkg_files: List[str],
     region: Union[Region, str],
+    extra_selection: Optional[str] = None,
     weight_mean: Optional[float] = None,
     weight_scale: Optional[float] = None,
     scale_sum_weights: bool = True,
     use_campaign_weight: bool = False,
     test_case_size: Optional[int] = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
     """Prepare the data for training in a region with signal and
     background ROOT files
 
@@ -110,9 +110,16 @@ def prepare_from_root(
     for f in bkg_files:
         log.info(" - %s" % f)
 
+    if extra_selection is not None:
+        selection = "({}) & ({})".format(get_selection(region), extra_selection)
+        log.info("Applying extra selection: %s" % extra_selection)
+    else:
+        selection = get_selection(region)
+    log.info("Total selection is: %s" % selection)
+
     sig_df = iterative_selection(
         files=sig_files,
-        selection=get_selection(region),
+        selection=selection,
         weight_name="weight_nominal",
         concat=True,
         keep_category="kinematics",
@@ -122,7 +129,7 @@ def prepare_from_root(
     )
     bkg_df = iterative_selection(
         files=bkg_files,
-        selection=get_selection(region),
+        selection=selection,
         weight_name="weight_nominal",
         concat=True,
         keep_category="kinematics",
@@ -433,18 +440,18 @@ def _inspect_single_training(
     )
 
     return SingleTrainingResult(
-        auc=roc_auc,
-        ks_test_sig=ks_stat_sig,
-        ks_pvalue_sig=ks_p_sig,
-        ks_test_bkg=ks_stat_bkg,
-        ks_pvalue_bkg=ks_p_bkg,
+        auc=float(roc_auc),
+        ks_test_sig=float(ks_stat_sig),
+        ks_pvalue_sig=float(ks_p_sig),
+        ks_test_bkg=float(ks_stat_bkg),
+        ks_pvalue_bkg=float(ks_p_bkg),
     )
 
 
 def folded_training(
     df: pd.DataFrame,
-    labels: numpy.ndarray,
-    weights: numpy.ndarray,
+    labels: np.ndarray,
+    weights: np.ndarray,
     params: Dict[str, Any],
     fit_kw: Dict[str, Any],
     output_dir: Union[str, os.PathLike],

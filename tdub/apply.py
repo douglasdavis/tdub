@@ -2,16 +2,18 @@
 Module for applying trained models
 """
 
-from __future__ import annotations
-
 # stdlib
 import json
 import logging
+import os
 from pathlib import PosixPath
+from typing import List, Dict, Any, Union
 
 # external
 import numpy as np
 import joblib
+import lightgbm as lgbm
+import pandas as pd
 from sklearn.model_selection import KFold
 
 # tdub
@@ -71,15 +73,15 @@ class FoldedResult:
         self._region = Region.from_str(self._summary["region"])
 
     @property
-    def model0(self) -> lightgbm.LGBMClassifier:
+    def model0(self) -> lgbm.LGBMClassifier:
         return self._model0
 
     @property
-    def model1(self) -> lightgbm.LGBMClassifier:
+    def model1(self) -> lgbm.LGBMClassifier:
         return self._model1
 
     @property
-    def model2(self) -> lightgbm.LGBMClassifier:
+    def model2(self) -> lgbm.LGBMClassifier:
         return self._model2
 
     @property
@@ -100,7 +102,7 @@ class FoldedResult:
 
     def to_files(
         self, files: Union[str, List[str]], tree: str = "WtLoop_nominal"
-    ) -> numpy.ndarray:
+    ) -> np.ndarray:
         """apply the folded result to a set of files
 
         Parameters
@@ -135,7 +137,7 @@ class FoldedResult:
 
     def to_dataframe(
         self,
-        df: pandas.DataFrame,
+        df: pd.DataFrame,
         column_name: str = "unnamed_bdt_response",
         query: bool = False,
     ) -> None:
@@ -197,7 +199,7 @@ class FoldedResult:
 
 
 def generate_npy(
-    frs: List[FoldedResult], df: pandas.DataFrame, output_file: Union[str, os.PathLike]
+    frs: List[FoldedResult], df: pd.DataFrame, output_file: Union[str, os.PathLike]
 ) -> None:
     """create a NumPy npy file which is the response for all events in a DataFrame
 

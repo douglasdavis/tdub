@@ -2,10 +2,8 @@
 A module to aid working with histograms
 """
 
-from __future__ import annotations
-
 # stdlib
-from typing import Iterable
+from typing import Tuple, Optional, Union, List, Dict, Any
 
 # ext
 import numpy as np
@@ -34,7 +32,7 @@ class CustomTAxis:
 
 
 def prepare_padded(
-    content: numpy.ndarray, errors: numpy.ndarray
+    content: np.ndarray, errors: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Prepare arrays for saving to ROOT histogram with over/underflow
 
@@ -65,7 +63,7 @@ def prepare_padded(
 
 
 def arrays2th1(
-    content: numpy.ndarray, error: numpy.ndarray, bins: numpy.ndarray, title: str = "none"
+    content: np.ndarray, error: np.ndarray, bins: np.ndarray, title: str = "none"
 ) -> CustomTH1:
     """create a TH1-like object built from arrays
 
@@ -102,8 +100,8 @@ def arrays2th1(
 
 
 def df2th1(
-    dfc: pandas.DataFrame,
-    dfe: pandas.DataFrame,
+    dfc: pd.DataFrame,
+    dfe: pd.DataFrame,
     weight_col: Optional[Union[List[str], str]] = None,
 ) -> Union[CustomTH1, Dict[str, CustomTH1]]:
     """create a TH1-like object built from a dataframe structure
@@ -161,7 +159,7 @@ def df2th1(
 
 
 def generate_from_df(
-    df: pandas.DataFrame,
+    df: pd.DataFrame,
     var: str,
     bins: int,
     range: Tuple[float, float],

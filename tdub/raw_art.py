@@ -2,25 +2,29 @@
 Module for art from raw data
 """
 
-from __future__ import annotations
+# stdlib
+import numbers
+from typing import Optional, List, Tuple, Union, Sequence, Iterable, Any
 
 # external
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 import pygram11
 
 # tdub
 from tdub._art import setup_style
 from tdub.utils import edges_and_centers
+from tdub.apply import FoldedResult
 
 
 def draw_rocs(
     frs: List[FoldedResult],
-    ax: Optional[matplotlib.axes.Axes] = None,
+    ax: Optional[plt.Axes] = None,
     labels: Optional[List[str]] = None,
     draw_guess: bool = False,
     draw_grid: bool = False,
-) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
+) -> Tuple[plt.Figure, plt.Axes]:
     """draw ROC curves from a set of folded training results
 
     Parameters
@@ -85,8 +89,8 @@ def draw_rocs(
 
 def draw_stack(
     *,
-    data_df: pandas.DataFrame,
-    mc_dfs: List[pandas.DataFrame],
+    data_df: pd.DataFrame,
+    mc_dfs: List[pd.DataFrame],
     distribution: str,
     weight_name: str = "weight_nominal",
     bins: Union[int, Sequence[numbers.Real]] = 10,
@@ -96,7 +100,7 @@ def draw_stack(
     lumi: float = 139.0,
     legend_ncol: int = 2,
     y_scalefac: float = 1.35,
-) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes, matplotlib.axes.Axes]:
+) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
     """using some dataframes, draw the stacked histograms for some distribution
 
     Parameters

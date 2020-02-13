@@ -2,8 +2,6 @@
 Module for art from TRExFitter
 """
 
-from __future__ import annotations
-
 # stdlib
 import logging
 import os
@@ -11,6 +9,8 @@ import re
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import PosixPath
+
+from typing import List, Any, Optional, Tuple, Set
 
 # externals
 import numpy as np
@@ -166,27 +166,27 @@ class TRExHistogram:
         return self.uproothist
 
     @property
-    def sumw2(self) -> numpy.ndarray:
+    def sumw2(self) -> np.ndarray:
         """numpy.ndarray: the sum of weights squared in each bin"""
         return self.uproothist.variances
 
     @property
-    def error(self) -> numpy.ndarray:
+    def error(self) -> np.ndarray:
         """numpy.ndarray: the uncertainty in each bin (sqrt of sumw2)"""
         return np.sqrt(self.sumw2)
 
     @property
-    def bins(self) -> numpy.ndarray:
+    def bins(self) -> np.ndarray:
         """numpy.ndarray: the bin edges"""
         return self.uproothist.edges
 
     @property
-    def bin_centers(self) -> numpy.ndarray:
+    def bin_centers(self) -> np.ndarray:
         """numpy.ndarray: the bin centers"""
         return tdub.utils.bin_centers(self.bins)
 
     @property
-    def bin_width(self) -> numpy.ndarray:
+    def bin_width(self) -> np.ndarray:
         """numpy.ndarray: the bin widths"""
         return round(self.bins[-1] - self.bins[-2], 2)
 
@@ -218,10 +218,10 @@ _region_meta = var_to_axis_meta()
 
 
 def draw_ratio_with_line(
-    ax: matplotlib.axes.Axis,
+    ax: plt.Axes,
     data: TRExHistogram,
-    mc_sum: numpy.ndarray,
-    mc_err: numpy.ndarray,
+    mc_sum: np.ndarray,
+    mc_err: np.ndarray,
     yline: float = 1.0,
     autoxscale: bool = True,
 ) -> None:
@@ -238,7 +238,7 @@ def draw_ratio_with_line(
         ax.autoscale(enable=True, axis="x", tight=True)
 
 
-def set_labels(ax: matplotlib.axes.Axes, histogram: TRExHistogram) -> None:
+def set_labels(ax: plt.Axes, histogram: TRExHistogram) -> None:
     """ define the axis labels """
     if histogram.has_uniform_bins():
         ylabel_suffix = f" / {histogram.bin_width} {histogram.unit}"
@@ -264,14 +264,14 @@ def shrink_pdf(file_path: str) -> None:
 
 
 def stackem(
-    args: argparse.Namespace,
+    args: Any,
     region: str,
     data: Sample,
     histograms: List[Sample],
     template_var: str,
-    band: Optional[uproot_methods.classes.TGraphAasymmErrors] = None,
+    band: Optional[Any] = None,
     figsize: Optional[Tuple[float, float]] = None,
-) -> Tuple[matplotlib.figure.Figure, Tuple[matplotlib.axes.Axis, matplotlib.axes.Axis]]:
+) -> Tuple[matplotlib.figure.Figure, Tuple[plt.Axes, plt.Axes]]:
     """Create a stack plot
 
     Parameters
@@ -360,8 +360,8 @@ def stackem(
 
 
 def prefit_histograms(
-    args: argparse.Namespace, fit_name: str, region: str, samples: List[Sample]
-) -> Tuple[TRExHistogram, List[TRExHistogram], uproot_methods.classes.TGraphAsymmErrors]:
+    args: Any, fit_name: str, region: str, samples: List[Sample]
+) -> Tuple[TRExHistogram, List[TRExHistogram], Any]:
     """Prepare prefit histogram objects
 
     Parameters
@@ -393,8 +393,8 @@ def prefit_histograms(
 
 
 def postfit_histograms(
-    args: argparse.Namespace, fit_name: str, region: str, samples: List[Samples]
-) -> Tuple[TRExHistogram, List[TRExHistogram], uproot_methods.classes.TGraphAsymmErrors]:
+    args: Any, fit_name: str, region: str, samples: List[Sample]
+) -> Tuple[TRExHistogram, List[TRExHistogram], Any]:
     """Prepare postfit histogram objects
 
     Parameters
@@ -433,7 +433,7 @@ def split_region_str(region: str) -> Tuple[str, str]:
         return (splits[0], "_".join(splits[1:]))
 
 
-def run_stacks(args: argparse.Namespace) -> None:
+def run_stacks(args: Any) -> None:
     """Given command line arguments generate stack plots
 
     Parameters
@@ -526,9 +526,7 @@ def get_blank_systematics(config_file: str) -> Tuple[List[NuisPar], Set[str]]:
     return nps, categories
 
 
-def draw_pulls(
-    args: argparse.Namespace, nps: List[NuisPar]
-) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.Axes]:
+def draw_pulls(args: Any, nps: List[NuisPar]) -> Tuple[plt.Figure, plt.Axes]:
     """Draw pulls from command line arguments and nuisance parameters
 
     Parameters
@@ -593,7 +591,7 @@ def draw_pulls(
     return fig, ax
 
 
-def run_pulls(args: argparse.Namespace) -> None:
+def run_pulls(args: Any) -> None:
     """Given command line arguments generate pull plots
 
     Parameters

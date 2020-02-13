@@ -2,12 +2,12 @@
 Module for handling dataframes
 """
 
-from __future__ import annotations
-
 # stdlib
 from dataclasses import dataclass, field
 import logging
 import re
+
+from typing import Optional, Union, List, Any, Dict
 
 # externals
 import dask
@@ -199,7 +199,7 @@ def raw_dataframe(
     branches: Optional[List[str]] = None,
     drop_weight_sys: bool = False,
     entrysteps: Optional[Any] = None,
-) -> pandas.DataFrame:
+) -> pd.DataFrame:
     """Construct a raw pandas flavored Dataframe with help from uproot
 
     We call this dataframe "raw" because it hasn't been parsed by any
@@ -261,7 +261,7 @@ def conservative_dataframe(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     entrysteps: Optional[Any] = None,
-) -> pandas.DataFrame:
+) -> pd.DataFrame:
     """Construct a raw pandas flavored dataframe with conservative branches
 
     This function does some hand-holding and grabs a conservative set
@@ -557,7 +557,7 @@ def specific_dataframe(
     return sdf
 
 
-def satisfying_selection(*dfs: pandas.DataFrame, selection: str) -> List[pandas.DataFrame]:
+def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFrame]:
     """get subsets of dataframes that satisfy a selection
 
     Parameters
@@ -600,7 +600,7 @@ def iterative_selection(
     ignore_avoid: bool = False,
     use_campaign_weight: bool = False,
     **iterate_opts,
-) -> pandas.DataFrame:
+) -> pd.DataFrame:
     """build a selected dataframe via uproot's iterate
 
     if we want to build a memory-hungry dataframe and apply a
@@ -710,7 +710,7 @@ def iterative_selection(
     return dfs
 
 
-def drop_cols(df: pandas.DataFrame, *cols: str) -> None:
+def drop_cols(df: pd.DataFrame, *cols: str) -> None:
     """drop some columns from a dataframe
 
     this is a convenient function because it just ignores branches
@@ -759,9 +759,7 @@ def drop_cols(df: pandas.DataFrame, *cols: str) -> None:
 pd.DataFrame.drop_cols = drop_cols
 
 
-def drop_avoid(
-    df: pandas.DataFrame, region: Optional[Union[str, tdub.utils.Region]] = None
-) -> None:
+def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) -> None:
     """drop columns that we avoid in classifiers
 
     this uses :py:func:`tdub.frames.drop_cols` with a predefined set
@@ -799,7 +797,7 @@ def drop_avoid(
 pd.DataFrame.drop_avoid = drop_avoid
 
 
-def drop_jet2(df: pandas.DataFrame) -> None:
+def drop_jet2(df: pd.DataFrame) -> None:
     """drop all columns with jet2 properties
 
     in the 1j1b region we obviously don't have a second jet; so this
@@ -834,7 +832,7 @@ pd.DataFrame.drop_jet2 = drop_jet2
 
 
 def apply_weight(
-    df: pandas.DataFrame, weight_name: str, exclude: Optional[List[str]] = None
+    df: pd.DataFrame, weight_name: str, exclude: Optional[List[str]] = None
 ) -> None:
     """apply (multiply) a weight to all other weights in the DataFrame
 
@@ -877,9 +875,7 @@ def apply_weight(
 pd.DataFrame.apply_weight = apply_weight
 
 
-def apply_weight_campaign(
-    df: pandas.DataFrame, exclude: Optional[List[str]] = None
-) -> None:
+def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
     """multiply nominal and systematic weights by the campaign weight
 
     this is useful for samples that were produced without the campaign
@@ -915,7 +911,7 @@ def apply_weight_campaign(
 pd.DataFrame.apply_weight_campaign = apply_weight_campaign
 
 
-def apply_weight_tptrw(df: pandas.DataFrame, exclude: Optional[List[str]] = None) -> None:
+def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
     """multiply nominal and systematic weights by the top pt reweight term
 
     this is useful for samples that were produced without the top pt

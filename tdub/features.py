@@ -2,16 +2,15 @@
 Module for selecting features
 """
 
-from __future__ import annotations
-
 # stdlib
 import copy
 import gc
 import logging
+import os
 import json
 from pathlib import PosixPath
 
-log = logging.getLogger(__name__)
+from typing import Optional, List, Dict, Any, Union, Tuple
 
 # externals
 import numpy as np
@@ -31,7 +30,9 @@ except ImportError:
 
 # tdub
 from tdub.frames import iterative_selection, drop_cols
-from tdub.utils import quick_files, get_selection, get_avoids
+from tdub.utils import quick_files, get_selection, get_avoids, Region
+
+log = logging.getLogger(__name__)
 
 
 class FeatureSelector:
@@ -106,9 +107,9 @@ class FeatureSelector:
 
     def __init__(
         self,
-        df: pandas.DataFrame,
+        df: pd.DataFrame,
         labels: np.ndarray,
-        weights: numpy.ndarray,
+        weights: np.ndarray,
         importance_type: str = "gain",
         corr_threshold: float = 0.85,
         name: Optional[str] = None,
@@ -159,11 +160,11 @@ class FeatureSelector:
         self._model_params = None
 
     @property
-    def df(self) -> pandas.DataFrame:
+    def df(self) -> pd.DataFrame:
         return self._df
 
     @property
-    def weights(self) -> numpy.ndarray:
+    def weights(self) -> np.ndarray:
         return self._weights
 
     @property
@@ -175,15 +176,15 @@ class FeatureSelector:
         return self._raw_features
 
     @property
-    def corr_matrix(self) -> pandas.DataFrame:
+    def corr_matrix(self) -> pd.DataFrame:
         return self._corr_matrix
 
     @property
-    def correlated(self) -> pandas.DataFrame:
+    def correlated(self) -> pd.DataFrame:
         return self._correlated
 
     @property
-    def importances(self) -> pandas.DataFrame:
+    def importances(self) -> pd.DataFrame:
         return self._importances
 
     @property
@@ -745,14 +746,14 @@ def create_parquet_files(
 
 def prepare_from_parquet(
     data_dir: Union[str, os.PathLike],
-    region: Union[str, tdub.utils.Region],
+    region: Union[str, Region],
     nlo_method: str = "DR",
     ttbar_frac: Optional[Union[str, float]] = None,
     weight_mean: Optional[float] = None,
     weight_scale: Optional[float] = None,
     scale_sum_weights: bool = True,
     test_case_size: Optional[int] = None,
-) -> Tuple[pandas.DataFrame, np.ndarray, np.ndarray]:
+) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
     """prepare feature selection data from parquet files
 
     this function requires pyarrow_.
