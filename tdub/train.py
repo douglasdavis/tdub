@@ -6,7 +6,6 @@ Module for training BDTs
 import json
 import logging
 import os
-from dataclasses import dataclass
 from pathlib import PosixPath
 from pprint import pformat
 from typing import Optional, Tuple, List, Union, Dict, Any
@@ -194,29 +193,54 @@ def prepare_from_root(
     return df, y, w
 
 
-@dataclass
 class SingleTrainingResult:
     """Describes the properties of a single training
 
+    Parameters
+    ----------
+    auc : float
+        the AUC value for the model
+    ks_test_sig : float
+        the binned KS test value for signal
+    ks_pvalue_sig : float
+        the binned KS test p-value for signal
+    ks_test_bkg : float
+        the binned KS test value for background
+    ks_pvalue_bkg : float
+        the binned KS test p-value for background
+    kwargs : dict
+        currently unused
+
     Attributes
     ----------
-    proba_auc : float
-       the AUC value for the model
+    auc : float
+        the AUC value for the model
     ks_test_sig : float
-       the binned KS test value for signal
+        the binned KS test value for signal
     ks_pvalue_sig : float
-       the binned KS test p-value for signal
+        the binned KS test p-value for signal
     ks_test_bkg : float
-       the binned KS test value for background
+        the binned KS test value for background
     ks_pvalue_bkg : float
-       the binned KS test p-value for background
+        the binned KS test p-value for background
     """
 
-    auc: float = -1
-    ks_test_sig: float = -1
-    ks_pvalue_sig: float = -1
-    ks_test_bkg: float = -1
-    ks_pvalue_bkg: float = -1
+    def __init__(
+        self,
+        *,
+        auc: float = -1.0,
+        ks_test_sig: float = -1.0,
+        ks_pvalue_sig: float = -1.0,
+        ks_test_bkg: float = -1.0,
+        ks_pvalue_bkg: float = -1.0,
+        **kwargs,
+    ) -> None:
+        self.auc = auc
+        self.ks_test_sig = ks_test_sig
+        self.ks_pvalue_sig = ks_pvalue_sig
+        self.ks_test_bkg = ks_test_bkg
+        self.ks_pvalue_bkg = ks_pvalue_bkg
+        self.bad_ks = self.ks_pvalue_sig < 0.2 or self.ks_pvalue_bkg < 0.2
 
     def __repr__(self) -> str:
         p1 = f"auc={self.auc:0.3}"
@@ -225,9 +249,6 @@ class SingleTrainingResult:
         p4 = f"ks_test_bkg={self.ks_test_bkg:0.5}"
         p5 = f"ks_pvalue_bkg={self.ks_pvalue_bkg:0.5}"
         return f"SingleTrainingResult({p1}, {p2}, {p3}, {p4}, {p5})"
-
-    def __post_init__(self):
-        self.bad_ks = int(self.ks_pvalue_sig < 0.2 or self.ks_pvalue_bkg < 0.2)
 
 
 def single_training(
