@@ -15,6 +15,9 @@ from glob import glob
 from pathlib import PosixPath
 
 from typing import Union, Iterable, Optional, Dict, List, Tuple
+FileLike = Union[str, os.PathLike]
+FileOrFiles = Union[List[FileLike], FileLike]
+
 
 # external
 import numpy as np
@@ -179,7 +182,7 @@ class SampleInfo:
 
 
 def categorize_branches(
-    source: Union[Union[str, os.PathLike], Iterable[str]],
+    source: Union[FileLike, Iterable[str]],
     tree: str = "WtLoop_nominal",
 ) -> Dict[str, List[str]]:
     """categorize branches into a separate lists
@@ -264,7 +267,7 @@ def categorize_branches(
 
 
 def quick_files(
-    datapath: Union[str, os.PathLike], campaign: Optional[str] = None
+    datapath: FileLike, campaign: Optional[str] = None
 ) -> Dict[str, List[str]]:
     """get a dictionary of ``{sample_str : file_list}`` for quick file access.
 
@@ -369,7 +372,7 @@ def quick_files(
 
 
 def files_for_tree(
-    datapath: Union[str, os.PathLike],
+    datapath: FileLike,
     sample_prefix: str,
     tree_name: str,
     campaign: Optional[str] = None,
@@ -496,7 +499,7 @@ def edges_and_centers(
 
 
 def get_branches(
-    file_name: Union[str, os.PathLike],
+    file_name: FileOrFiles,
     tree: str = "WtLoop_nominal",
     ignore_weights: bool = False,
     sort: bool = False,
@@ -505,7 +508,7 @@ def get_branches(
 
     Parameters
     ----------
-    file_name : str or os.PathLike
+    file_name : str, list(str), os.PathLike, list(os.PathLike)
        the ROOT file name
     tree : str
        the ROOT tree name
@@ -531,7 +534,10 @@ def get_branches(
     ["pT_lep1", "pT_lep2", "weight_nominal", "weight_tptrw"]
 
     """
-    t = uproot.open(file_name).get(tree)
+    if isinstance(file_name, list):
+        t = uproot.open(file_name[0]).get(tree)
+    else:
+        t = uproot.open(file_name).get(tree)
     bs = [b.decode("utf-8") for b in t.allkeys()]
     if not ignore_weights:
         if sort:
@@ -546,7 +552,7 @@ def get_branches(
 
 
 def conservative_branches(
-    file_name: Union[str, os.PathLike], tree: str = "WtLoop_nominal"
+    file_name: FileLike, tree: str = "WtLoop_nominal"
 ) -> List[str]:
     """get branches in a ROOT file that form a conservative minimum
 
