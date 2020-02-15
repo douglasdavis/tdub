@@ -6,13 +6,13 @@ from tdub.frames import iterative_selection, drop_avoid, conservative_dataframe
 test_file_root = PosixPath(__file__).parent / "test_data"
 
 
-def test_ignore_avoid():
+def test_exclude_avoids():
     files = [
         str(test_file_root / "testfile1.root"),
         str(test_file_root / "testfile2.root"),
         str(test_file_root / "testfile3.root"),
     ]
-    df = iterative_selection(files, "(reg1j1b == True)", ignore_avoid=True, concat=True)
+    df = iterative_selection(files, "(reg1j1b == True)", exclude_avoids=True, concat=True)
     cols = set(df.columns)
     avoid = set(AVOID_IN_CLF)
     assert len(cols & avoid) == 0
@@ -20,7 +20,7 @@ def test_ignore_avoid():
     df = iterative_selection(
         files,
         "(reg1j1b == True)",
-        ignore_avoid=True,
+        exclude_avoids=True,
         concat=True,
         keep_category="kinematics",
     )

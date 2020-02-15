@@ -115,20 +115,11 @@ def prepare_from_root(
         log.info(" - %s" % f)
 
     if extra_selection is not None:
-        extra_variables = list(formulate.from_numexpr(extra_selection).variables)
         selection = "({}) & ({})".format(get_selection(region), extra_selection)
         log.info("Applying extra selection: %s" % extra_selection)
     else:
-        extra_variables = []
         selection = get_selection(region)
     log.info("Total selection is: %s" % selection)
-
-    necessary_features = list(set(get_features(region)) | set(extra_variables))
-    remove_features = list(set(extra_variables) - set(get_features(region)))
-    if len(remove_features) > 0:
-        log.info("Variables which will be removed after selection:")
-        for entry in remove_features:
-            log.info(" - %s" % entry)
 
     sig_df = iterative_selection(
         files=sig_files,
@@ -136,8 +127,8 @@ def prepare_from_root(
         weight_name="weight_nominal",
         concat=True,
         keep_category="kinematics",
-        branches=necessary_features,
-        ignore_avoid=True,
+        branches=get_features(region),
+        exclude_avoids=True,
         use_campaign_weight=use_campaign_weight,
     )
     bkg_df = iterative_selection(
@@ -146,13 +137,11 @@ def prepare_from_root(
         weight_name="weight_nominal",
         concat=True,
         keep_category="kinematics",
-        branches=necessary_features,
-        ignore_avoid=True,
+        branches=get_features(region),
+        exclude_avoids=True,
         use_campaign_weight=use_campaign_weight,
         entrysteps="1 GB",
     )
-    sig_df.drop_cols(*remove_features)
-    bkg_df.drop_cols(*remove_features)
 
     if test_case_size is not None:
         if test_case_size > 5000:

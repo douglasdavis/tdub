@@ -14,6 +14,7 @@ import dask
 import dask.dataframe as dd
 import pandas as pd
 import uproot
+import formulate
 
 # tdub
 from tdub.constants import AVOID_IN_CLF
@@ -596,7 +597,7 @@ def iterative_selection(
     branches: Optional[List[str]] = None,
     concat: bool = True,
     keep_category: Optional[str] = None,
-    ignore_avoid: bool = False,
+    exclude_avoids: bool = False,
     use_campaign_weight: bool = False,
     **iterate_opts,
 ) -> pd.DataFrame:
@@ -633,8 +634,8 @@ def iterative_selection(
        columns which are part of the given category (see
        :py:func:`tdub.utils.categorize_branches`). The weight branch
        is always kept.
-    ignore_avoid : bool
-       ignore branches defined by :py:data:`tdub.utils.AVOID_IN_CLF`
+    exclude_avoids : bool
+       exclude branches defined by :py:data:`tdub.utils.AVOID_IN_CLF`
     use_campaign_weight : bool
        multiply the nominal weight by the campaign weight. this is
        potentially necessary if the samples were prepared without the
@@ -662,46 +663,50 @@ def iterative_selection(
     Keep only the kinematic branches after selection and ignore avoided columns:
 
     >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"), concat=True,
-    ...                             keep_category="kinematics", ignore_avoid=True)
+    ...                             keep_category="kinematics", exclude_avoids=True)
 
     """
+    # determine which branches will be used for selection only and
+    # which branches we need for weights
+    selection_branches = set(formulate.from_numexpr(selection).variables)
+    weights_to_grab = set([weight_name])
+    if use_campaign_weight:
+        weights_to_grab.add("weight_campaign")
+    if branches is None:
+        branches = set(get_branches(files, tree=tree))
+    branches = set(branches)
+    sel_only_branches = selection_branches - branches
+
+    # determine which branches to keep after reading dataframes and
+    # are necessary during reading.
     if keep_category is not None:
-        if isinstance(files, list):
-            branch_cats = categorize_branches(files[0], tree=tree)
-        else:
-            branch_cats = categorize_branches(files, tree=tree)
-        keep_branches = branch_cats.get(keep_category)
-        if weight_name not in keep_branches:
-            keep_branches.append(weight_name)
+        branches_cated = categorize_branches(list(branches), tree=tree)
+        keep_cat = set(branches_cated.get(keep_category))
+        keep = keep_cat & branches
+        read_branches = keep | weights_to_grab | selection_branches
+    else:
+        keep = branches
+        read_branches = branches | weights_to_grab | selection_branches
 
-    bs = branches
-    if branches is not None:
-        weights_to_grab = [weight_name]
-        sel_branches = ["OS", "reg1j1b", "reg2j1b", "reg2j2b"]
-        if use_campaign_weight:
-            weights_to_grab.append("weight_campaign")
-        bs = sorted(set(branches) | set(weights_to_grab) | set(sel_branches), key=str.lower)
+    # drop avoided classifier variables
+    if exclude_avoids:
+        keep = keep - set(AVOID_IN_CLF)
 
-    if ignore_avoid:
-        if bs is None:
-            if isinstance(files, list):
-                filebs = get_branches(files[0], tree=tree)
-            else:
-                filebs = get_branches(files, tree=tree)
-            bs = sorted(set(filebs) - set(AVOID_IN_CLF), key=str.lower)
-        else:
-            bs = sorted(set(bs) - set(AVOID_IN_CLF), key=str.lower)
-        if keep_category is not None:
-            keep_branches = sorted(set(keep_branches) & set(bs), key=str.lower)
+    # always drop selection only branches
+    keep = keep - sel_only_branches
+
+    # always keep the requested weight (enforce here just in
+    # case). sort into a list and move on to dataframes
+    keep.add(weight_name)
+    keep = sorted(keep, key=str.lower)
 
     dfs = []
-    itr = uproot.pandas.iterate(files, tree, branches=bs, **iterate_opts)
+    itr = uproot.pandas.iterate(files, tree, branches=list(read_branches), **iterate_opts)
     for i, df in enumerate(itr):
-        if use_campaign_weight:
-            apply_weight_campaign(df)
         idf = df.query(selection)
-        if keep_category is not None:
-            idf = idf[keep_branches]
+        if use_campaign_weight:
+            apply_weight_campaign(idf)
+        idf = idf[keep]
         dfs.append(idf)
         log.debug(f"finished iteration {i}")
     if concat:
