@@ -5,13 +5,6 @@ A module for handling dataframes.
 
 .. currentmodule:: tdub.frames
 
-Class Summary
-^^^^^^^^^^^^^
-
-.. autosummary::
-
-   DataFramesInMemory
-   SelectedDataFrame
 
 Factory Function Summary
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -19,11 +12,8 @@ Factory Function Summary
 .. autosummary::
 
    conservative_dataframe
-   delayed_dataframe
    iterative_selection
    raw_dataframe
-   selected_dataframes
-   specific_dataframe
 
 Helper Function Summary
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -42,17 +32,9 @@ Helper Function Summary
 Reference
 ^^^^^^^^^
 
-.. autoclass:: DataFramesInMemory
-   :members:
-.. autoclass:: SelectedDataFrame
-   :members:
-
 .. autofunction:: conservative_dataframe
-.. autofunction:: delayed_dataframe
 .. autofunction:: iterative_selection
 .. autofunction:: raw_dataframe
-.. autofunction:: selected_dataframes
-.. autofunction:: specific_dataframe
 
 .. autofunction:: apply_weight
 .. autofunction:: apply_weight_campaign

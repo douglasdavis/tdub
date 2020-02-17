@@ -15,14 +15,15 @@ import joblib
 import pandas as pd
 from sklearn.model_selection import KFold
 
+# fmt: off
 try:
     import lightgbm as lgbm
 except ImportError:
     class lgbm:
         LGBMClassifier = None
+# fmt: on
 
 # tdub
-from tdub.frames import specific_dataframe
 from tdub.utils import Region, get_selection
 
 
@@ -129,16 +130,7 @@ class FoldedResult:
         >>> y = fr_1j1b.to_files(["/path/to/file1.root", "/path/to/file2.root"])
 
         """
-        dfim = specific_dataframe(files, self.region, tree=tree, to_ram=True)
-        dfim._df = dfim.df[self.features]
-
-        X = dfim.df.to_numpy()
-        y0 = self.model0.predict_proba(X)[:, 1]
-        y1 = self.model1.predict_proba(X)[:, 1]
-        y2 = self.model2.predict_proba(X)[:, 1]
-        y = np.mean([y0, y1, y2], axis=0)
-
-        return y
+        raise NotImplementedError
 
     def to_dataframe(
         self,

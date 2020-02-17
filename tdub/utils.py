@@ -47,9 +47,9 @@ class Region(Enum):
     Using this enum for grabing the ``2j2b`` region from a set of
     files:
 
-    >>> from tdub.utils import Region
-    >>> from tdub.frames import specific_dataframe
-    >>> sdf = specific_dataframe(files, Region.r2j2b)
+    >>> from tdub.utils import Region, get_selection
+    >>> from tdub.frames import iterative_selection
+    >>> df = iterative_selection(files, get_selection(Region.r2j2b))
 
     """
 
@@ -590,18 +590,15 @@ def conservative_branches(
     >>> fr_2j1b.to_dataframe(df, query=True)
 
     """
-    t = uproot.open(file_name).get(tree)
-    bs = set([b.decode("utf-8") for b in t.allkeys()])
-
+    branches_in_file = get_branches(file_name)
     good_branches = set(
         {"reg1j1b", "reg2j1b", "reg2j2b", "OS"}
         | set(tdub.constants.FEATURESET_1j1b)
         | set(tdub.constants.FEATURESET_2j1b)
         | set(tdub.constants.FEATURESET_2j2b)
     )
-    good_branches = bs & good_branches
-
-    return sorted(good_branches)
+    good_branches = set(branches_in_file) & good_branches
+    return sorted(good_branches, key=str.lower)
 
 
 def get_selection(region: Union[str, Region]) -> str:
