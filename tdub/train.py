@@ -50,6 +50,7 @@ def prepare_from_root(
     sig_files: List[str],
     bkg_files: List[str],
     region: Union[Region, str],
+    branches: Optional[List[str]] = None,
     extra_selection: Optional[str] = None,
     weight_mean: Optional[float] = None,
     weight_scale: Optional[float] = None,
@@ -67,6 +68,8 @@ def prepare_from_root(
        list of background ROOT files
     region : Region or str
        the region where we're going to perform the training
+    branches : list(str), optional
+       if not None, we override the list of features defined by the region
     extra_selection : str, optional
        an additional selection string to apply to the dataset
     weight_mean : float, optional
@@ -121,13 +124,17 @@ def prepare_from_root(
         selection = get_selection(region)
     log.info("Total selection is: %s" % selection)
 
+    if branches is None:
+        log.info("Using features defined by the region")
+        branches = get_features(region)
+
     sig_df = iterative_selection(
         files=sig_files,
         selection=selection,
         weight_name="weight_nominal",
         concat=True,
         keep_category="kinematics",
-        branches=get_features(region),
+        branches=branches,
         exclude_avoids=True,
         use_campaign_weight=use_campaign_weight,
     )
@@ -137,7 +144,7 @@ def prepare_from_root(
         weight_name="weight_nominal",
         concat=True,
         keep_category="kinematics",
-        branches=get_features(region),
+        branches=branches,
         exclude_avoids=True,
         use_campaign_weight=use_campaign_weight,
         entrysteps="1 GB",
