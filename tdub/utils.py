@@ -15,6 +15,7 @@ from glob import glob
 from pathlib import PosixPath
 
 from typing import Union, Iterable, Optional, Dict, List, Tuple
+
 FileLike = Union[str, os.PathLike]
 FileOrFiles = Union[List[FileLike], FileLike]
 
@@ -182,8 +183,7 @@ class SampleInfo:
 
 
 def categorize_branches(
-    source: Union[FileLike, Iterable[str]],
-    tree: str = "WtLoop_nominal",
+    source: Union[FileLike, Iterable[str]], tree: str = "WtLoop_nominal",
 ) -> Dict[str, List[str]]:
     """categorize branches into a separate lists
 
@@ -266,9 +266,7 @@ def categorize_branches(
     }
 
 
-def quick_files(
-    datapath: FileLike, campaign: Optional[str] = None
-) -> Dict[str, List[str]]:
+def quick_files(datapath: FileLike, campaign: Optional[str] = None) -> Dict[str, List[str]]:
     """get a dictionary of ``{sample_str : file_list}`` for quick file access.
 
     The lists of files are sorted alphabetically. These types of
@@ -372,10 +370,7 @@ def quick_files(
 
 
 def files_for_tree(
-    datapath: FileLike,
-    sample_prefix: str,
-    tree_name: str,
-    campaign: Optional[str] = None,
+    datapath: FileLike, sample_prefix: str, tree_name: str, campaign: Optional[str] = None,
 ) -> List[str]:
     """get a list of files for the sample and desired tree
 
@@ -551,9 +546,7 @@ def get_branches(
     return list(set(bs) ^ weights)
 
 
-def conservative_branches(
-    file_name: FileLike, tree: str = "WtLoop_nominal"
-) -> List[str]:
+def conservative_branches(file_name: FileLike, tree: str = "WtLoop_nominal") -> List[str]:
     """get branches in a ROOT file that form a conservative minimum
 
     we define "conservative minimum" as the branches necessary for
@@ -681,7 +674,8 @@ def get_features(region: Union[str, Region]) -> List[str]:
     Parameters
     ----------
     region : str or tdub.utils.Region
-       the region as a string or enum entry
+       the region as a string or enum entry. If ``"ALL"`` returns a
+       set of unique features from all regions
 
     Returns
     -------
@@ -704,6 +698,16 @@ def get_features(region: Union[str, Region]) -> List[str]:
      'psuedoContTagBin_jet2']
 
     """
+    # first allow retrieval of all features
+    if region == "ALL":
+        return sorted(
+            set(tdub.constants.FEATURESET_1j1b)
+            | set(tdub.constants.FEATURESET_2j1b)
+            | set(tdub.constants.FEATURESET_2j2b),
+            key=str.lower,
+        )
+
+    # if not "ALL" grab from a dict constructed from constants
     options = {
         Region.r1j1b: tdub.constants.FEATURESET_1j1b,
         Region.r2j1b: tdub.constants.FEATURESET_2j1b,
