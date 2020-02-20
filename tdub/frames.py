@@ -342,9 +342,6 @@ def drop_cols(df: pd.DataFrame, *cols: str) -> None:
     df.drop(columns=in_both, inplace=True)
 
 
-pd.DataFrame.drop_cols = drop_cols
-
-
 def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) -> None:
     """drop columns that we avoid in classifiers
 
@@ -380,9 +377,6 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
     drop_cols(df, *to_drop)
 
 
-pd.DataFrame.drop_avoid = drop_avoid
-
-
 def drop_jet2(df: pd.DataFrame) -> None:
     """drop all columns with jet2 properties
 
@@ -412,9 +406,6 @@ def drop_jet2(df: pd.DataFrame) -> None:
     """
     j2cols = [col for col in df.columns if "jet2" in col]
     drop_cols(df, *j2cols)
-
-
-pd.DataFrame.drop_jet2 = drop_jet2
 
 
 def apply_weight(
@@ -458,9 +449,6 @@ def apply_weight(
     df.loc[:, cols] = df.loc[:, cols].multiply(df.loc[:, weight_name], axis="index")
 
 
-pd.DataFrame.apply_weight = apply_weight
-
-
 def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
     """multiply nominal and systematic weights by the campaign weight
 
@@ -492,9 +480,6 @@ def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None)
 
     """
     apply_weight(df, "weight_campaign", exclude=exclude)
-
-
-pd.DataFrame.apply_weight_campaign = apply_weight_campaign
 
 
 def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
@@ -533,4 +518,9 @@ def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) ->
     apply_weight(df, "weight_tptrw_tool", exclude=excludes)
 
 
+pd.DataFrame.drop_cols = drop_cols
+pd.DataFrame.drop_avoid = drop_avoid
+pd.DataFrame.drop_jet2 = drop_jet2
+pd.DataFrame.apply_weight = apply_weight
+pd.DataFrame.apply_weight_campaign = apply_weight_campaign
 pd.DataFrame.apply_weight_tptrw = apply_weight_tptrw
