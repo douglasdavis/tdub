@@ -13,7 +13,7 @@ import yaml
 
 # tdub
 from tdub.apply import FoldedResult, generate_npy
-from tdub.batch import gen_submit_script
+from tdub.batch import gen_apply_npy_script
 from tdub.features import create_parquet_files, prepare_from_parquet, FeatureSelector
 from tdub.frames import raw_dataframe, drop_cols
 from tdub.rex_art import run_stacks, run_pulls
@@ -200,7 +200,7 @@ def _pred2npy(args):
         outdir = pathlib.PosixPath(".")
 
     if args.bnl_dir is not None:
-        gen_submit_script(
+        gen_apply_npy_script(
             args.bnl_dir, args.folds, outdir, args.arr_name, args.bnl_script_name
         )
         return 0

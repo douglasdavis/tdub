@@ -315,6 +315,12 @@ def single_training(
     X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
         df, labels, weights, test_size=test_size, random_state=random_state, shuffle=True
     )
+
+    log.info("features training with:")
+    for c in X_train.columns:
+        log.info(" - %s" % c)
+    log.info("saving output to %s" % output_path.resolve())
+
     validation_data = [(X_test, y_test)]
     validation_w = w_test
     model = lgbm.LGBMClassifier(boosting_type="gbdt", **clf_params)
@@ -405,12 +411,12 @@ def _inspect_single_training(
     train_pred_bkg = train_pred[train_is_bkg]
 
     ## bins for proba and for pred
-    proba_bins = np.linspace(0, 1, 41)
+    proba_bins = np.linspace(0, 1, 36)
     proba_bc = bin_centers(proba_bins)
     proba_bw = proba_bins[1] - proba_bins[0]
     pred_xmin = min(test_pred_bkg.min(), train_pred_bkg.min())
     pred_xmax = max(test_pred_sig.max(), train_pred_sig.max())
-    pred_bins = np.linspace(pred_xmin, pred_xmax, 41)
+    pred_bins = np.linspace(pred_xmin, pred_xmax, 36)
     pred_bc = bin_centers(pred_bins)
     pred_bw = pred_bins[1] - pred_bins[0]
 
@@ -562,6 +568,11 @@ def folded_training(
     output_path.mkdir(exist_ok=True, parents=True)
     os.chdir(output_path)
 
+    log.info("features training with:")
+    for c in df.columns:
+        log.info(" - %s" % c)
+    log.info("saving output to %s" % output_path.resolve())
+
     fig_proba_hists, ax_proba_hists = plt.subplots()
     fig_pred_hists, ax_pred_hists = plt.subplots()
     fig_rocs, ax_rocs = plt.subplots()
@@ -624,11 +635,11 @@ def folded_training(
         w_bkg_test = w_test[y_test == 0]
         w_sig_train = w_train[y_train == 1]
         w_bkg_train = w_train[y_train == 0]
-        proba_bins = np.linspace(0, 1, 41)
+        proba_bins = np.linspace(0, 1, 36)
         proba_bc = bin_centers(proba_bins)
         predxmin = min(pred_bkg_test.min(), pred_bkg_train.min())
         predxmax = max(pred_sig_test.max(), pred_sig_train.max())
-        pred_bins = np.linspace(predxmin, predxmax, 41)
+        pred_bins = np.linspace(predxmin, predxmax, 36)
         pred_bc = bin_centers(pred_bins)
 
         ### Axis with all folds (proba histograms)
@@ -1008,7 +1019,7 @@ def gp_minimize_auc(
         fig, ax = plt.subplots()
         xmin = np.min(pred[y_test == 0])
         xmax = np.max(pred[y_test == 1])
-        bins = np.linspace(0, 1, 41)
+        bins = np.linspace(0, 1, 36)
         ax.hist(
             train_pred[y_train == 0],
             bins=bins,
@@ -1050,8 +1061,8 @@ def gp_minimize_auc(
         binning_sig_max = max(np.max(pred[y_test == 1]), np.max(train_pred[y_train == 1]))
         binning_bkg_min = min(np.min(pred[y_test == 0]), np.min(train_pred[y_train == 0]))
         binning_bkg_max = max(np.max(pred[y_test == 0]), np.max(train_pred[y_train == 0]))
-        binning_sig = np.linspace(0, 1, 41)
-        binning_bkg = np.linspace(0, 1, 41)
+        binning_sig = np.linspace(0, 1, 36)
+        binning_bkg = np.linspace(0, 1, 36)
 
         h_sig_test, err_sig_test = pygram11.histogram(
             pred[y_test == 1], bins=binning_sig, weights=w_test[y_test == 1]

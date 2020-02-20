@@ -17,8 +17,8 @@ notification    = Error
 notify_user     = ddavis@phy.duke.edu
 GetEnv          = True
 Executable      = {tdub_exe_path}
-Output          = .condor_stdout/job.out.apply-gennpy.$(cluster).$(process)
-Error           = .condor_stderr/job.err.apply-gennpy.$(cluster).$(process)
+Output          = logs/job.out.apply-gennpy.$(cluster).$(process)
+Error           = logs/job.err.apply-gennpy.$(cluster).$(process)
 Log             = /tmp/ddavis/log.$(cluster).$(process)
 request_memory  = 2.0G
 """
@@ -49,7 +49,7 @@ def parse_samples(usatlasdata_path: Union[str, os.PathLike]) -> List[pathlib.Pat
     return [p for p in path.iterdir() if (p.is_file() and p.suffix == ".root")]
 
 
-def gen_submit_script(
+def gen_apply_npy_script(
     input_dir: Union[str, os.PathLike],
     fold_dirs: List[Union[str, os.PathLike]],
     output_dir: Union[str, os.PathLike],
@@ -88,8 +88,8 @@ def gen_submit_script(
     """
     if script_name is None:
         script_name = "apply-gennpy.condor.submit"
-    pathlib.PosixPath(".condor_stderr").mkdir(exist_ok=True)
-    pathlib.PosixPath(".condor_stdout").mkdir(exist_ok=True)
+    log_dir = pathlib.PosixPath(os.getcwd()) / "logs"
+    log_dir.mkdir(exist_ok=True)
     output_script = pathlib.PosixPath(script_name)
     header = BNL_CONDOR_HEADER.format(tdub_exe_path=shutil.which("tdub"))
     folds = " ".join([str(pathlib.PosixPath(fold).resolve()) for fold in fold_dirs])
