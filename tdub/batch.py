@@ -87,7 +87,7 @@ def gen_apply_npy_script(
 
     """
     if script_name is None:
-        script_name = "apply-gennpy.condor.submit"
+        script_name = "apply-gennpy.condor.sub"
     log_dir = pathlib.PosixPath(os.getcwd()) / "logs"
     log_dir.mkdir(exist_ok=True)
     output_script = pathlib.PosixPath(script_name)
