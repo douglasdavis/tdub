@@ -546,7 +546,7 @@ def get_branches(
     return list(set(bs) ^ weights)
 
 
-def conservative_branches(file_name: FileLike, tree: str = "WtLoop_nominal") -> List[str]:
+def conservative_branches(file_name: FileOrFiles, tree: str = "WtLoop_nominal") -> List[str]:
     """get branches in a ROOT file that form a conservative minimum
 
     we define "conservative minimum" as the branches necessary for
@@ -556,7 +556,7 @@ def conservative_branches(file_name: FileLike, tree: str = "WtLoop_nominal") -> 
 
     Parameters
     ----------
-    file_name : str or os.PathLike
+    file_name : str or os.PathLike or list(str) or list(os.PathLike)
        the ROOT file name
     tree : str
        the ROOT tree name

@@ -96,6 +96,7 @@ def conservative_dataframe(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     entrysteps: Optional[Any] = None,
+    **kwargs,
 ) -> pd.DataFrame:
     """Construct a raw pandas flavored dataframe with conservative branches
 
@@ -114,6 +115,8 @@ def conservative_dataframe(
        weight branch (we make sure to grab it)
     entrysteps : Any, optional
        see the ``entrysteps`` keyword for ``uproot.iterate``
+    kwargs
+       extra keyword arguments passed to :py:func:`raw_dataframe`
 
     Returns
     -------
@@ -129,13 +132,15 @@ def conservative_dataframe(
     >>> df = conservative_dataframe(files)
 
     """
-    if isinstance(files, str):
-        bs = conservative_branches(files, tree)
-    else:
-        bs = conservative_branches(files[0], tree)
-    bs = list(set(bs) | set([weight_name]))
+    branches = conservative_branches(files, tree)
+    branches = sorted(set(branches) | set([weight_name]), key=str.lower)
     return raw_dataframe(
-        files, tree=tree, weight_name=weight_name, entrysteps=entrysteps, branches=bs
+        files,
+        tree=tree,
+        weight_name=weight_name,
+        entrysteps=entrysteps,
+        branches=branches,
+        **kwargs,
     )
 
 
