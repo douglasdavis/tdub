@@ -227,7 +227,7 @@ class FeatureSelector:
         if to_drop and and_drop:
             for d in to_drop:
                 log.info(f"dropping {d} because it's a feature with a single unique value")
-            self._df.and_drop(columns=to_drop, inplace=True)
+            self._df.drop(columns=to_drop, inplace=True)
 
     def check_collinearity(self, threshold: Optional[float] = None) -> None:
         """calculate the correlations of the features
