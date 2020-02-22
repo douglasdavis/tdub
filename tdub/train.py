@@ -28,6 +28,11 @@ try:
 except ImportError:
     class lgbm:
         LGBMClassifier = None
+try:
+    import xgboost as xgb
+except ImportError:
+    class xgb:
+        XGBClassifier = None
 # fmt: on
 
 # tdub
@@ -257,6 +262,7 @@ def single_training(
     random_state: int = 414,
     early_stopping_rounds: Optional[int] = None,
     extra_summary_entries: Optional[Dict[str, Any]] = None,
+    use_xgboost: bool = False,
 ) -> SingleTrainingResult:
     """Execute a single training with some parameters
 
@@ -282,6 +288,8 @@ def single_training(
        number of rounds to have no improvement for stopping training
     extra_summary_entries : dict, optional
        extra entries to save in the JSON output summary
+    use_xgboost : bool
+       use XGBoost classifier
 
     Examples
     --------
@@ -291,11 +299,7 @@ def single_training(
     >>> qfiles = quick_files("/path/to/data")
     >>> df, labels, weights = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
     >>> params = dict(
-    ...     boosting_type="gbdt",
-    ...     num_leaves=42,
     ...     learning_rate=0.05
-    ...     reg_alpha=0.2,
-    ...     reg_lambda=0.8,
     ...     max_depth=5,
     ... )
     >>> single_round(
@@ -323,24 +327,48 @@ def single_training(
 
     validation_data = [(X_test, y_test)]
     validation_w = w_test
-    model = lgbm.LGBMClassifier(boosting_type="gbdt", **clf_params)
-    model.fit(
-        X_train,
-        y_train,
-        sample_weight=w_train,
-        eval_set=validation_data,
-        eval_metric="auc",
-        verbose=20,
-        early_stopping_rounds=early_stopping_rounds,
-        eval_sample_weight=[validation_w],
-    )
+
+    if use_xgboost:
+        model = xgb.XGBClassifier(booster="gbtree", verbosity=1, **clf_params)
+        model.fit(
+            X_train,
+            y_train,
+            sample_weight=w_train,
+            eval_set=validation_data,
+            eval_metric="auc",
+            early_stopping_rounds=early_stopping_rounds,
+            sample_weight_eval_set=[validation_w],
+        )
+
+    else:
+        model = lgbm.LGBMClassifier(boosting_type="gbdt", **clf_params)
+        model.fit(
+            X_train,
+            y_train,
+            sample_weight=w_train,
+            eval_set=validation_data,
+            eval_metric="auc",
+            verbose=20,
+            early_stopping_rounds=early_stopping_rounds,
+            eval_sample_weight=[validation_w],
+        )
 
     fig_proba, ax_proba = plt.subplots()
     fig_pred, ax_pred = plt.subplots()
     fig_roc, ax_roc = plt.subplots()
 
     trainres = _inspect_single_training(
-        ax_proba, ax_pred, ax_roc, model, X_test, X_train, y_test, y_train, w_test, w_train,
+        ax_proba,
+        ax_pred,
+        ax_roc,
+        model,
+        X_test,
+        X_train,
+        y_test,
+        y_train,
+        w_test,
+        w_train,
+        is_xgb_model=use_xgboost,
     )
     fig_proba.savefig("proba.pdf")
     fig_pred.savefig("pred.pdf")
@@ -369,13 +397,14 @@ def _inspect_single_training(
     ax_proba: plt.Axes,
     ax_pred: plt.Axes,
     ax_roc: plt.Axes,
-    model: lgbm.LGBMClassifier,
+    model: Any,
     X_test: pd.DataFrame,
     X_train: np.ndarray,
     y_test: np.ndarray,
     y_train: np.ndarray,
     w_test: np.ndarray,
     w_train: np.ndarray,
+    is_xgb_model: bool = False,
 ) -> SingleTrainingResult:
     """inspect a single training round and make some plots"""
 
@@ -387,10 +416,16 @@ def _inspect_single_training(
     train_is_bkg = np.invert(train_is_sig)
 
     ## test and train output
-    test_proba = model.predict_proba(X_test)[:, 1]
-    test_pred = model.predict(X_test, raw_score=True)
-    train_proba = model.predict_proba(X_train)[:, 1]
-    train_pred = model.predict(X_train, raw_score=True)
+    if is_xgb_model:
+        test_proba = model.predict_proba(X_test)[:, 1]
+        test_pred = model.predict(X_test, output_margin=True)
+        train_proba = model.predict_proba(X_train)[:, 1]
+        train_pred = model.predict(X_train, output_margin=True)
+    else:
+        test_proba = model.predict_proba(X_test)[:, 1]
+        test_pred = model.predict(X_test, raw_score=True)
+        train_proba = model.predict_proba(X_train)[:, 1]
+        train_pred = model.predict(X_train, raw_score=True)
 
     ## test and train weights
     test_w_sig = w_test[test_is_sig]
