@@ -17,17 +17,6 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-try:
-    import pyarrow
-except ImportError:
-    pyarrow = None
-
-try:
-    import lightgbm as lgbm
-except ImportError:
-    lgbm = None
-
-
 # tdub
 from tdub.frames import iterative_selection, drop_cols
 from tdub.utils import quick_files, get_selection, get_avoids, Region
@@ -143,9 +132,9 @@ class FeatureSelector:
         self.default_clf_opts = dict(
             boosting_type="gbdt",
             importance_type=importance_type,
-            learning_rate=0.05,
+            learning_rate=0.1,
+            n_estimators=200,
             num_leaves=100,
-            n_estimators=500,
             max_depth=5,
         )
 
@@ -324,6 +313,8 @@ class FeatureSelector:
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
 
         """
+        import lightgbm as lgbm
+
         log.info("starting check_importances step")
         clf_opts = copy.deepcopy(self.default_clf_opts)
         if extra_clf_opts is not None:
@@ -356,7 +347,7 @@ class FeatureSelector:
                 eval_metric="auc",
                 eval_set=[(test_df, test_y)],
                 eval_sample_weight=[test_w],
-                early_stopping_rounds=15,
+                early_stopping_rounds=10,
                 verbose=20,
             )
             if extra_fit_opts is not None:
@@ -474,6 +465,8 @@ class FeatureSelector:
         >>> fs.check_iterative_remove_aucs(max_features=20)
 
         """
+        import lightgbm as lgbm
+
         log.info("Starting check_iterative_remove_aucs step")
         if self._candidates is None:
             log.error("candidates are not calculated; call check_candidates()")
@@ -577,6 +570,8 @@ class FeatureSelector:
         >>> fs.check_iterative_add_aucs(max_features=20)
 
         """
+        import lightgbm as lgbm
+
         log.info("starting check_iterative_add_aucs step")
         if self._candidates is None:
             log.error("candidates are not calculated; call check_candidates()")
@@ -658,7 +653,7 @@ class FeatureSelector:
         try:
             outdir.mkdir(exist_ok=False)
         except FileExistsError:
-            log.warn(f"{output_dir} already exists; contents will be overwritten")
+            log.warn(f"{outdir} already exists; contents will be overwritten")
 
         out_raw_aucs = outdir / "raw_aucs.txt"
         out_raw_tf = outdir / "raw_top_features.txt"
@@ -706,9 +701,11 @@ def create_parquet_files(
     >>> create_parquet_files("/path/to/root/files", "/path/to/pq/output", entrysteps="250 MB")
 
     """
-    if pyarrow is None:
-        log.error("pyarrow required, doing nothing")
-        return None
+    try:
+        import pyarrow
+    except ImportError:
+        log.error("pyarrow not installed, exiting")
+        exit(1)
     indir = str(PosixPath(qf_dir).resolve())
     qf = quick_files(indir)
     if out_dir is None:
@@ -802,9 +799,11 @@ def prepare_from_parquet(
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
 
     """
-    if pyarrow is None:
-        log.error("pyarrow required, doing nothing")
-        return None
+    try:
+        import pyarrow
+    except ImportError:
+        log.error("pyarrow not installed, exiting")
+        exit(1)
 
     if weight_scale is not None and weight_mean is not None:
         raise ValueError("weight_scale and weight_mean cannot be used together")
