@@ -16,7 +16,7 @@ from tdub.utils import bin_centers
 
 def setup_style():
     matplotlib.use("Agg")
-    matplotlib.rcParams["figure.figsize"] = (6, 5.25)
+    matplotlib.rcParams["figure.figsize"] = (6, 5.5)
     matplotlib.rcParams["axes.labelsize"] = 14
     matplotlib.rcParams["font.size"] = 12
     matplotlib.rcParams["xtick.top"] = True
