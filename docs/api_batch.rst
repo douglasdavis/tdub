@@ -11,11 +11,11 @@ Function Summary
 
 .. autosummary::
 
-   gen_submit_script
+   gen_apply_npy_script
    parse_samples
 
 Reference
 ^^^^^^^^^
 
-.. autofunction:: gen_submit_script
+.. autofunction:: gen_apply_npy_script
 .. autofunction:: parse_samples
