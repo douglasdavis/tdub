@@ -33,8 +33,8 @@ def prepare_padded(
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Prepare arrays for saving to ROOT histogram with over/underflow
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     content : :py:obj:`numpy.ndarray`
        the bin contents
     error : :py:obj:`numpy.ndarray`
@@ -62,7 +62,7 @@ def prepare_padded(
 def arrays2th1(
     content: np.ndarray, error: np.ndarray, bins: np.ndarray, title: str = "none"
 ) -> CustomTH1:
-    """create a TH1-like object built from arrays
+    """Create a TH1-like object built from arrays
 
     Parameters
     ----------
@@ -101,7 +101,7 @@ def df2th1(
     dfe: pd.DataFrame,
     weight_col: Optional[Union[List[str], str]] = None,
 ) -> Union[CustomTH1, Dict[str, CustomTH1]]:
-    """create a TH1-like object built from a dataframe structure
+    """Create a TH1-like object built from a dataframe structure
 
     Parameters
     ----------
@@ -163,7 +163,7 @@ def generate_from_df(
     nominal_weight: bool = True,
     systematic_weights: bool = False,
 ) -> Any:
-    """generate histogram(s) from a dataframe
+    """Generate histogram(s) from a dataframe
 
     Parameters
     ----------

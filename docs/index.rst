@@ -35,6 +35,7 @@ originate from `ROOT <https://root.cern/>`_ files).
    api_constants.rst
    api_frames.rst
    api_features.rst
+   api_hist.rst
    api_raw_art.rst
    api_rex_art.rst
    api_train.rst
