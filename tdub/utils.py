@@ -59,7 +59,7 @@ class Region(Enum):
 
     @staticmethod
     def from_str(s: str) -> "Region":
-        """get enum value for the given string
+        """Get enum value for the given string
 
         This function supports three ways to define a region; prefixed
         with "r", prefixed with "reg", or no prefix at all. For
@@ -184,7 +184,7 @@ class SampleInfo:
 def categorize_branches(
     source: Union[FileLike, Iterable[str]], tree: str = "WtLoop_nominal",
 ) -> Dict[str, List[str]]:
-    """categorize branches into a separate lists
+    """Categorize branches into a separate lists
 
     The categories:
 
@@ -196,8 +196,9 @@ def categorize_branches(
     ----------
     source : os.PathLike or str or Iterable(str)
        if iterable of strings, use that as list of branches, if
-       os.PathLike or str then get branches from ROOT file the
-       ``tree`` argument.
+       os.PathLike or str then the source is interpreted as a ROOT
+       file and we get the branches by passing the file and ``tree``
+       argument to :py:func:`get_branches`.
     tree : str, optional
        the tree name in the file if ``source`` is os.PathLike; this is
        ignored if ``source`` is an iterable of strings.
@@ -266,7 +267,7 @@ def categorize_branches(
 
 
 def quick_files(datapath: FileLike, campaign: Optional[str] = None) -> Dict[str, List[str]]:
-    """get a dictionary of ``{sample_str : file_list}`` for quick file access.
+    """Get a dictionary of ``{sample_str : file_list}`` for quick file access.
 
     The lists of files are sorted alphabetically. These types of
     samples are currently tested:
@@ -371,7 +372,7 @@ def quick_files(datapath: FileLike, campaign: Optional[str] = None) -> Dict[str,
 def files_for_tree(
     datapath: FileLike, sample_prefix: str, tree_name: str, campaign: Optional[str] = None,
 ) -> List[str]:
-    """get a list of files for the sample and desired tree
+    """Get a list of files for the sample and desired tree
 
     Parameters
     ----------
@@ -420,7 +421,7 @@ def files_for_tree(
 
 
 def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
-    """get bin centers given bin edges
+    """Get bin centers given bin edges
 
     Parameters
     ----------
@@ -451,7 +452,7 @@ def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
 def edges_and_centers(
     bins: Union[int, Iterable], range: Optional[Tuple[float, float]] = None
 ) -> np.array:
-    """create arrays for edges and bin centers
+    """Create arrays for edges and bin centers
 
     Parameters
     ----------
@@ -498,7 +499,7 @@ def get_branches(
     ignore_weights: bool = False,
     sort: bool = False,
 ) -> List[str]:
-    """get list of branches in a ROOT TTree
+    """Get list of branches in a ROOT TTree
 
     Parameters
     ----------
@@ -546,7 +547,7 @@ def get_branches(
 
 
 def conservative_branches(file_name: FileOrFiles, tree: str = "WtLoop_nominal") -> List[str]:
-    """get branches in a ROOT file that form a conservative minimum
+    """Get branches in a ROOT file that form a conservative minimum
 
     we define "conservative minimum" as the branches necessary for
     using our BDT infrastructure, so this conservative minimum
@@ -594,10 +595,11 @@ def conservative_branches(file_name: FileOrFiles, tree: str = "WtLoop_nominal") 
 
 
 def get_selection(region: Union[str, Region]) -> str:
-    """get the selection given a region
+    """Get the selection given a region
 
-    see :py:func:`tdub.utils.Region.from_str` for the compatible
-    strings.
+    See the tdub.constants module for the defition of the
+    selections. See :py:func:`tdub.utils.Region.from_str` for the
+    compatible strings.
 
     Parameters
     ----------
@@ -632,7 +634,11 @@ def get_selection(region: Union[str, Region]) -> str:
 
 
 def get_avoids(region: Union[str, Region]) -> List[str]:
-    """get the featuers to avoid for the given region
+    """Get the features to avoid for the given region.
+
+    See the tdub.constants module for defintion of the variables to
+    avoid. See :py:func:`tdub.utils.Region.from_str` for the
+    compatible strings.
 
     Parameters
     ----------
@@ -665,10 +671,11 @@ def get_avoids(region: Union[str, Region]) -> List[str]:
 
 
 def get_features(region: Union[str, Region]) -> List[str]:
-    """get the feature list for a region
+    """Get the feature list for a region
 
-    see :py:func:`tdub.utils.Region.from_str` for the compatible
-    strings.
+    See the tdub.constants module for the defition of the feature
+    lists. See :py:func:`tdub.utils.Region.from_str` for the
+    compatible strings.
 
     Parameters
     ----------
@@ -718,7 +725,11 @@ def get_features(region: Union[str, Region]) -> List[str]:
 
 
 def augment_features(region: Union[str, Region], to_add: List[str]) -> None:
-    """add some features to the existing lists
+    """Add some features to the existing lists
+
+    See the tdub.constants module for the defition of the feature
+    lists. See :py:func:`tdub.utils.Region.from_str` for the
+    compatible strings.
 
     Parameters
     ----------
@@ -755,7 +766,7 @@ def augment_features(region: Union[str, Region], to_add: List[str]) -> None:
 
 
 def override_features(table: Dict[str, List[str]]) -> None:
-    """override feature constants ``tdub.constants.FEATURESET_{1j1b, 2j1b, 2j2b}``
+    """Override feature constants ``tdub.constants.FEATURESET_{1j1b, 2j1b, 2j2b}``
 
     Given a dictionary of the form
 
