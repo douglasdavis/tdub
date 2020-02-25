@@ -11,9 +11,6 @@ import pandas as pd
 from uproot_methods.classes import TH1
 from pygram11 import fix1dmw
 
-# tdub
-from tdub.utils import categorize_branches
-
 
 class CustomTH1(TH1.Methods, list):
     """A TH1 like skeleton object"""

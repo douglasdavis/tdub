@@ -19,7 +19,7 @@ from sklearn.model_selection import train_test_split
 
 # tdub
 from tdub.frames import iterative_selection, drop_cols
-from tdub.utils import quick_files, get_selection, get_avoids, Region
+from tdub.utils import quick_files, get_selection, Region
 
 log = logging.getLogger(__name__)
 
@@ -110,13 +110,13 @@ class FeatureSelector:
             df.shape[0] == weights.shape[0]
         ), "df and weights must have the same number of entries"
 
-        ## hidden behind properties
+        # hidden behind properties
         self._df = df
         self._weights = weights
         self._labels = labels
         self._raw_features = df.columns.to_list()
 
-        ## completely hidden
+        # completely hidden
         self._nsig = self._labels[self._labels == 1].shape[0]
         self._nbkg = self._labels[self._labels == 0].shape[0]
         self._scale_pos_weight = self._nbkg / self._nsig
@@ -126,7 +126,7 @@ class FeatureSelector:
         # self._weights[self._labels == 1] *= self._sow_bkg / self._sow_sig
         # self._weights *= len(self._weights) / np.sum(self._weights)
 
-        ## public attributes
+        # public attributes
         self.name = name
         self.corr_threshold = corr_threshold
         self.default_clf_opts = dict(
@@ -138,8 +138,8 @@ class FeatureSelector:
             max_depth=5,
         )
 
-        ## Calculated later by some member functions
-        ## we hide these behind properties
+        # Calculated later by some member functions
+        # we hide these behind properties
         self._corr_matrix = None
         self._correlated = None
         self._importances = None
@@ -413,7 +413,7 @@ class FeatureSelector:
             log.info(f"{f} is in the top {n}; but correlations say drop it; closer look:")
             dropped_df = self.correlations.query("drop == '{f}'")
             for corr_feat in dropped_df.because.to_list():
-                if corr_feat not in drop_bc_corr:
+                if corr_feat not in drop_because_corr:
                     log.info("{corr_feat} will be kept without swap")
                 if features_ordered.index(f) < features_ordered.index(corr_feat):
                     log.info("{corr_feat} to be replaced with {f}")
@@ -424,8 +424,8 @@ class FeatureSelector:
             if f in n_top:
                 n_top.remove(f)
 
-        ## use dict to ensure we drop duplicates while preserving
-        ## order (python3.7 insertion order is preserved).
+        # use dict to ensure we drop duplicates while preserving
+        # order (python3.7 insertion order is preserved).
         temp_dict = {f: None for f in n_top}
         self._candidates = list(temp_dict.keys())
 
@@ -701,11 +701,6 @@ def create_parquet_files(
     >>> create_parquet_files("/path/to/root/files", "/path/to/pq/output", entrysteps="250 MB")
 
     """
-    try:
-        import pyarrow
-    except ImportError:
-        log.error("pyarrow not installed, exiting")
-        exit(1)
     indir = str(PosixPath(qf_dir).resolve())
     qf = quick_files(indir)
     if out_dir is None:
@@ -799,12 +794,6 @@ def prepare_from_parquet(
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
 
     """
-    try:
-        import pyarrow
-    except ImportError:
-        log.error("pyarrow not installed, exiting")
-        exit(1)
-
     if weight_scale is not None and weight_mean is not None:
         raise ValueError("weight_scale and weight_mean cannot be used together")
 

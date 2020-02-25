@@ -16,16 +16,15 @@ from pathlib import PosixPath
 
 from typing import Union, Iterable, Optional, Dict, List, Tuple
 
-FileLike = Union[str, os.PathLike]
-FileOrFiles = Union[List[FileLike], FileLike]
-
-
 # external
 import numpy as np
 import uproot
 
 # tdub
 import tdub.constants
+
+FileLike = Union[str, os.PathLike]
+FileOrFiles = Union[List[FileLike], FileLike]
 
 log = logging.getLogger(__name__)
 

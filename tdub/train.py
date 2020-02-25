@@ -17,7 +17,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import pygram11
-import formulate
 from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import auc, roc_auc_score, roc_curve
@@ -409,13 +408,13 @@ def _inspect_single_training(
     """inspect a single training round and make some plots"""
 
     # fmt: off
-    ## get the selection arrays
+    # get the selection arrays
     test_is_sig = y_test == 1
     test_is_bkg = np.invert(test_is_sig)
     train_is_sig = y_train == 1
     train_is_bkg = np.invert(train_is_sig)
 
-    ## test and train output
+    # test and train output
     if is_xgb_model:
         test_proba = model.predict_proba(X_test)[:, 1]
         test_pred = model.predict(X_test, output_margin=True)
@@ -427,48 +426,45 @@ def _inspect_single_training(
         train_proba = model.predict_proba(X_train)[:, 1]
         train_pred = model.predict(X_train, raw_score=True)
 
-    ## test and train weights
+    # test and train weights
     test_w_sig = w_test[test_is_sig]
     test_w_bkg = w_test[test_is_bkg]
     train_w_sig = w_train[train_is_sig]
     train_w_bkg = w_train[train_is_bkg]
 
-    ## test and train signal and background proba arrays
+    # test and train signal and background proba arrays
     test_proba_sig = test_proba[test_is_sig]
     test_proba_bkg = test_proba[test_is_bkg]
     train_proba_sig = train_proba[train_is_sig]
     train_proba_bkg = train_proba[train_is_bkg]
 
-    ## test and train signal and background pred arrays
+    # test and train signal and background pred arrays
     test_pred_sig = test_pred[test_is_sig]
     test_pred_bkg = test_pred[test_is_bkg]
     train_pred_sig = train_pred[train_is_sig]
     train_pred_bkg = train_pred[train_is_bkg]
 
-    ## bins for proba and for pred
+    # bins for proba and for pred
     proba_bins = np.linspace(0, 1, 36)
     proba_bc = bin_centers(proba_bins)
-    proba_bw = proba_bins[1] - proba_bins[0]
     pred_xmin = min(test_pred_bkg.min(), train_pred_bkg.min())
     pred_xmax = max(test_pred_sig.max(), train_pred_sig.max())
     pred_bins = np.linspace(pred_xmin, pred_xmax, 36)
     pred_bc = bin_centers(pred_bins)
-    pred_bw = pred_bins[1] - pred_bins[0]
 
-    ## calculate the proba histograms
+    # calculate the proba histograms
     test_h_proba_sig = pygram11.histogram(test_proba_sig, bins=proba_bins, density=True, weights=test_w_sig)
     test_h_proba_bkg = pygram11.histogram(test_proba_bkg, bins=proba_bins, density=True, weights=test_w_bkg)
     train_h_proba_sig = pygram11.histogram(train_proba_sig, bins=proba_bins, density=True, weights=train_w_sig)
     train_h_proba_bkg = pygram11.histogram(train_proba_bkg, bins=proba_bins, density=True, weights=train_w_bkg)
 
-    ## calculate the pred histograms
+    # calculate the pred histograms
     test_h_pred_sig = pygram11.histogram(test_pred_sig, bins=pred_bins, density=True, weights=test_w_sig)
     test_h_pred_bkg = pygram11.histogram(test_pred_bkg, bins=pred_bins, density=True, weights=test_w_bkg)
     train_h_pred_sig = pygram11.histogram(train_pred_sig, bins=pred_bins, density=True, weights=train_w_sig)
     train_h_pred_bkg = pygram11.histogram(train_pred_bkg, bins=pred_bins, density=True, weights=train_w_bkg)
 
-
-    ## plot the proba distributions
+    # plot the proba distributions
     ax_proba.hist(proba_bc, bins=proba_bins, weights=train_h_proba_sig[0],
                   label="Sig (train)", histtype="stepfilled", alpha=0.5, edgecolor="C0", color="C0")
     ax_proba.hist(proba_bc, bins=proba_bins, weights=train_h_proba_bkg[0],
@@ -482,21 +478,21 @@ def _inspect_single_training(
     ax_proba.set_ylabel("Arbitrary Units")
     ax_proba.set_xlabel("Classifier Response")
 
-    ## plot the pred distributions
+    # plot the pred distributions
     ax_pred.hist(pred_bc, bins=pred_bins, weights=train_h_pred_sig[0],
-                  label="Sig (train)", histtype="stepfilled", alpha=0.5, edgecolor="C0", color="C0")
+                 label="Sig (train)", histtype="stepfilled", alpha=0.5, edgecolor="C0", color="C0")
     ax_pred.hist(pred_bc, bins=pred_bins, weights=train_h_pred_bkg[0],
-                  label="Bkg (train)", histtype="step", hatch="///", edgecolor="C3", color="C3")
+                 label="Bkg (train)", histtype="step", hatch="///", edgecolor="C3", color="C3")
     ax_pred.errorbar(pred_bc, test_h_pred_sig[0], yerr=test_h_pred_sig[1],
-                      label="Sig (test)", color="C0", fmt="o", markersize=4)
+                     label="Sig (test)", color="C0", fmt="o", markersize=4)
     ax_pred.errorbar(pred_bc, test_h_pred_bkg[0], yerr=test_h_pred_bkg[1],
-                      label="Bkg (test)", color="C3", fmt="o", markersize=4)
+                     label="Bkg (test)", color="C3", fmt="o", markersize=4)
     ax_pred.set_ylim([0, 1.4 * ax_pred.get_ylim()[1]])
     ax_pred.legend(loc="upper right", ncol=2, frameon=False, numpoints=1)
     ax_pred.set_ylabel("Arbitrary Units")
     ax_pred.set_xlabel("Classifier Response")
 
-    ## plot the auc
+    # plot the auc
     fpr, tpr, thresholds = roc_curve(y_test, test_proba, sample_weight=w_test)
     roc_auc = auc(fpr, tpr)
     ax_roc.plot(fpr, tpr, lw=1, label=f"AUC = {roc_auc:0.3}")
@@ -675,9 +671,8 @@ def folded_training(
         predxmin = min(pred_bkg_test.min(), pred_bkg_train.min())
         predxmax = max(pred_sig_test.max(), pred_sig_train.max())
         pred_bins = np.linspace(predxmin, predxmax, 36)
-        pred_bc = bin_centers(pred_bins)
 
-        ### Axis with all folds (proba histograms)
+        # Axis with all folds (proba histograms)
         ax_proba_hists.hist(
             proba_sig_test,
             bins=proba_bins,
@@ -711,7 +706,7 @@ def folded_training(
             weights=w_bkg_train,
         )
 
-        ### Axis specific to the fold (proba histograms)
+        # Axis specific to the fold (proba histograms)
         fold_ax_proba.hist(
             proba_sig_train,
             bins=proba_bins,
@@ -761,7 +756,7 @@ def folded_training(
         )
         fold_ax_proba.set_ylim([0, 1.5 * fold_ax_proba.get_ylim()[1]])
 
-        ### Axis with all
+        # Axis with all
         ax_pred_hists.hist(
             pred_sig_test,
             bins=pred_bins,
@@ -1052,8 +1047,6 @@ def gp_minimize_auc(
 
         train_pred = fitted_model.predict_proba(X_train)[:, 1]
         fig, ax = plt.subplots()
-        xmin = np.min(pred[y_test == 0])
-        xmax = np.max(pred[y_test == 1])
         bins = np.linspace(0, 1, 36)
         ax.hist(
             train_pred[y_train == 0],
@@ -1092,10 +1085,6 @@ def gp_minimize_auc(
         fig.savefig("histograms.pdf")
         plt.close(fig)
 
-        binning_sig_min = min(np.min(pred[y_test == 1]), np.min(train_pred[y_train == 1]))
-        binning_sig_max = max(np.max(pred[y_test == 1]), np.max(train_pred[y_train == 1]))
-        binning_bkg_min = min(np.min(pred[y_test == 0]), np.min(train_pred[y_train == 0]))
-        binning_bkg_max = max(np.max(pred[y_test == 0]), np.max(train_pred[y_train == 0]))
         binning_sig = np.linspace(0, 1, 36)
         binning_bkg = np.linspace(0, 1, 36)
 

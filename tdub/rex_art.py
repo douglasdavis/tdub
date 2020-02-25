@@ -321,7 +321,7 @@ def stackem(
         expected_sum4band = np.hstack([expected_sum, expected_sum[-1]])
 
         if args.band_style == "hatch":
-            ax.fill_between(x=data.bins,y1=(expected_sum4band - yerrlo), y2=(expected_sum4band + yerrhi),
+            ax.fill_between(x=data.bins, y1=(expected_sum4band - yerrlo), y2=(expected_sum4band + yerrhi),
                             step="post", facecolor="none", hatch="////", edgecolor="cornflowerblue",
                             linewidth=0.0, zorder=50, label="Syst. Unc.")
             axr.fill_between(x=data.bins, y1=1 - yerrlo / expected_sum4band, y2=1 + yerrhi / expected_sum4band,

@@ -3,11 +3,10 @@ Module for handling dataframes
 """
 
 # stdlib
-from dataclasses import dataclass, field
 import logging
 import re
 
-from typing import Optional, Union, List, Any, Dict, Iterable
+from typing import Optional, Union, List, Any, Iterable
 
 # externals
 import pandas as pd
@@ -22,8 +21,6 @@ from tdub.utils import (
     conservative_branches,
     get_avoids,
     get_branches,
-    get_features,
-    get_selection,
 )
 
 

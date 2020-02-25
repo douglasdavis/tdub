@@ -27,8 +27,7 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="tdub", description="tdub CLI")
     subparsers = parser.add_subparsers(dest="action", help="")
     subparsers.metavar = "action           "
-    formatter = lambda prog: argparse.HelpFormatter(prog, max_help_position=60)
-    common_parser = argparse.ArgumentParser(add_help=False, formatter_class=formatter)
+    common_parser = argparse.ArgumentParser(add_help=False, formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=60))
     common_parser.add_argument("--debug", action="store_true", help="set logging level to debug")
 
     applygennpy = subparsers.add_parser("apply-gennpy", help="Calculate samples BDT response and save to .npy file", parents=[common_parser])
@@ -85,7 +84,7 @@ def parse_args():
     fselexecute.add_argument("-n", "--nlo-method", type=str, choices=["DR", "DS"], required=True, help="tW NLO sample")
     fselexecute.add_argument("-r", "--region", type=str, choices=["1j1b", "2j1b", "2j2b"], required=True, help="Region to process")
     fselexecute.add_argument("-t", "--type", type=str, dest="itype", choices=["split", "gain"], required=True, help="importance type")
-    fselexecute.add_argument("-o", "--out",  type=str, required=False, default="_auto", help="Output directory to save selection result (prepended with 'fsel_result.')")
+    fselexecute.add_argument("-o", "--out", type=str, required=False, default="_auto", help="Output directory to save selection result (prepended with 'fsel_result.')")
     fselexecute.add_argument("--corr-threshold", dest="corrt", type=float, default=0.85, help="Correlation threshold")
     fselexecute.add_argument("--importance-n-fits", dest="nfits", type=int, default=5, help="Number of fitting rounds for importance calc.")
     fselexecute.add_argument("--max-features", dest="maxf", type=int, default=25, help="maximum number of features to test iteratively")
