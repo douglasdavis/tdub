@@ -151,6 +151,7 @@ def iterative_selection(
     keep_category: Optional[str] = None,
     exclude_avoids: bool = False,
     use_campaign_weight: bool = False,
+    use_tptrw: bool = False,
     **iterate_opts,
 ) -> pd.DataFrame:
     """build a selected dataframe via uproot's iterate
@@ -193,6 +194,8 @@ def iterative_selection(
        potentially necessary if the samples were prepared without the
        campaign weight included in the product which forms the nominal
        weight
+    use_tptrw : bool
+       apply the top pt reweighting factor.
 
     Returns
     -------
@@ -224,6 +227,10 @@ def iterative_selection(
     weights_to_grab = set([weight_name])
     if use_campaign_weight:
         weights_to_grab.add("weight_campaign")
+        log.info("applying the campaign weight")
+    if use_tptrw:
+        weights_to_grab.add("weight_tptrw_tool")
+        log.info("applying the top pt reweighting factor")
     if branches is None:
         branches = set(get_branches(files, tree=tree))
     branches = set(branches)
@@ -255,9 +262,11 @@ def iterative_selection(
     dfs = []
     itr = uproot.pandas.iterate(files, tree, branches=list(read_branches), **iterate_opts)
     for i, df in enumerate(itr):
-        idf = df.query(selection)
         if use_campaign_weight:
-            apply_weight_campaign(idf)
+            apply_weight_campaign(df)
+        if use_tptrw:
+            apply_weight_tptrw(df)
+        idf = df.query(selection)
         idf = idf[keep]
         dfs.append(idf)
         log.debug(f"finished iteration {i}")
