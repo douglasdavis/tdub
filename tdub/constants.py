@@ -20,7 +20,7 @@ str: The pandas flavor selection string for the 2j2b region
 """
 
 
-FEATURESET_1j1b = sorted(
+FEATURESET_1j1b_TMVA = sorted(
     [
         "pTsys_lep1lep2jet1met",
         "mass_lep2jet1",
@@ -42,7 +42,7 @@ list(str): list of features we use for classifiers in the 1j1b region
 """
 
 
-FEATURESET_2j1b = sorted(
+FEATURESET_2j1b_TMVA = sorted(
     [
         "mass_lep1jet2",
         "psuedoContTagBin_jet1",
@@ -60,7 +60,7 @@ list(str): list of features we use for classifiers in the 2j1b region
 """
 
 
-FEATURESET_2j2b = sorted(
+FEATURESET_2j2b_TMVA = sorted(
     [
         "mass_lep1jet2",
         "mass_lep1jet1",
@@ -77,7 +77,7 @@ list(str): list of features we use for classifiers in the 2j2b region
 """
 
 
-FEATURESET_1j1b_LGBM = sorted(
+FEATURESET_1j1b = sorted(
     [
         "cent_lep1lep2",
         "deltapT_lep1_lep2",
@@ -99,18 +99,22 @@ list(str): list of features we use for classifiers in the 1j1b region
 """
 
 
-FEATURESET_2j1b_LGBM = sorted(
+FEATURESET_2j1b = sorted(
     [
-        "deltaR_lep1lep2_jet1jet2met",
-        "HT_jet1jet2",
+        # "deltaR_lep1lep2_jet1jet2met",
+        # "HT_jet1jet2",
+        # "mass_lep2jet1",
+        # "pT_jet2",
         "mass_lep1jet1",
         "mass_lep1jet2",
-        "mass_lep2jet1",
         "mass_lep2jet2",
         "psuedoContTagBin_jet1",
         "psuedoContTagBin_jet2",
-        "pT_jet2",
         "pTsys_lep1lep2jet1jet2met",
+        "HTratio_lep1lep2_lep1lep2jet1met",
+        "HTratio_lep1lep2_lep1lep2jet1jet2met"
+        # "pTHTratio_lep1lep2jet1met",
+        # "pTHTratio_lep1lep2jet1jet2met",
     ],
     key=str.lower,
 )
@@ -119,15 +123,16 @@ list(str): list of features we use for classifiers in the 2j1b region
 """
 
 
-FEATURESET_2j2b_LGBM = sorted(
+FEATURESET_2j2b = sorted(
     [
-        "deltaR_jet1_jet2",
+        # "deltaR_jet1_jet2",
         "mass_lep1jet1",
         "mass_lep1jet2",
         "mass_lep2jet1",
         "mass_lep2jet2",
         "pT_jet2",
         "pTsys_jet1jet2",
+        "pTsys_lep1lep2met",
     ],
     key=str.lower,
 )
