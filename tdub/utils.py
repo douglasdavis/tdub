@@ -931,19 +931,20 @@ def ks_twosample_binned(
 def chisquared_cdf_c(chi2: float, ndf: float) -> float:
     """Calculate :math:`\chi^2` probability from the value and degrees of freedom
 
-    See ROOT's ``TMath::Prob``/``ROOT::Math::chisquared_cdf_c``. To
-    quote ROOT's documentation:
+    See ROOT's ``TMath::Prob`` & ``ROOT::Math::chisquared_cdf_c``. Quoting
+    the ROOT documentation:
 
-    Computation of the probability for a certain :math:`chi^2` and
+    Computation of the probability for a certain :math:`\chi^2` and
     number of degrees of freedom (ndf). Calculations are based on the
     incomplete gamma function :math:`P(a,x)`, where
     :math:`a=\mathrm{ndf}/2` and :math:`x=\chi^2/2`.
 
     :math:`P(a,x)` represents the probability that the observed
     :math:`\chi^2` for a correct model should be less than the value
-    chi2. The returned probability corresponds to :math:`1-P(a,x)`,
-    which denotes the probability that an observed Chi-squared exceeds
-    the value :math:`chi^2` by chance, even for a correct model.
+    :math:`\chi^2`. The returned probability corresponds to
+    :math:`1-P(a,x)`, which denotes the probability that an observed
+    :math:`\chi^2` exceeds the value :math:`\chi^2` by chance, even
+    for a correct model.
 
     Parameters
     ----------
