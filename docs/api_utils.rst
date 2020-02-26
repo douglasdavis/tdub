@@ -21,6 +21,8 @@ Function Summary
    augment_features
    bin_centers
    categorize_branches
+   chisquared_cdf_c
+   chisquared_test
    conservative_branches
    edges_and_centers
    files_for_tree
@@ -47,6 +49,8 @@ Reference
 .. autofunction:: augment_features
 .. autofunction:: bin_centers
 .. autofunction:: categorize_branches
+.. autofunction:: chisquared_cdf_c
+.. autofunction:: chisquared_test
 .. autofunction:: conservative_branches
 .. autofunction:: edges_and_centers
 .. autofunction:: files_for_tree

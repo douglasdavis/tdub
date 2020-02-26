@@ -18,6 +18,7 @@ from typing import Union, Iterable, Optional, Dict, List, Tuple
 
 # external
 import numpy as np
+import scipy.special
 import uproot
 
 # tdub
@@ -546,7 +547,9 @@ def get_branches(
     return list(set(bs) ^ weights)
 
 
-def conservative_branches(file_name: FileOrFiles, tree: str = "WtLoop_nominal") -> List[str]:
+def conservative_branches(
+    file_name: FileOrFiles, tree: str = "WtLoop_nominal"
+) -> List[str]:
     """Get branches in a ROOT file that form a conservative minimum
 
     we define "conservative minimum" as the branches necessary for
@@ -923,3 +926,87 @@ def ks_twosample_binned(
     dfmax = float(np.max(np.abs(rsum1 - rsum2)))
     z = float(dfmax * math.sqrt(esum1 * esum2 / (esum1 + esum2)))
     return dfmax, kolmogorov_prob(z)
+
+
+def chisquared_cdf_c(chi2: float, ndf: float) -> float:
+    """Calculate :math:`\chi^2` probability from the value and degrees of freedom
+
+    See ROOT's ``TMath::Prob``/``ROOT::Math::chisquared_cdf_c``. To
+    quote ROOT's documentation:
+
+    Computation of the probability for a certain :math:`chi^2` and
+    number of degrees of freedom (ndf). Calculations are based on the
+    incomplete gamma function :math:`P(a,x)`, where
+    :math:`a=\mathrm{ndf}/2` and :math:`x=\chi^2/2`.
+
+    :math:`P(a,x)` represents the probability that the observed
+    :math:`\chi^2` for a correct model should be less than the value
+    chi2. The returned probability corresponds to :math:`1-P(a,x)`,
+    which denotes the probability that an observed Chi-squared exceeds
+    the value :math:`chi^2` by chance, even for a correct model.
+
+    Parameters
+    ----------
+    chi2 : float
+       the :math:`\chi^2` value
+    ndf : float
+       the degrees of freedom
+
+    Returns
+    -------
+    float
+       the :math:`\chi^2` probability
+
+    """
+    return scipy.special.gammaincc(0.5 * ndf, 0.5 * chi2)
+
+
+def chisquared_test(
+    h1: np.ndarray, err1: np.ndarray, h2: np.ndarray, err2: np.ndarray,
+) -> Tuple[float, float, float]:
+    """Perform :math:`\chi^2` test on two histograms
+
+    Parameters
+    ----------
+    h1 : :py:obj:`numpy.ndarray`
+       the first histogram bin contents
+    h2 : :py:obj:`numpy.ndarray`
+       the second histogram bin contents
+    err1 : :py:obj:`numpy.ndarray`
+       the first histogram bin errors
+    err2 : :py:obj:`numpy.ndarray`
+       the second histogram bin errors
+
+    Returns
+    -------
+    (float, int, float)
+       the :math:`\chi^2` test value, the degrees of freedom, and the probability
+
+    """
+    # remove 0 bin heights
+    badh1 = h1 * h1 == 0
+    badh2 = h2 * h2 == 0
+    good_bins = np.invert(np.logical_or(badh1, badh2))
+    histo1 = h1[good_bins]
+    histo2 = h2[good_bins]
+    error1 = err1[good_bins]
+    error2 = err2[good_bins]
+
+    # degrees of freedom
+    nbins = histo1.shape[0]
+    ndf = nbins - 1
+
+    # sums
+    sum1 = np.sum(histo1)
+    sum2 = np.sum(histo2)
+    sumw1 = np.sum(error1 * error1)
+    sumw2 = np.sum(error2 * error2)
+
+    # chi2 calculation
+    error1sq = error1 * error1
+    error2sq = error2 * error2
+    sigma = sum1 * sum2 * error2sq + sum2 * sum2 * error1sq
+    delta = sum2 * histo1 - sum1 * histo2
+    chi2 = np.sum(delta * delta / sigma)
+
+    return (chi2, ndf, chisquared_cdf_c(chi2, ndf))
