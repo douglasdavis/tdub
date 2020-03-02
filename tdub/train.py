@@ -407,6 +407,8 @@ def _inspect_single_training(
     y_train: np.ndarray,
     w_test: np.ndarray,
     w_train: np.ndarray,
+    nbins_proba: int = 30,
+    nbins_pred: int = 30,
     is_xgb_model: bool = False,
 ) -> SingleTrainingResult:
     """inspect a single training round and make some plots"""
@@ -449,11 +451,11 @@ def _inspect_single_training(
     train_pred_bkg = train_pred[train_is_bkg]
 
     # bins for proba and for pred
-    proba_bins = np.linspace(0, 1, 36)
+    proba_bins = np.linspace(0, 1, nbins_proba + 1)
     proba_bc = bin_centers(proba_bins)
     pred_xmin = min(test_pred_bkg.min(), train_pred_bkg.min())
     pred_xmax = max(test_pred_sig.max(), train_pred_sig.max())
-    pred_bins = np.linspace(pred_xmin, pred_xmax, 36)
+    pred_bins = np.linspace(pred_xmin, pred_xmax, nbins_pred + 1)
     pred_bc = bin_centers(pred_bins)
 
     # calculate the proba histograms

@@ -25,7 +25,9 @@ import uproot
 import tdub.constants
 
 FileLike = Union[str, os.PathLike]
+PathLike = Union[str, os.PathLike]
 FileOrFiles = Union[List[FileLike], FileLike]
+PathOrPaths = Union[List[PathLike], PathLike]
 
 log = logging.getLogger(__name__)
 
