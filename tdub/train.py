@@ -387,6 +387,12 @@ def single_training(
     summary["features"] = [c for c in df.columns]
     summary["set_params"] = clf_params
     summary["all_params"] = model.get_params()
+    summary["best_iteration"] = -1
+    if early_stopping_rounds is not None:
+        if use_xgboost:
+            summary["best_iteration"] = int(model.best_iteration)
+        else:
+            summary["best_iteration"] = int(model.best_iteration_)
     if extra_summary_entries is not None:
         for k, v in extra_summary_entries.items():
             summary[k] = v
@@ -569,7 +575,7 @@ def folded_training(
 
     Returns
     -------
-    neg_roc_score : float
+    negative_roc_score : float
        -1 times the mean area under the ROC curve (AUC)
 
     Examples
@@ -608,6 +614,12 @@ def folded_training(
     log.info("features training with:")
     for c in df.columns:
         log.info(" - %s" % c)
+
+    log.info("model parameters:")
+    for k, v in params.items():
+        if v is not None:
+            log.info(f"{k:>20} | {v:<12}")
+
     log.info("saving output to %s" % output_path.resolve())
 
     fig_proba_hists, ax_proba_hists = plt.subplots()
@@ -904,8 +916,8 @@ def folded_training(
         json.dump(summary, f, indent=4)
 
     os.chdir(starting_dir)
-    neg_roc_score = -1.0 * np.mean(aucs)
-    return neg_roc_score
+    negative_roc_score = -1.0 * np.mean(aucs)
+    return negative_roc_score
 
 
 def gp_minimize_auc(
