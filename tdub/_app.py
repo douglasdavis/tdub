@@ -17,8 +17,7 @@ from tdub.batch import gen_apply_npy_script
 from tdub.features import create_parquet_files, prepare_from_parquet, FeatureSelector
 from tdub.frames import raw_dataframe, drop_cols
 from tdub.rex_art import run_stacks, run_pulls
-from tdub.train import gp_minimize_auc, folded_training, prepare_from_root
-from tdub.utils import SampleInfo, quick_files, override_features
+from tdub.utils import SampleInfo, quick_files
 from tdub import setup_logging
 
 
@@ -55,24 +54,6 @@ def parse_args():
     rexstacks.add_argument("--band-style", type=str, choices=["hatch", "shade"], default="hatch", help="systematic band style")
     rexstacks.add_argument("--legend-ncol", type=int, choices=[1, 2], default=1, help="number of legend columns")
 
-    trainfold = subparsers.add_parser("train-fold", help="Perform a folded training", parents=[common_parser])
-    trainfold.add_argument("optimdir", type=str, help="directory containing optimization information")
-    trainfold.add_argument("datadir", type=str, help="Directory with ROOT files")
-    trainfold.add_argument("-o", "--out-dir", type=str, default="_folded", help="output directory for saving optimizatin results")
-    trainfold.add_argument("-s", "--seed", type=int, default=414, help="random seed for folding")
-    trainfold.add_argument("-n", "--n-splits", type=int, default=3, help="number of splits for folding")
-    trainfold.add_argument("-r", "--esr", type=int, default=15, help="early stopping rounds")
-    trainfold.add_argument("--override-features", type=str, help="a YAML file containing feature lists for overriding default features")
-
-    trainoptimize = subparsers.add_parser("train-optimize", help="Gaussian processes minimization for HP optimization", parents=[common_parser])
-    trainoptimize.add_argument("region", type=str, help="Region to train", choices=["1j1b", "2j1b", "2j2b"])
-    trainoptimize.add_argument("nlomethod", type=str, help="NLO method samples to use", choices=["DR", "DS", "Both"])
-    trainoptimize.add_argument("datadir", type=str, help="Directory with ROOT files")
-    trainoptimize.add_argument("-o", "--out-dir", type=str, default="_optim", help="output directory for saving optimizatin results")
-    trainoptimize.add_argument("-n", "--n-calls", type=int, default=15, help="number of calls for the optimization procedure")
-    trainoptimize.add_argument("-r", "--esr", type=int, default=15, help="early stopping rounds for the training")
-    trainoptimize.add_argument("--override-features", type=str, help="a YAML file containing feature lists for overriding default features")
-
     fselprepare = subparsers.add_parser("fsel-prepare", help="Prepare a set of parquet files for feature selection", parents=[common_parser])
     fselprepare.add_argument("-i", "--in", dest="indir", type=str, required=True, help="Directory containing ROOT files")
     fselprepare.add_argument("-o", "--out", dest="outdir", type=str, required=True, help="Output directory to save parquet files")
@@ -95,20 +76,6 @@ def parse_args():
 
     # fmt: on
     return (parser.parse_args(), parser)
-
-
-def _optimize(args):
-    if args.override_features:
-        with pathlib.PosixPath(args.override_features).open("r") as f:
-            override_features(yaml.safe_load(f))
-    return gp_minimize_auc(
-        args.datadir,
-        args.region,
-        args.nlomethod,
-        output_dir=args.out_dir,
-        n_calls=args.n_calls,
-        esr=args.esr,
-    )
 
 
 def _fselprepare(args):
@@ -146,38 +113,6 @@ def _fselexecute(args):
     fs.check_iterative_remove_aucs(max_features=args.maxf)
     fs.check_iterative_add_aucs(max_features=args.maxf)
     fs.save_result()
-
-
-def _foldedtraining(args):
-    if args.override_features:
-        with pathlib.PosixPath(args.override_features).open("r") as f:
-            override_features(yaml.safe_load(f))
-    with open(f"{args.optimdir}/summary.json", "r") as f:
-        summary = json.load(f)
-    nlo_method = summary["nlo_method"]
-    qfiles = quick_files(f"{args.datadir}")
-    if nlo_method == "DR":
-        tW_files = qfiles["tW_DR"]
-    elif nlo_method == "DS":
-        tW_files = qfiles["tW_DS"]
-    elif nlo_method == "Both":
-        tW_files = qfiles["tW_DR"] + qfiles["tW_DS"]
-        tW_files.sort()
-    else:
-        raise ValueError("nlo_method must be 'DR' or 'DS' or 'Both'")
-
-    df, labels, weights = prepare_from_root(tW_files, qfiles["ttbar"], summary["region"])
-    folded_training(
-        df,
-        labels,
-        weights,
-        summary["best_params"],
-        {"verbose": 20, "early_stopping_rounds": args.esr},
-        args.out_dir,
-        summary["region"],
-        kfold_kw={"n_splits": args.n_splits, "shuffle": True, "random_state": args.seed},
-    )
-    return 0
 
 
 def _pred2npy(args):

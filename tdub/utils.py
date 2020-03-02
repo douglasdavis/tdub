@@ -931,7 +931,7 @@ def ks_twosample_binned(
 
 
 def chisquared_cdf_c(chi2: float, ndf: float) -> float:
-    """Calculate :math:`\chi^2` probability from the value and degrees of freedom
+    r"""Calculate :math:`\chi^2` probability from the value and degrees of freedom
 
     See ROOT's ``TMath::Prob`` & ``ROOT::Math::chisquared_cdf_c``. Quoting
     the ROOT documentation:
@@ -967,7 +967,7 @@ def chisquared_cdf_c(chi2: float, ndf: float) -> float:
 def chisquared_test(
     h1: np.ndarray, err1: np.ndarray, h2: np.ndarray, err2: np.ndarray,
 ) -> Tuple[float, float, float]:
-    """Perform :math:`\chi^2` test on two histograms
+    r"""Perform :math:`\chi^2` test on two histograms
 
     Parameters
     ----------
@@ -984,7 +984,6 @@ def chisquared_test(
     -------
     (float, int, float)
        the :math:`\chi^2` test value, the degrees of freedom, and the probability
-
     """
     # remove 0 bin heights
     badh1 = h1 * h1 == 0
