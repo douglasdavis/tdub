@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest, macOS-latest]
-        python-version: [3.7, 3.8]
+        python-version: [3.7]
     runs-on: ${{matrix.platform}}
     steps:
     - uses: actions/checkout@master
