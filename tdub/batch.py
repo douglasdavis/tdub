@@ -50,6 +50,7 @@ def parse_samples(usatlasdata_path: Union[str, os.PathLike]) -> List[pathlib.Pat
 
 
 def gen_apply_npy_script(
+    exe: str,
     input_dir: Union[str, os.PathLike],
     fold_dirs: List[Union[str, os.PathLike]],
     output_dir: Union[str, os.PathLike],
@@ -60,6 +61,8 @@ def gen_apply_npy_script(
 
     Parameters
     ----------
+    exe : str
+       executable string
     input_dir : str or os.PathLike
        directory containing ROOT files
     fold_dirs : list(str) or list(os.PathLike)
@@ -87,18 +90,18 @@ def gen_apply_npy_script(
 
     """
     if script_name is None:
-        script_name = "apply-gennpy.condor.sub"
+        script_name = "apply-gen-npy.condor.sub"
     log_dir = pathlib.PosixPath(os.getcwd()) / "logs"
     log_dir.mkdir(exist_ok=True)
     output_script = pathlib.PosixPath(script_name)
-    header = BNL_CONDOR_HEADER.format(tdub_exe_path=shutil.which("tdub"))
-    folds = " ".join([str(pathlib.PosixPath(fold).resolve()) for fold in fold_dirs])
-    action = "apply-gennpy"
+    header = BNL_CONDOR_HEADER.format(tdub_exe_path=exe)
+    folds = " -f ".join([str(pathlib.PosixPath(fold).resolve()) for fold in fold_dirs])
+    action = "apply-gen-npy"
     outdir = pathlib.PosixPath(output_dir)
     outdir.mkdir(exist_ok=True, parents=True)
     with output_script.open("w") as f:
         print(header, file=f)
         for sample in parse_samples(input_dir):
-            opts = f"--single-file {sample.resolve()} -f {folds} -n {arr_name} -o {outdir.resolve()}"
+            opts = f"--single {sample.resolve()} -f {folds} -n {arr_name} -o {outdir.resolve()}"
             print(f"Arguments = {action} {opts}\nQueue\n\n", file=f)
     log.info(f"generated condor submission script {output_script}")
