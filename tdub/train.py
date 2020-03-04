@@ -492,7 +492,7 @@ def _inspect_single_training(
     ax_proba.hist(proba_bc, bins=proba_bins, weights=train_h_proba_sig[0],
                   label="Sig (train)", histtype="stepfilled", alpha=0.5, edgecolor="C0", color="C0")
     ax_proba.hist(proba_bc, bins=proba_bins, weights=train_h_proba_bkg[0],
-                  label="Bkg (train)", histtype="step", hatch="///", edgecolor="C3", color="C3")
+                  label="Bkg (train)", histtype="stepfilled", alpha=0.4, edgecolor="C3", color="C3")
     ax_proba.errorbar(proba_bc, test_h_proba_sig[0], yerr=test_h_proba_sig[1],
                       label="Sig (test)", color="C0", fmt="o", markersize=4)
     ax_proba.errorbar(proba_bc, test_h_proba_bkg[0], yerr=test_h_proba_bkg[1],
@@ -506,7 +506,7 @@ def _inspect_single_training(
     ax_pred.hist(pred_bc, bins=pred_bins, weights=train_h_pred_sig[0],
                  label="Sig (train)", histtype="stepfilled", alpha=0.5, edgecolor="C0", color="C0")
     ax_pred.hist(pred_bc, bins=pred_bins, weights=train_h_pred_bkg[0],
-                 label="Bkg (train)", histtype="step", hatch="///", edgecolor="C3", color="C3")
+                 label="Bkg (train)", histtype="stepfilled", alpha=0.4, edgecolor="C3", color="C3")
     ax_pred.errorbar(pred_bc, test_h_pred_sig[0], yerr=test_h_pred_sig[1],
                      label="Sig (test)", color="C0", fmt="o", markersize=4)
     ax_pred.errorbar(pred_bc, test_h_pred_bkg[0], yerr=test_h_pred_bkg[1],
@@ -646,6 +646,7 @@ def folded_training(
     fold_number = 0
     nfits = 0
     for train_idx, test_idx in folder.split(df):
+        # fmt: off
         X_train, X_test = df.iloc[train_idx], df.iloc[test_idx]
         y_train, y_test = labels[train_idx], labels[test_idx]
         w_train, w_test = weights[train_idx], weights[test_idx]
@@ -669,9 +670,7 @@ def folded_training(
             **fit_kw,
         )
 
-        joblib.dump(
-            fitted_model, f"model_fold{fold_number}.joblib.gz", compress=("gzip", 3)
-        )
+        joblib.dump(fitted_model, f"model_fold{fold_number}.joblib.gz", compress=("gzip", 3))
 
         nfits += 1
         importances += fitted_model.feature_importances_
@@ -696,162 +695,55 @@ def folded_training(
         w_bkg_test = w_test[y_test == 0]
         w_sig_train = w_train[y_train == 1]
         w_bkg_train = w_train[y_train == 0]
-        proba_bins = np.linspace(0, 1, 36)
+        proba_bins = np.linspace(0, 1, 31)
         proba_bc = bin_centers(proba_bins)
         predxmin = min(pred_bkg_test.min(), pred_bkg_train.min())
         predxmax = max(pred_sig_test.max(), pred_sig_train.max())
-        pred_bins = np.linspace(predxmin, predxmax, 36)
+        pred_bins = np.linspace(predxmin, predxmax, 31)
 
         # Axis with all folds (proba histograms)
-        ax_proba_hists.hist(
-            proba_sig_test,
-            bins=proba_bins,
-            label=f"F{fold_number} Sig. (test)",
-            density=True,
-            histtype="step",
-            weights=w_sig_test,
-        )
-        ax_proba_hists.hist(
-            proba_bkg_test,
-            bins=proba_bins,
-            label=f"F{fold_number} Bkg. (test)",
-            density=True,
-            histtype="step",
-            weights=w_bkg_test,
-        )
-        ax_proba_hists.hist(
-            proba_sig_train,
-            bins=proba_bins,
-            label=f"F{fold_number} Sig. (train)",
-            density=True,
-            histtype="step",
-            weights=w_sig_train,
-        )
-        ax_proba_hists.hist(
-            proba_bkg_train,
-            bins=proba_bins,
-            label=f"F{fold_number} Bkg. (train)",
-            density=True,
-            histtype="step",
-            weights=w_bkg_train,
-        )
+        ax_proba_hists.hist(proba_sig_test, bins=proba_bins, label=f"F{fold_number} Sig. (test)",
+                            density=True, histtype="step", weights=w_sig_test)
+        ax_proba_hists.hist(proba_bkg_test, bins=proba_bins, label=f"F{fold_number} Bkg. (test)",
+                            density=True, histtype="step", weights=w_bkg_test)
+        ax_proba_hists.hist(proba_sig_train, bins=proba_bins, label=f"F{fold_number} Sig. (train)",
+                            density=True, histtype="step", weights=w_sig_train)
+        ax_proba_hists.hist(proba_bkg_train, bins=proba_bins, label=f"F{fold_number} Bkg. (train)",
+                            density=True, histtype="step", weights=w_bkg_train)
 
         # Axis specific to the fold (proba histograms)
-        fold_ax_proba.hist(
-            proba_sig_train,
-            bins=proba_bins,
-            label=f"F{fold_number} Sig. (train)",
-            weights=w_sig_train,
-            density=True,
-            histtype="stepfilled",
-            color="C0",
-            edgecolor="C0",
-            alpha=0.5,
-            linewidth=1,
-        )
-        fold_ax_proba.hist(
-            proba_bkg_train,
-            bins=proba_bins,
-            label=f"F{fold_number} Bkg. (train)",
-            weights=w_bkg_train,
-            density=True,
-            histtype="step",
-            hatch="//",
-            edgecolor="C3",
-            linewidth=1,
-        )
-        train_h_sig = pygram11.histogram(
-            proba_sig_test, bins=proba_bins, weights=w_sig_test, flow=False, density=True
-        )
-        train_h_bkg = pygram11.histogram(
-            proba_bkg_test, bins=proba_bins, weights=w_bkg_test, flow=False, density=True
-        )
-        fold_ax_proba.errorbar(
-            proba_bc,
-            train_h_sig[0],
-            yerr=train_h_sig[1],
-            color="C0",
-            fmt="o",
-            label=f"F{fold_number} Sig. (test)",
-            markersize=4,
-        )
-        fold_ax_proba.errorbar(
-            proba_bc,
-            train_h_bkg[0],
-            yerr=train_h_bkg[1],
-            color="C3",
-            fmt="o",
-            label=f"F{fold_number} Bkg. (test)",
-            markersize=4,
-        )
+        fold_ax_proba.hist(proba_sig_train, bins=proba_bins, label=f"F{fold_number} Sig. (train)", density=True,
+                           weights=w_sig_train, histtype="stepfilled", color="C0", edgecolor="C0", alpha=0.5, linewidth=1)
+        fold_ax_proba.hist(proba_bkg_train, bins=proba_bins, label=f"F{fold_number} Bkg. (train)", density=True,
+                           weights=w_bkg_train, histtype="stepfilled", color="C3", edgecolor="C3", alpha=0.4, linewidth=1)
+
+        train_h_sig = pygram11.histogram(proba_sig_test, bins=proba_bins, weights=w_sig_test, flow=False, density=True)
+        train_h_bkg = pygram11.histogram(proba_bkg_test, bins=proba_bins, weights=w_bkg_test, flow=False, density=True)
+
+        fold_ax_proba.errorbar(proba_bc, train_h_sig[0], yerr=train_h_sig[1], markersize=4,
+                               color="C0", fmt="o", label=f"F{fold_number} Sig. (test)")
+        fold_ax_proba.errorbar(proba_bc, train_h_bkg[0], yerr=train_h_bkg[1], markersize=4,
+                               color="C3", fmt="o", label=f"F{fold_number} Bkg. (test)")
         fold_ax_proba.set_ylim([0, 1.5 * fold_ax_proba.get_ylim()[1]])
 
         # Axis with all
-        ax_pred_hists.hist(
-            pred_sig_test,
-            bins=pred_bins,
-            label=f"F{fold_number} Sig. (test)",
-            density=True,
-            histtype="step",
-            weights=w_sig_test,
-        )
-        ax_pred_hists.hist(
-            pred_bkg_test,
-            bins=pred_bins,
-            label=f"F{fold_number} Bkg. (test)",
-            density=True,
-            histtype="step",
-            weights=w_bkg_test,
-        )
-        ax_pred_hists.hist(
-            pred_sig_train,
-            bins=pred_bins,
-            label=f"F{fold_number} Sig. (train)",
-            density=True,
-            histtype="step",
-            weights=w_sig_train,
-        )
-        ax_pred_hists.hist(
-            pred_bkg_train,
-            bins=pred_bins,
-            label=f"F{fold_number} Bkg. (train)",
-            density=True,
-            histtype="step",
-            weights=w_bkg_train,
-        )
+        ax_pred_hists.hist(pred_sig_test, bins=pred_bins, label=f"F{fold_number} Sig. (test)",
+                           density=True, histtype="step", weights=w_sig_test)
+        ax_pred_hists.hist(pred_bkg_test, bins=pred_bins, label=f"F{fold_number} Bkg. (test)",
+                           density=True, histtype="step", weights=w_bkg_test)
+        ax_pred_hists.hist(pred_sig_train, bins=pred_bins, label=f"F{fold_number} Sig. (train)",
+                           density=True, histtype="step", weights=w_sig_train)
+        ax_pred_hists.hist(pred_bkg_train, bins=pred_bins, label=f"F{fold_number} Bkg. (train)",
+                           density=True, histtype="step", weights=w_bkg_train)
 
-        fold_ax_pred.hist(
-            pred_sig_test,
-            bins=pred_bins,
-            label=f"F{fold_number} Sig. (test)",
-            density=True,
-            histtype="step",
-            weights=w_sig_test,
-        )
-        fold_ax_pred.hist(
-            pred_bkg_test,
-            bins=pred_bins,
-            label=f"F{fold_number} Bkg. (test)",
-            density=True,
-            histtype="step",
-            weights=w_bkg_test,
-        )
-        fold_ax_pred.hist(
-            pred_sig_train,
-            bins=pred_bins,
-            label=f"F{fold_number} Sig. (train)",
-            density=True,
-            histtype="step",
-            weights=w_sig_train,
-        )
-        fold_ax_pred.hist(
-            pred_bkg_train,
-            bins=pred_bins,
-            label=f"F{fold_number} Bkg. (train)",
-            density=True,
-            histtype="step",
-            weights=w_bkg_train,
-        )
+        fold_ax_pred.hist(pred_sig_test, bins=pred_bins, label=f"F{fold_number} Sig. (test)",
+                          density=True, histtype="step", weights=w_sig_test)
+        fold_ax_pred.hist(pred_bkg_test, bins=pred_bins, label=f"F{fold_number} Bkg. (test)",
+                          density=True, histtype="step", weights=w_bkg_test)
+        fold_ax_pred.hist(pred_sig_train, bins=pred_bins, label=f"F{fold_number} Sig. (train)",
+                          density=True, histtype="step", weights=w_sig_train)
+        fold_ax_pred.hist(pred_bkg_train, bins=pred_bins, label=f"F{fold_number} Bkg. (train)",
+                          density=True, histtype="step", weights=w_bkg_train)
         fold_ax_pred.set_ylim([0, 1.5 * fold_ax_pred.get_ylim()[1]])
 
         fpr, tpr, thresholds = roc_curve(y_test, test_proba, sample_weight=w_test)
@@ -859,9 +751,7 @@ def folded_training(
         tprs[-1][0] = 0.0
         roc_auc = auc(fpr, tpr)
         aucs.append(roc_auc)
-        ax_rocs.plot(
-            fpr, tpr, lw=1, alpha=0.45, label=f"fold {fold_number}, AUC = {roc_auc:0.3}"
-        )
+        ax_rocs.plot(fpr, tpr, lw=1, alpha=0.45, label=f"fold {fold_number}, AUC = {roc_auc:0.3}")
 
         fold_ax_proba.set_ylabel("Arb. Units")
         fold_ax_proba.set_xlabel("Classifier Output")
@@ -877,6 +767,7 @@ def folded_training(
         plt.close(fold_fig_proba)
         plt.close(fold_fig_pred)
 
+        # fmt: on
         fold_number += 1
 
     relative_importances = importances / nfits
@@ -1084,7 +975,7 @@ def gp_minimize_auc(
 
         train_pred = fitted_model.predict_proba(X_train)[:, 1]
         fig, ax = plt.subplots()
-        bins = np.linspace(0, 1, 36)
+        bins = np.linspace(0, 1, 31)
         ax.hist(
             train_pred[y_train == 0],
             bins=bins,
@@ -1122,8 +1013,8 @@ def gp_minimize_auc(
         fig.savefig("histograms.pdf")
         plt.close(fig)
 
-        binning_sig = np.linspace(0, 1, 36)
-        binning_bkg = np.linspace(0, 1, 36)
+        binning_sig = np.linspace(0, 1, 31)
+        binning_bkg = np.linspace(0, 1, 31)
 
         h_sig_test, err_sig_test = pygram11.histogram(
             pred[y_test == 1], bins=binning_sig, weights=w_test[y_test == 1]
