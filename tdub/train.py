@@ -359,6 +359,7 @@ def single_training(
     fig_proba, ax_proba = plt.subplots()
     fig_pred, ax_pred = plt.subplots()
     fig_roc, ax_roc = plt.subplots()
+    fig_imp, (ax_imp_gain, ax_imp_split) = plt.subplots(2, 1)
 
     trainres = _inspect_single_training(
         ax_proba,
@@ -373,12 +374,22 @@ def single_training(
         w_train,
         is_xgb_model=use_xgboost,
     )
+
+    if not use_xgboost:
+        lgbm.plot_importance(model, ax=ax_imp_gain, importance_type="gain")
+        lgbm.plot_importance(model, ax=ax_imp_split, importance_type="split")
+        ax_imp_gain.set_xlabel("Importance (gain)")
+        ax_imp_split.set_xlabel("Importance (split)")
+        ax_imp_gain.set_title("")
+        ax_imp_split.set_title("")
+        fig_imp.subplots_adjust(left=0.475, top=0.975, bottom=0.09, right=0.925)
+        fig_imp.savefig("imp.pdf")
+
     fig_proba.savefig("proba.pdf")
     fig_pred.savefig("pred.pdf")
     fig_roc.savefig("roc.pdf")
 
-    summary: Dict[str, Any] = {}
-    summary["auc"] = trainres.auc
+    summary = {"auc": round(trainres.auc, 5)}
     summary["bad_ks"] = trainres.bad_ks
     summary["ks_test_sig"] = trainres.ks_test_sig
     summary["ks_test_bkg"] = trainres.ks_test_bkg
@@ -399,6 +410,7 @@ def single_training(
     with open("summary.json", "w") as f:
         json.dump(summary, f, indent=4)
     os.chdir(starting_dir)
+
     return trainres
 
 
@@ -920,6 +932,13 @@ def folded_training(
     return negative_roc_score
 
 
+_best_fit = None
+_best_auc = None
+_best_parameters = None
+_best_paramdict = None
+_ifit = None
+
+
 def gp_minimize_auc(
     data_dir: str,
     region: Union[Region, str],
@@ -1004,35 +1023,35 @@ def gp_minimize_auc(
     save_dir.mkdir(exist_ok=True, parents=True)
     os.chdir(save_dir)
 
-    global best_fit
-    global best_auc
-    global best_parameters
-    global best_paramdict
-    global ifit
-    best_fit = 0
-    best_auc = 0.0
-    best_parameters = [{"teste": 1}]
-    best_paramdict = {}
-    ifit = 0
+    global _best_fit
+    global _best_auc
+    global _best_parameters
+    global _best_paramdict
+    global _ifit
+    _best_fit = 0
+    _best_auc = 0.0
+    _best_parameters = [{"teste": 1}]
+    _best_paramdict = {}
+    _ifit = 0
 
     @use_named_args(dimensions=dimensions)
     def afit(
         learning_rate, num_leaves, min_child_samples, max_depth,
     ):
-        global ifit
-        global best_fit
-        global best_auc
-        global best_parameters
-        global best_paramdict
+        global _ifit
+        global _best_fit
+        global _best_auc
+        global _best_parameters
+        global _best_paramdict
 
-        log.info(f"on iteration {ifit} out of {n_calls}")
+        log.info(f"on iteration {_ifit} out of {n_calls}")
         log.info(f"learning_rate: {learning_rate}")
         log.info(f"num_leaves: {num_leaves}")
         log.info(f"min_child_samples: {min_child_samples}")
         log.info(f"max_depth: {max_depth}")
 
         curdir = os.getcwd()
-        p = PosixPath(f"training_{ifit}")
+        p = PosixPath(f"training_{_ifit}")
         p.mkdir(exist_ok=False)
         os.chdir(p.resolve())
 
@@ -1148,13 +1167,13 @@ def gp_minimize_auc(
 
         os.chdir(curdir)
 
-        if score > best_auc:
-            best_parameters[0] = model.get_params()
-            best_auc = score
-            best_fit = ifit
-            best_paramdict = curp
+        if score > _best_auc:
+            _best_parameters[0] = model.get_params()
+            _best_auc = score
+            _best_fit = _ifit
+            _best_paramdict = curp
 
-        ifit += 1
+        _ifit += 1
 
         del model
         return -score
@@ -1171,9 +1190,9 @@ def gp_minimize_auc(
         "region": region,
         "nlo_method": nlo_method,
         "features": list(df.columns),
-        "best_iteration": best_fit,
-        "best_auc": best_auc,
-        "best_params": best_paramdict,
+        "best_iteration": _best_fit,
+        "best_auc": _best_auc,
+        "best_params": _best_paramdict,
     }
 
     with open("summary.json", "w") as f:
