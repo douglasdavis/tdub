@@ -25,6 +25,7 @@ Function Summary
    chisquared_test
    conservative_branches
    edges_and_centers
+   extended_selection
    files_for_tree
    get_avoids
    get_branches
@@ -32,6 +33,7 @@ Function Summary
    get_selection
    kolmogorov_prob
    ks_twosample_binned
+   minimal_branches
    override_features
    quick_files
 
@@ -53,6 +55,7 @@ Reference
 .. autofunction:: chisquared_test
 .. autofunction:: conservative_branches
 .. autofunction:: edges_and_centers
+.. autofunction:: extended_selection
 .. autofunction:: files_for_tree
 .. autofunction:: get_avoids
 .. autofunction:: get_branches
@@ -60,5 +63,6 @@ Reference
 .. autofunction:: get_selection
 .. autofunction:: kolmogorov_prob
 .. autofunction:: ks_twosample_binned
+.. autofunction:: minimal_branches
 .. autofunction:: override_features
 .. autofunction:: quick_files
