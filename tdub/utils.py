@@ -14,12 +14,14 @@ from enum import Enum
 from glob import glob
 from pathlib import PosixPath
 
-from typing import Union, Iterable, Optional, Dict, List, Tuple
+from typing import Union, Iterable, Optional, Dict, List, Tuple, Set
 
 # external
 import numpy as np
 import scipy.special
 import uproot
+import pandas as pd
+import formulate
 
 # tdub
 import tdub.constants
@@ -1012,3 +1014,55 @@ def chisquared_test(
     chi2 = np.sum(delta * delta / sigma)
 
     return (chi2, ndf, chisquared_cdf_c(chi2, ndf))
+
+
+def extended_selection(region: Union[Region, str], extra: str) -> str:
+    """Construct an extended selection string for a region
+
+    Parameters
+    ----------
+    region : str or tdub.utils.Region
+        the region as a string or enum entry
+    extra : str
+        the extra selection string
+
+    Returns
+    -------
+    str
+        the complete new selection string
+
+    Examples
+    --------
+
+    >>> from tdub.utils import extended_selection
+    >>> extended_selection("2j2b", "met < 120")
+    '((reg2j2b == True) & (OS == True)) & (met < 120)'
+
+    """
+    raw = get_selection(region)
+    return f"({raw}) & ({extra})"
+
+
+def minimal_branches(selection: str) -> Set[str]:
+    """Get the minimal set of branches necessary to perform a selection
+
+    Parameters
+    ----------
+    selection : str
+        the selection string
+
+    Returns
+    -------
+    set(str)
+        the set of necessary branches/variables
+
+    Examples
+    --------
+
+    >>> from tdub.utils import minimal_selection_branches
+    >>> selection = "(reg1j1b == True) & (OS == True) & (mass_lep1lep2 > 100)"
+    >>> minimal_branches(selection)
+    {'OS', 'mass_lep1lep2', 'reg1j1b'}
+
+    """
+    return formulate.from_numexpr(selection).variables

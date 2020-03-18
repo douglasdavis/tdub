@@ -11,7 +11,6 @@ from typing import Optional, Union, List, Any, Iterable
 # externals
 import pandas as pd
 import uproot
-import formulate
 
 # tdub
 from tdub.constants import AVOID_IN_CLF
@@ -21,6 +20,7 @@ from tdub.utils import (
     conservative_branches,
     get_avoids,
     get_branches,
+    minimal_branches
 )
 
 
@@ -223,7 +223,7 @@ def iterative_selection(
     """
     # determine which branches will be used for selection only and
     # which branches we need for weights
-    selection_branches = set(formulate.from_numexpr(selection).variables)
+    selection_branches = minimal_branches(selection)
     weights_to_grab = set([weight_name])
     if use_campaign_weight:
         weights_to_grab.add("weight_campaign")

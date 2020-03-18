@@ -43,6 +43,7 @@ from tdub.utils import (
     ks_twosample_binned,
     get_selection,
     get_features,
+    extended_selection,
 )
 
 
@@ -125,8 +126,8 @@ def prepare_from_root(
         log.info(" - %s" % f)
 
     if extra_selection is not None:
-        selection = "({}) & ({})".format(get_selection(region), extra_selection)
-        log.info("Applying extra selection: %s" % extra_selection)
+        selection = extended_selection(region, extra_selection)
+        log.info("Applying extra selection, %s" % extra_selection)
     else:
         selection = get_selection(region)
     log.info("Total selection is: %s" % selection)
