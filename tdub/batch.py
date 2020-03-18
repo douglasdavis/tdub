@@ -6,7 +6,6 @@ Module to help running batch jobs
 import logging
 import pathlib
 import os
-import shutil
 from typing import List, Union, Optional
 
 log = logging.getLogger(__name__)
