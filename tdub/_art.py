@@ -14,14 +14,14 @@ import matplotlib.pyplot as plt
 def setup_style():
     matplotlib.use("Agg")
     matplotlib.rcParams["figure.figsize"] = (6, 5.5)
-    matplotlib.rcParams["axes.labelsize"] = 14
-    matplotlib.rcParams["font.size"] = 12
+    matplotlib.rcParams["axes.labelsize"] = 15
+    matplotlib.rcParams["font.size"] = 13
     matplotlib.rcParams["xtick.top"] = True
     matplotlib.rcParams["ytick.right"] = True
     matplotlib.rcParams["xtick.direction"] = "in"
     matplotlib.rcParams["ytick.direction"] = "in"
-    matplotlib.rcParams["xtick.labelsize"] = 12
-    matplotlib.rcParams["ytick.labelsize"] = 12
+    matplotlib.rcParams["xtick.labelsize"] = 13
+    matplotlib.rcParams["ytick.labelsize"] = 13
     matplotlib.rcParams["xtick.minor.visible"] = True
     matplotlib.rcParams["ytick.minor.visible"] = True
     matplotlib.rcParams["xtick.major.width"] = 0.8

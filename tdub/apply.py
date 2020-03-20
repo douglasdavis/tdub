@@ -14,6 +14,7 @@ import numpy as np
 import joblib
 import pandas as pd
 from sklearn.model_selection import KFold
+from sklearn.base import BaseEstimator
 
 # fmt: off
 try:
@@ -21,10 +22,17 @@ try:
 except ImportError:
     class lgbm:
         LGBMClassifier = None
+try:
+    import xgboost as xgb
+except ImportError:
+    class xgb:
+        XGBClassifier = None
 # fmt: on
 
+Classifier = BaseEstimator
+
 # tdub
-from tdub.utils import Region, get_selection
+from tdub.utils import Region
 
 
 log = logging.getLogger(__name__)
@@ -77,17 +85,18 @@ class FoldedResult:
         self._features = self._summary["features"]
         self._folder = KFold(**(self._summary["kfold"]))
         self._region = Region.from_str(self._summary["region"])
+        self._selection_used = self._summary["selection_used"]
 
     @property
-    def model0(self) -> lgbm.LGBMClassifier:
+    def model0(self) -> Classifier:
         return self._model0
 
     @property
-    def model1(self) -> lgbm.LGBMClassifier:
+    def model1(self) -> Classifier:
         return self._model1
 
     @property
-    def model2(self) -> lgbm.LGBMClassifier:
+    def model2(self) -> Classifier:
         return self._model2
 
     @property
@@ -97,6 +106,10 @@ class FoldedResult:
     @property
     def region(self) -> Region:
         return self._region
+
+    @property
+    def selection_used(self) -> str:
+        return self._selection_used
 
     @property
     def folder(self) -> KFold:
@@ -175,8 +188,8 @@ class FoldedResult:
             df[column_name] = -9999.0
 
         if query:
-            log.info(f"applying selection filter [ {get_selection(self.region)} ]")
-            mask = df.eval(get_selection(self.region))
+            log.info(f"applying selection filter '{self.selection_used}'")
+            mask = df.eval(self.selection_used)
             X = df[self.features].to_numpy()[mask]
         else:
             X = df[self.features].to_numpy()
@@ -219,8 +232,8 @@ def generate_npy(
     --------
 
     >>> from tdub.apply import FoldedResult, generate_npy
-    >>> from tdub.frames import conservative_dataframe
-    >>> df = conservative_dataframe("/path/to/file.root")
+    >>> from tdub.frames import raw_dataframe
+    >>> df = raw_dataframe("/path/to/file.root")
     >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
     >>> fr_2j1b = FoldedResult("/path/to/folded_training_2j1b")
     >>> fr_2j2b = FoldedResult("/path/to/folded_training_2j2b")

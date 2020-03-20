@@ -85,7 +85,9 @@ def raw_dataframe(
             set(branches) ^ set(filter(weight_sys_re.match, branches)), key=str.lower
         )
     itr = uproot.pandas.iterate(files, tree, branches=branches, entrysteps=entrysteps)
-    return pd.concat([d for d in itr])
+    result = pd.concat([d for d in itr])
+    result.selection_used = None
+    return result
 
 
 def conservative_dataframe(
@@ -147,7 +149,6 @@ def iterative_selection(
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
     branches: Optional[List[str]] = None,
-    concat: bool = True,
     keep_category: Optional[str] = None,
     exclude_avoids: bool = False,
     use_campaign_weight: bool = False,
@@ -179,9 +180,6 @@ def iterative_selection(
     branches : list(str), optional
        a list of branches to include as columns in the dataframe,
        default is ``None`` (all branches)
-    concat : bool
-       concatenate the resulting selected dataframes to return
-       a single dataframe
     keep_category : str, optional
        if not ``None``, the selected dataframe(s) will only include
        columns which are part of the given category (see
@@ -205,20 +203,19 @@ def iterative_selection(
     Examples
     --------
 
-    Creating a ``ttbar_dfs`` list of dataframes and a single ``tW_df``
-    dataframe:
+    Creating a ``ttbar_df`` dataframe a single ``tW_df`` dataframe:
 
     >>> from tdub.frames import iterative_selection
     >>> from tdub.utils import quick_files
     >>> from tdub.utils import get_selection
     >>> qf = quick_files("/path/to/files")
     >>> ttbar_dfs = iterative_selection(qf["ttbar"], get_selection("2j2b"), entrysteps="1 GB")
-    >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"), concat=True)
+    >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"))
 
     Keep only the kinematic branches after selection and ignore avoided columns:
 
-    >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"), concat=True,
-    ...                             keep_category="kinematics", exclude_avoids=True)
+    >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"), exclue_avoids=True,
+    ...                             keep_category="kinematics")
 
     """
     # determine which branches will be used for selection only and
@@ -270,9 +267,9 @@ def iterative_selection(
         idf = idf[keep]
         dfs.append(idf)
         log.debug(f"finished iteration {i}")
-    if concat:
-        return pd.concat(dfs)
-    return dfs
+    result = pd.concat(dfs)
+    result.selection_used = selection
+    return result
 
 
 def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFrame]:

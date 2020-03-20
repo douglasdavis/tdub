@@ -14,6 +14,8 @@ from typing import Optional, Tuple, List, Union, Dict, Any
 import joblib
 import numpy as np
 import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import pygram11
@@ -35,6 +37,7 @@ except ImportError:
 # fmt: on
 
 # tdub
+from tdub.art import setup_style
 from tdub.frames import iterative_selection, drop_cols
 from tdub.utils import (
     Region,
@@ -43,12 +46,12 @@ from tdub.utils import (
     ks_twosample_binned,
     get_selection,
     get_features,
-    extended_selection,
 )
 
-
+setup_style()
 log = logging.getLogger(__name__)
-matplotlib.use("Agg")
+
+_fig_adjustment_dict = dict(left=0.125, bottom=0.095, right=0.965, top=0.95)
 
 
 def prepare_from_root(
@@ -56,7 +59,7 @@ def prepare_from_root(
     bkg_files: List[str],
     region: Union[Region, str],
     branches: Optional[List[str]] = None,
-    extra_selection: Optional[str] = None,
+    override_selection: Optional[str] = None,
     weight_mean: Optional[float] = None,
     weight_scale: Optional[float] = None,
     scale_sum_weights: bool = True,
@@ -76,8 +79,9 @@ def prepare_from_root(
        the region where we're going to perform the training
     branches : list(str), optional
        if not None, we override the list of features defined by the region
-    extra_selection : str, optional
-       an additional selection string to apply to the dataset
+    override_selection : str, optional
+       a manual selection string to apply to the dataset (this will override
+       the region defined selection).
     weight_mean : float, optional
        scale all weights such that the mean weight is this
        value. Cannot be used with ``weight_scale``.
@@ -125,9 +129,9 @@ def prepare_from_root(
     for f in bkg_files:
         log.info(" - %s" % f)
 
-    if extra_selection is not None:
-        selection = extended_selection(region, extra_selection)
-        log.info("Applying extra selection, %s" % extra_selection)
+    if override_selection is not None:
+        selection = override_selection
+        log.info("Overriding selection (in region %s) to %s" % (region, override_selection))
     else:
         selection = get_selection(region)
     log.info("Total selection is: %s" % selection)
@@ -140,7 +144,6 @@ def prepare_from_root(
         files=sig_files,
         selection=selection,
         weight_name="weight_nominal",
-        concat=True,
         keep_category="kinematics",
         branches=branches,
         exclude_avoids=True,
@@ -150,7 +153,6 @@ def prepare_from_root(
         files=bkg_files,
         selection=selection,
         weight_name="weight_nominal",
-        concat=True,
         keep_category="kinematics",
         branches=branches,
         exclude_avoids=True,
@@ -195,6 +197,7 @@ def prepare_from_root(
     if weight_mean is not None:
         w *= weight_mean * len(w) / np.sum(w)
 
+    df.selection_used = selection
     return df, y, w
 
 
@@ -324,6 +327,8 @@ def single_training(
         df, labels, weights, test_size=test_size, random_state=random_state, shuffle=True
     )
 
+    log.info("selection used on the datasets:")
+    log.info("  '%s'" % df.selection_used)
     log.info("features training with:")
     for c in X_train.columns:
         log.info(" - %s" % c)
@@ -386,11 +391,15 @@ def single_training(
         fig_imp.subplots_adjust(left=0.475, top=0.975, bottom=0.09, right=0.925)
         fig_imp.savefig("imp.pdf")
 
+    fig_proba.subplots_adjust(**_fig_adjustment_dict)
     fig_proba.savefig("proba.pdf")
+    fig_pred.subplots_adjust(**_fig_adjustment_dict)
     fig_pred.savefig("pred.pdf")
+    fig_roc.subplots_adjust(**_fig_adjustment_dict)
     fig_roc.savefig("roc.pdf")
 
     summary = {"auc": round(trainres.auc, 5)}
+    summary["selection_used"] = df.selection_used
     summary["bad_ks"] = trainres.bad_ks
     summary["ks_test_sig"] = trainres.ks_test_sig
     summary["ks_test_bkg"] = trainres.ks_test_bkg
@@ -523,7 +532,7 @@ def _inspect_single_training(
     ax_roc.plot(fpr, tpr, lw=1, label=f"AUC = {roc_auc:0.3}")
     ax_roc.set_ylabel("True postive rate")
     ax_roc.set_xlabel("False positive rate")
-    ax_roc.grid()
+    ax_roc.grid(color="black", alpha=0.15)
     ax_roc.legend(loc="lower right")
     # fmt: on
 
@@ -624,6 +633,8 @@ def folded_training(
     output_path.mkdir(exist_ok=True, parents=True)
     os.chdir(output_path)
 
+    log.info("selection used on the datasets:")
+    log.info("  '%s'" % df.selection_used)
     log.info("features training with:")
     for c in df.columns:
         log.info(" - %s" % c)
@@ -762,7 +773,9 @@ def folded_training(
         fold_ax_pred.set_xlabel("Classifier Output")
         fold_ax_pred.legend(ncol=2, loc="upper center")
 
+        fold_fig_proba.subplots_adjust(**_fig_adjustment_dict)
         fold_fig_proba.savefig(f"fold{fold_number}_histograms_proba.pdf")
+        fold_fig_pred.subplots_adjust(**_fig_adjustment_dict)
         fold_fig_pred.savefig(f"fold{fold_number}_histograms_pred.pdf")
 
         plt.close(fold_fig_proba)
@@ -793,18 +806,23 @@ def folded_training(
     ax_proba_hists.set_xlabel("Classifier Output")
     ax_proba_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_proba_hists.set_ylim([0, 1.5 * ax_proba_hists.get_ylim()[1]])
+    fig_proba_hists.subplots_adjust(**_fig_adjustment_dict)
     fig_proba_hists.savefig("histograms_proba.pdf")
 
     ax_pred_hists.set_ylabel("Arb. Units")
     ax_pred_hists.set_xlabel("Classifier Output")
     ax_pred_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_pred_hists.set_ylim([0, 1.5 * ax_pred_hists.get_ylim()[1]])
+    fig_pred_hists.subplots_adjust(**_fig_adjustment_dict)
     fig_pred_hists.savefig("histograms_pred.pdf")
 
+    ax_rocs.grid(color="black", alpha=0.15)
     ax_rocs.legend(ncol=2, loc="lower right")
+    fig_rocs.subplots_adjust(**_fig_adjustment_dict)
     fig_rocs.savefig("roc.pdf")
 
     summary: Dict[str, Any] = {}
+    summary["selection_used"] = df.selection_used
     summary["region"] = region
     summary["features"] = [str(c) for c in df.columns]
     summary["importances"] = list(relative_importances)
@@ -1011,6 +1029,7 @@ def gp_minimize_auc(
         )
         ax.set_ylim([0, 1.5 * ax.get_ylim()[1]])
         ax.legend(ncol=2, loc="upper center")
+        fig.subplots_adjust(**_fig_adjustment_dict)
         fig.savefig("histograms.pdf")
         plt.close(fig)
 
@@ -1092,6 +1111,7 @@ def gp_minimize_auc(
 
     fig, ax = plt.subplots()
     plot_convergence(search_result, ax=ax)
+    fig.subplots_adjust(**_fig_adjustment_dict)
     fig.savefig("gpmin_convergence.pdf")
 
     os.chdir(run_from_dir)
