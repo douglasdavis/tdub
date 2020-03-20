@@ -134,7 +134,7 @@ def prepare_from_root(
         log.info("Overriding selection (in region %s) to %s" % (region, override_selection))
     else:
         selection = get_selection(region)
-    log.info("Total selection is: %s" % selection)
+    log.info("Total selection is: '%s'" % selection)
 
     if branches is None:
         log.info("Using features defined by the region")
