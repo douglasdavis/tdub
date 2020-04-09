@@ -40,11 +40,11 @@ class Region(Enum):
     Attributes
     ----------
     r1j1b
-       Our ``1j1b`` region
-    r1j1b
-       Our ``2j1b`` region
-    r2j1b = 1
-       Our ``2j2b`` region
+       A label for our ``1j1b`` region.
+    r2j1b
+       A label for our ``2j1b`` region.
+    r2j2b = 1
+       A label for our ``2j2b`` region.
 
     Examples
     --------
