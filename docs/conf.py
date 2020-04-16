@@ -37,7 +37,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
-    "sphinxcontrib.programoutput",
+    "sphinx_click.ext",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
