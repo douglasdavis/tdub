@@ -1,6 +1,4 @@
-"""
-Module for training BDTs
-"""
+"""Module for training BDTs."""
 
 # stdlib
 import json
@@ -67,51 +65,48 @@ def prepare_from_root(
     use_tptrw: bool = False,
     test_case_size: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
-    """Prepare the data for training in a region with signal and background ROOT files
+    r"""Prepare the data to train in a region with signal and background ROOT files.
 
     Parameters
     ----------
     sig_files : list(str)
-       list of signal ROOT files
+        list of signal ROOT files
     bkg_files : list(str)
-       list of background ROOT files
+        list of background ROOT files
     region : Region or str
-       the region where we're going to perform the training
+        the region where we're going to perform the training
     branches : list(str), optional
-       if not None, we override the list of features defined by the region
+        if not None, we override the list of features defined by the region
     override_selection : str, optional
-       a manual selection string to apply to the dataset (this will override
-       the region defined selection).
+        a manual selection string to apply to the dataset (this will override
+        the region defined selection).
     weight_mean : float, optional
-       scale all weights such that the mean weight is this
-       value. Cannot be used with ``weight_scale``.
+        scale all weights such that the mean weight is this value. Cannot be
+        used with `weight_scale`.
     weight_scale : float, optional
-       value to scale all weights by, cannot be used with
-       ``weight_mean``.
+        value to scale all weights by, cannot be used with `weight_mean`.
     scale_sum_weights : bool
-       scale sum of weights of signal to be sum of weights of
-       background
+        scale sum of weights of signal to be sum of weights of background
     use_campaign_weight : bool
-       see the parameter description for
-       :py:func:`tdub.frames.iterative_selection`
+        see the parameter description for
+        :py:func:`tdub.frames.iterative_selection`
     use_tptrw : bool
-       apply the top pt reweighing factor.
+        apply the top pt reweighing factor.
     test_case_size : int, optional
-       if defined, prepare a small "test case" dataset using this many
-       background and training samples
+        if defined, prepare a small test case dataset using this many background
+        and training samples
 
     Returns
     -------
     df : :obj:`pandas.DataFrame`
        the feature matrix
     labels : :obj:`numpy.ndarray`
-       the event labels (``0`` for background; ``1`` for signal)
+       the event labels (0 for background; 1 for signal)
     weights : :obj:`numpy.ndarray`
        the event weights
 
     Examples
     --------
-
     >>> from tdub.utils import quick_files
     >>> from tdub.train import prepare_from_root
     >>> qfiles = quick_files("/path/to/data")
@@ -202,7 +197,7 @@ def prepare_from_root(
 
 
 class SingleTrainingResult:
-    """Describes the properties of a single training
+    """Describes the properties of a single training.
 
     Parameters
     ----------
@@ -243,6 +238,7 @@ class SingleTrainingResult:
         ks_pvalue_bkg: float = -1.0,
         **kwargs,
     ) -> None:
+        """Class init."""
         self.auc = auc
         self.ks_test_sig = ks_test_sig
         self.ks_pvalue_sig = ks_pvalue_sig
@@ -251,6 +247,7 @@ class SingleTrainingResult:
         self.bad_ks = self.ks_pvalue_sig < 0.2 or self.ks_pvalue_bkg < 0.2
 
     def __repr__(self) -> str:
+        """Clean representation of the result."""
         p1 = f"auc={self.auc:0.3}"
         p2 = f"ks_test_sig={self.ks_test_sig:0.5}"
         p3 = f"ks_pvalue_sig={self.ks_pvalue_sig:0.5}"
@@ -271,7 +268,7 @@ def single_training(
     extra_summary_entries: Optional[Dict[str, Any]] = None,
     use_xgboost: bool = False,
 ) -> SingleTrainingResult:
-    """Execute a single training with some parameters
+    """Execute a single training with some parameters.
 
     Parameters
     ----------
@@ -300,7 +297,6 @@ def single_training(
 
     Examples
     --------
-
     >>> from tdub.utils import quick_files
     >>> from tdub.train import prepare_from_root, single_round
     >>> qfiles = quick_files("/path/to/data")
@@ -439,8 +435,7 @@ def _inspect_single_training(
     nbins_pred: int = 30,
     is_xgb_model: bool = False,
 ) -> SingleTrainingResult:
-    """inspect a single training round and make some plots"""
-
+    """Inspect a single training round and make some plots."""
     # fmt: off
     # get the selection arrays
     test_is_sig = y_test == 1
@@ -562,7 +557,7 @@ def folded_training(
     region: str,
     kfold_kw: Dict[str, Any] = None,
 ) -> float:
-    """Execute a folded training
+    """Execute a folded training.
 
     Train a :obj:`lightgbm.LGBMClassifier` model using :math:`k`-fold
     cross validation using the given input data and parameters.  The
@@ -602,7 +597,6 @@ def folded_training(
 
     Examples
     --------
-
     >>> from tdub.utils import quick_files
     >>> from tdub.train import prepare_from_root
     >>> from tdub.train import folded_training
@@ -858,7 +852,7 @@ def gp_minimize_auc(
     esr: Optional[int] = 10,
     random_state: int = 414,
 ):
-    """Minimize AUC using Gaussian processes
+    """Minimize AUC using Gaussian processes.
 
     This is our hyperparameter optimization procedure which uses the
     :py:func:`skopt.gp_minimize` functions from Scikit-Optimize.
@@ -882,7 +876,6 @@ def gp_minimize_auc(
 
     Examples
     --------
-
     >>> from tdub.utils import Region
     >>> from tdub.train import prepare_from_root, gp_minimize_auc
     >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DS", "opt_DS_2j1b")
