@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from enum import Enum
 from glob import glob
 from pathlib import PosixPath
-
 from typing import Union, Iterable, Optional, Dict, List, Tuple, Set
 
 # external
