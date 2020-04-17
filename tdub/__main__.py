@@ -3,16 +3,16 @@ tdub command line interface
 """
 
 # stdlib
-from pathlib import PosixPath
-import logging
 import json
+import logging
+import os
+from pathlib import PosixPath
 
 # third party
 import click
 
 # tdub
 from tdub import setup_logging
-from tdub.utils import quick_files
 
 setup_logging()
 log = logging.getLogger("tdub-cli")
@@ -25,9 +25,9 @@ notification    = Error
 notify_user     = ddavis@phy.duke.edu
 GetEnv          = True
 Executable      = {exe}
-Output          = {out_dir}/logs/job.out.hopt.$(cluster).$(process)
-Error           = {out_dir}/logs/job.err.hopt.$(cluster).$(process)
-Log             = {out_dir}/logs/job.log.$(cluster).$(process)
+Output          = {outdir}/$(cluster).$(process)
+Error           = {errdir}/$(cluster).$(process)
+Log             = {logdir}/$(cluster).$(process)
 request_memory  = 2.0G
 """
 
@@ -37,10 +37,11 @@ def cli():
     pass
 
 
+# fmt: off
 @cli.command("train-single", context_settings=dict(max_content_width=92))
-@click.option("-d", "--data-dir", type=click.Path(exists=True), help="directory containing data files", required=True)
+@click.option("-d", "--datadir", type=click.Path(exists=True), help="directory containing data files", required=True)
 @click.option("-r", "--region", type=str, required=True, help="the region to train on")
-@click.option("-o", "--out-dir", type=str, required=True, help="output directory name")
+@click.option("-o", "--outdir", type=str, required=True, help="output directory name")
 @click.option("-n", "--nlo-method", type=str, default="DR", help="tW simluation NLO method", show_default=True)
 @click.option("-x", "--override-selection", type=str, help="override selection with contents of file")
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
@@ -51,13 +52,14 @@ def cli():
 @click.option("--min-child-samples", type=int, required=True, help="min_child_samples model parameter")
 @click.option("--max-depth", type=int, required=True, help="max_depth model parameter")
 @click.option("--n-estimators", type=int, required=True, help="n_estimators model parameter")
-def single(data_dir, region, out_dir, nlo_method, override_selection, use_tptrw, ignore_list,
-           early_stopping_rounds, learning_rate, num_leaves, min_child_samples, max_depth, n_estimators):
+# fmt: on
+def single(datadir, region, outdir, nlo_method, override_selection, use_tptrw, ignore_list,
+           early_stop, learning_rate, num_leaves, min_child_samples, max_depth, n_estimators):
     """Execute a single training round."""
     from tdub.train import single_training, prepare_from_root
-    from tdub.utils import get_avoids
+    from tdub.utils import get_avoids, quick_files
     from tdub.frames import drop_cols
-    qf = quick_files(data_dir)
+    qf = quick_files(datadir)
     override_sel = override_selection
     if override_sel:
         override_sel = PosixPath(override_sel).read_text().strip()
@@ -86,39 +88,44 @@ def single(data_dir, region, out_dir, nlo_method, override_selection, use_tptrw,
         y,
         w,
         params,
-        out_dir,
-        early_stopping_rounds=early_stopping_rounds,
+        outdir,
+        early_stopping_rounds=early_stop,
         extra_summary_entries=extra_sum,
     )
     return 0
 
+# fmt: off
 @cli.command("train-scan", context_settings=dict(max_content_width=140))
-@click.argument("config", type=click.Path(exists=True))
-@click.argument("data-dir", type=click.Path(exists=True))
+@click.argument("config", type=click.Path(exists=True, resolve_path=True))
+@click.argument("datadir", type=click.Path(exists=True, resolve_path=True))
+@click.argument("workspace", type=click.Path(exists=False))
 @click.option("-r", "--region", type=str, required=True, help="the region to train on")
-@click.option("-o", "--out-dir", type=str, required=True, help="output directory name")
 @click.option("-n", "--nlo-method", type=str, default="DR", help="tW simluation NLO method", show_default=True)
-@click.option("-s", "--script-name", type=str, default="hopt.scan.REGION.sub", help="output script name", show_default=True)
 @click.option("-x", "--override-selection", type=str, help="override selection with contents of file")
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
 @click.option("-e", "--early-stop", type=int, help="number of early stopping rounds")
-def scan(config, data_dir, region, out_dir, nlo_method, script_name, override_selection,
-         use_tptrw, ignore_list, early_stopping_rounds):
-    """Given CONFIG and DATA_DIR, perform a parameter scan via condor jobs.
+# fmt: on
+def scan(config, datadir, workspace, region, nlo_method, override_selection,
+         use_tptrw, ignore_list, early_stop):
+    """Perform a parameter scan via condor jobs.
 
     The scan parameters are defined in the CONFIG file, and the data
-    to use is in the DATA_DIR. Example:
+    to use is in the DATADIR. All relevant output will be saved to
+    the WORKSPACE directory. Example:
 
-    $ hopt.py scan conf.json /data/path -r 2j1b -e 10 -o scan_2j1b
+    $ tdub train-scan grid.json /data/path scan_2j1b -r 2j1b -e 10
 
     """
     with open(config, "r") as f:
         pd = json.load(f)
-    p = PosixPath(out_dir).resolve()
-    p.mkdir(exist_ok=False)
-    (p / "logs").mkdir(exist_ok=False)
-    pname = str(p)
+
+    ws = PosixPath(workspace).resolve()
+    ws.mkdir(exist_ok=False)
+    (ws / "log").mkdir()
+    (ws / "err").mkdir()
+    (ws / "out").mkdir()
+    (ws / "res").mkdir()
     runs = []
     i = 0
     override_sel = override_selection
@@ -145,7 +152,7 @@ def scan(config, data_dir, region, out_dir, nlo_method, script_name, override_se
                         arglist = (
                             "{}"
                             "-d {} "
-                            "-o {}/res{:04d}_{} "
+                            "-o {}/res/{:04d}_{} "
                             "-r {} "
                             "-n {} "
                             "-x {} "
@@ -158,8 +165,8 @@ def scan(config, data_dir, region, out_dir, nlo_method, script_name, override_se
                             "--early-stop {} "
                         ).format(
                             "-t " if use_tptrw else "",
-                            data_dir,
-                            pname,
+                            datadir,
+                            ws,
                             i,
                             suffix,
                             region,
@@ -171,44 +178,58 @@ def scan(config, data_dir, region, out_dir, nlo_method, script_name, override_se
                             n_estimators,
                             min_child_samples,
                             max_depth,
-                            early_stopping_rounds
+                            early_stop
                         )
                         arglist = arglist.replace("-x _NONE ", "")
                         arglist = arglist.replace("-i _NONE ", "")
                         runs.append(arglist)
                         i += 1
     log.info(f"prepared {len(runs)} jobs for submission")
-    output_script_name = script_name.replace("REGION", region)
-    output_script = PosixPath(output_script_name)
-    with output_script.open("w") as f:
-        print(BNL_CONDOR_HEADER.format(exe=EXECUTABLE, out_dir=pname), file=f)
+    with (ws / "scan.condor.sub").open("w") as f:
+        print(BNL_CONDOR_HEADER.format(
+            exe=EXECUTABLE,
+            outdir=(ws / "out"),
+            logdir=(ws / "log"),
+            errdir=(ws / "err")
+        ),
+        file=f)
         for run in runs:
             print(f"Arguments = train-single {run}\nQueue\n\n", file=f)
+
+    with (ws / "run.sh").open("w") as f:
+        print("#!/bin/bash\n\n", file=f)
+        for run in runs:
+            print(f"tdub train-single {run}\n", file=f)
+    os.chmod(ws / "run.sh", 0o755)
 
     return 0
 
 
+# fmt: off
 @cli.command("train-check", context_settings=dict(max_content_width=92))
-@click.argument("directory", type=click.Path(exists=True))
+@click.argument("workspace", type=click.Path(exists=True))
 @click.option("-p", "--print-top", is_flag=True, help="Print the top results")
 @click.option("-n", "--n-res", type=int, default=10, help="Number of top results to print", show_default=True)
-def check(directory, print_top, n_res):
-    """Check the results of a parameter scan DIRECTORY."""
+# fmt: on
+def check(workspace, print_top, n_res):
+    """Check the results of a parameter scan WORKSPACE."""
     from tdub.train import SingleTrainingResult
+    import shutil
     results = []
-    top_dir = PosixPath(directory)
-    for resdir in top_dir.iterdir():
+    top_dir = PosixPath(workspace)
+    resdirs = (top_dir / "res").iterdir()
+    for resdir in resdirs:
         if resdir.name == "logs" or not resdir.is_dir():
             continue
         summary_file = resdir / "summary.json"
         if not summary_file.exists():
-            continue
+            log.warn("no summary file for %s" % str(resdir))
         with summary_file.open("r") as f:
             summary = json.load(f)
             if summary["bad_ks"]:
                 continue
             res = SingleTrainingResult(**summary)
-            res.directory = resdir.name
+            res.workspace = resdir
             res.summary = summary
             results.append(res)
 
@@ -224,31 +245,38 @@ def check(directory, print_top, n_res):
         if len(potentials) > 15:
             break
 
-    best_res = potentials[0]
-    print(best_res)
-    print(best_res.summary)
-    print(best_res.directory)
-
     for result in potentials:
         print(result)
 
-    with open(top_dir / "summary.json", "w") as f:
-        json.dump(potentials[0].summary, f, indent=4)
+    best_res = potentials[0]
+    if os.path.exists(top_dir / "best"):
+        shutil.rmtree(top_dir / "best")
+    shutil.copytree(best_res.workspace, top_dir / "best")
+    print(best_res.workspace.name)
+    print(best_res.summary)
 
     return 0
 
 
+# fmt: off
 @cli.command("train-fold", context_settings=dict(max_content_width=92))
-@click.option("-s", "--scan-dir", type=click.Path(exists=True), help="scan step's output directory")
-@click.option("-d", "--data-dir", type=click.Path(exists=True), help="directory containing data files", required=True)
-@click.option("-o", "--out-dir", type=str, help="directory to save output", required=True)
+@click.argument("scandir", type=click.Path(exists=True))
+@click.argument("datadir", type=click.Path(exists=True))
 @click.option("-t", "--use-tptrw", is_flag=True, help="use top pt reweighting")
 @click.option("-r", "--random-seed", type=int, default=414, help="random seed for folding", show_default=True)
 @click.option("-n", "--n-splits", type=int, default=3, help="number of splits for folding", show_default=True)
-def fold(scan_dir, data_dir, out_dir, use_tptrw, random_seed, n_splits):
+# fmt: on
+def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
     """Perform a folded training based on a hyperparameter scan result."""
     from tdub.train import folded_training, prepare_from_root
-    with open(f"{scan_dir}/summary.json", "r") as f:
+    from tdub.utils import quick_files
+    scandir = PosixPath(scandir).resolve()
+    summary_file = scandir / "best" / "summary.json"
+    outdir = scandir / "foldres"
+    if outdir.exists():
+        log.warn(f"fold result already exists for {scandir}, exiting")
+        return 0
+    with summary_file.open("r") as f:
         summary = json.load(f)
     nlo_method = summary["nlo_method"]
     best_iteration = summary["best_iteration"]
@@ -257,7 +285,7 @@ def fold(scan_dir, data_dir, out_dir, use_tptrw, random_seed, n_splits):
     region = summary["region"]
     branches = summary["features"]
     selection = summary["selection_used"]
-    qf = quick_files(data_dir)
+    qf = quick_files(datadir)
     df, y, w = prepare_from_root(
         qf[f"tW_{nlo_method}"],
         qf["ttbar"],
@@ -273,7 +301,7 @@ def fold(scan_dir, data_dir, out_dir, use_tptrw, random_seed, n_splits):
         w,
         summary["all_params"],
         {"verbose": 10},
-        out_dir,
+        str(outdir),
         summary["region"],
         kfold_kw={
             "n_splits": n_splits,
@@ -283,15 +311,16 @@ def fold(scan_dir, data_dir, out_dir, use_tptrw, random_seed, n_splits):
     )
     return 0
 
-
+# fmt: off
 @cli.command("apply-gen-npy", context_settings=dict(max_content_width=92))
 @click.option("--bnl", type=str, help="all files in a BNL data directory")
 @click.option("--single", type=str, help="a single ROOT file")
 @click.option("-f", "--folds", type=str, multiple=True, help="fold output directories")
 @click.option("-n", "--arr-name", type=str, help="array name")
-@click.option("-o", "--out-dir", type=str, help="save output to directory", required=True)
+@click.option("-o", "--outdir", type=str, help="save output to directory", required=True)
 @click.option("--bnl-script-name", type=str, help="BNL condor submit script name")
-def apply_gen_npy(bnl, single, folds, arr_name, out_dir, bnl_script_name):
+# fmt: on
+def apply_gen_npy(bnl, single, folds, arr_name, outdir, bnl_script_name):
     """Generate BDT response array(s) and save to .npy file."""
     if single is not None and bnl is not None:
         raise ValueError("can only choose --bnl or --single, not both")
@@ -301,10 +330,10 @@ def apply_gen_npy(bnl, single, folds, arr_name, out_dir, bnl_script_name):
     from tdub.utils import SampleInfo, minimal_branches
     from tdub.frames import raw_dataframe
 
-    out_dir = PosixPath(out_dir)
+    outdir = PosixPath(outdir)
 
     if bnl is not None:
-        gen_apply_npy_script(EXECUTABLE, bnl, folds, out_dir, arr_name, bnl_script_name)
+        gen_apply_npy_script(EXECUTABLE, bnl, folds, outdir, arr_name, bnl_script_name)
         return 0
 
     frs = [FoldedResult(p) for p in folds]
@@ -323,18 +352,21 @@ def apply_gen_npy(bnl, single, folds, arr_name, out_dir, bnl_script_name):
         sampinfo = SampleInfo(stem)
         tree = f"WtLoop_{sampinfo.tree}"
         df = raw_dataframe(sample_name, tree=tree, branches=necessary_branches)
-        npyfilename = out_dir / f"{stem}.{arr_name}.npy"
+        npyfilename = outdir / f"{stem}.{arr_name}.npy"
         generate_npy(frs, df, npyfilename)
 
     if single is not None:
         process_sample(single)
 
 
+# fmt: off
 @cli.command("soverb", context_settings=dict(max_content_width=92))
-@click.argument("data-dir", type=click.Path(exists=True))
+@click.argument("datadir", type=click.Path(exists=True))
 @click.argument("selections", type=click.Path(exists=True))
-def soverb(data_dir, selections):
-    """Get signal over background using data in DATA_DIR and a SELECTIONS file.
+@click.option("-t", "--use-tptrw", is_flag=True, help="use top pt reweighting")
+# fmt: on
+def soverb(datadir, selections, use_tptrw):
+    """Get signal over background using data in DATADIR and a SELECTIONS file.
 
     the format of the JSON entries should be "region": "numexpr selection".
 
@@ -359,7 +391,7 @@ def soverb(data_dir, selections):
         necessary_branches |= minimal_branches(query)
     necessary_branches = list(necessary_branches) + ["weight_tptrw_tool"]
 
-    qf = quick_files(data_dir)
+    qf = quick_files(datadir)
     bkg = qf["ttbar"] + qf["Diboson"] + qf["Zjets"] + qf["MCNP"]
     sig = qf["tW_DR"]
 
