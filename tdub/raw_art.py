@@ -51,7 +51,6 @@ def draw_rocs(
 
     Examples
     --------
-
     >>> from tdub.apply import FoldedResult
     >>> from tdub.raw_art import draw_rocs
     >>> fr_1j1b = FoldedResult("/path/to/train_1j1b")
@@ -142,7 +141,6 @@ def draw_stack(
 
     Examples
     --------
-
     >>> import matplotlib.pyplot as plt
     >>> from tdub.raw_art import draw_stack
     >>> mc_dfs = get_mc_dataframes()   # user defined function returns a list of dataframes

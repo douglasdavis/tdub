@@ -66,7 +66,6 @@ def raw_dataframe(
 
     Examples
     --------
-
     >>> from tdub.utils import quick_files
     >>> from tdub.frames import raw_dataframe
     >>> files = quick_files("/path/to/files")["ttbar"]
@@ -124,7 +123,6 @@ def conservative_dataframe(
 
     Examples
     --------
-
     >>> from tdub.utils import quick_files
     >>> from tdub.frames import conservative_dataframe
     >>> files = quick_files("/path/to/files")["ttbar"]
@@ -202,7 +200,6 @@ def iterative_selection(
 
     Examples
     --------
-
     Creating a ``ttbar_df`` dataframe a single ``tW_df`` dataframe:
 
     >>> from tdub.frames import iterative_selection
@@ -289,7 +286,6 @@ def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFram
 
     Examples
     --------
-
     >>> from tdub.utils import quick_files
     >>> from tdub.frames import raw_dataframe, satisfying_selection
     >>> qf = quick_files("/path/to/files")
@@ -321,7 +317,6 @@ def drop_cols(df: pd.DataFrame, *cols: str) -> None:
 
     Examples
     --------
-
     >>> import pandas as pd
     >>> from tdub.utils import drop_cols
     >>> df = pd.read_parquet("some_file.parquet")
@@ -368,7 +363,6 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
 
     Examples
     --------
-
     >>> from tdub.utils import drop_avoid
     >>> import pandas as pd
     >>> df = pd.read_parquet("some_file.parquet")
@@ -401,7 +395,6 @@ def drop_jet2(df: pd.DataFrame) -> None:
 
     Examples
     --------
-
     >>> from tdub.utils import drop_jet2
     >>> import pandas as pd
     >>> df = pd.read_parquet("some_file.parquet")
@@ -438,7 +431,6 @@ def apply_weight(
 
     Examples
     --------
-
     >>> import tdub.frames
     >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
     >>> df.apply_weight("weight_campaign")
@@ -475,7 +467,6 @@ def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None)
 
     Examples
     --------
-
     >>> import tdub.frames
     >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
     >>> df.weight_nominal[5]
@@ -508,7 +499,6 @@ def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) ->
 
     Examples
     --------
-
     >>> import tdub.frames
     >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
     >>> df.weight_nominal[5]

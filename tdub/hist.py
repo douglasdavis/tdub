@@ -187,10 +187,8 @@ def generate_from_df(
        and the bin uncertainties are in the second frame. the columns
        give the weight used to calculate the histograms
 
-
     Examples
     --------
-
     >>> from tdub.utils import quick_files
     >>> from tdub.frames import raw_dataframe
     >>> from tdub.hist import generate_from_df

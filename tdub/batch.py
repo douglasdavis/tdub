@@ -38,7 +38,6 @@ def parse_samples(usatlasdata_path: Union[str, os.PathLike]) -> List[pathlib.Pat
 
     Examples
     --------
-
     >>> from tdub.batch import parse_samples
     >>> samples = parse_samples("/path/to/usaltasdata/some_root_files")
 
@@ -75,7 +74,6 @@ def gen_apply_npy_script(
 
     Examples
     --------
-
     >>> from tdub.batch import gen_submit_script
     >>> gen_submit_script(
     ...    "/path/to/usaltasdata/some_root_files",

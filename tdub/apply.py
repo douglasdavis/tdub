@@ -65,7 +65,6 @@ class FoldedResult:
 
     Examples
     --------
-
     >>> from tdub.apply import FoldedResult
     >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
 
@@ -171,7 +170,6 @@ class FoldedResult:
 
         Examples
         --------
-
         >>> from tdub.apply import FoldedResult
         >>> from tdub.frames import conservative_dataframe
         >>> df = conservative_dataframe("/path/to/file.root")
@@ -230,7 +228,6 @@ def generate_npy(
 
     Examples
     --------
-
     >>> from tdub.apply import FoldedResult, generate_npy
     >>> from tdub.frames import raw_dataframe
     >>> df = raw_dataframe("/path/to/file.root")

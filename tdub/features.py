@@ -87,7 +87,6 @@ class FeatureSelector:
 
     Examples
     --------
-
     >>> from tdub.features import FeatureSelector, prepare_from_parquet
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
     >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
@@ -198,7 +197,6 @@ class FeatureSelector:
 
         Examples
         --------
-
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
@@ -235,7 +233,6 @@ class FeatureSelector:
 
         Examples
         --------
-
         Overriding the exclusion threshold:
 
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
@@ -304,7 +301,6 @@ class FeatureSelector:
 
         Examples
         --------
-
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
@@ -383,7 +379,6 @@ class FeatureSelector:
 
         Examples
         --------
-
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
@@ -559,7 +554,6 @@ class FeatureSelector:
 
         Examples
         --------
-
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
@@ -634,7 +628,6 @@ class FeatureSelector:
 
         Examples
         --------
-
         >>> from tdub.features import FeatureSelector, prepare_from_parquet
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
@@ -696,7 +689,6 @@ def create_parquet_files(
 
     Examples
     --------
-
     >>> from tdub.features import create_parquet_files
     >>> create_parquet_files("/path/to/root/files", "/path/to/pq/output", entrysteps="250 MB")
 
@@ -789,7 +781,6 @@ def prepare_from_parquet(
 
     Examples
     --------
-
     >>> from tdub.features import prepare_from_parquet
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
 

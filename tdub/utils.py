@@ -47,7 +47,6 @@ class Region(Enum):
 
     Examples
     --------
-
     Using this enum for grabing the ``2j2b`` region from a set of
     files:
 
@@ -85,7 +84,6 @@ class Region(Enum):
 
         Examples
         --------
-
         >>> from tdub.utils import Region
         >>> Region.from_str("1j1b")
         <Region.r1j1b: 0>
@@ -214,7 +212,6 @@ def categorize_branches(
 
     Examples
     --------
-
     >>> from tdub.utils import categorize_branches
     >>> branches = ["pT_lep1", "pT_lep2", "weight_nominal", "weight_sys_jvt", "reg2j2b"]
     >>> cated = categorize_branches(branches)
@@ -436,7 +433,6 @@ def files_for_tree(
 
     Examples
     --------
-
     >>> from tdub.utils import files_for_tree
     >>> files_for_tree("/data/path", "ttbar", "JET_CategoryReduction_JET_JER_EffectiveNP_4__1up")
     ['/data/path/ttbar_410472_FS_MC16a_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root',
@@ -479,7 +475,6 @@ def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
 
     Examples
     --------
-
     >>> import numpy as np
     >>> from tdub.utils import bin_centers
     >>> bin_edges = np.linspace(25, 225, 11)
@@ -514,7 +509,6 @@ def edges_and_centers(
 
     Examples
     --------
-
     from bin multiplicity and a range
 
     >>> from tdub.utils import edges_and_centers
@@ -563,7 +557,6 @@ def get_branches(
 
     Examples
     --------
-
     A file with two kinematic variables and two weights
 
     >>> from tdub.utils import get_branches
@@ -614,7 +607,6 @@ def conservative_branches(
 
     Examples
     --------
-
     Grab branches for a file that are relevant for applying BDT models
     and do something useful
 
@@ -659,7 +651,6 @@ def get_selection(region: Union[str, Region]) -> str:
 
     Examples
     --------
-
     >>> from tdub.utils import get_selection, Region
     >>> get_selection(Region.r2j1b)
     '(reg2j1b == True) & (OS == True)'
@@ -698,7 +689,6 @@ def get_avoids(region: Union[str, Region]) -> List[str]:
 
     Examples
     --------
-
     >>> from tdub.utils import get_avoids, Region
     >>> get_avoids(Region.r2j1b)
     ['HT_jet1jet2', 'deltaR_lep1lep2_jet1jet2met', 'mass_lep2jet1', 'pT_jet2']
@@ -736,7 +726,6 @@ def get_features(region: Union[str, Region]) -> List[str]:
 
     Examples
     --------
-
     >>> from pprint import pprint
     >>> from tdub.utils import get_features
     >>> pprint(get_features("reg2j1b"))
@@ -786,7 +775,6 @@ def augment_features(region: Union[str, Region], to_add: List[str]) -> None:
 
     Examples
     --------
-
     >>> from tdub.utils import augment_features, get_features
     >>> "another" in get_features("2j2b")
     False
@@ -843,7 +831,6 @@ def override_features(table: Dict[str, List[str]]) -> None:
 
     Examples
     --------
-
     Using the dictionary above as an example
 
     >>> from tdub.utils import override_features, get_features
@@ -890,7 +877,6 @@ def kolmogorov_prob(z: float) -> float:
 
     Examples
     --------
-
     >>> from tdub.utils import kolmogorov_prob
     >>> kolmogorov_prob(1.13)
     0.15549781841748692
@@ -947,7 +933,6 @@ def ks_twosample_binned(
 
     Examples
     --------
-
     >>> import pygram11
     >>> from tdub.utils import ks_twosample_binned
     >>> data1, data2, w1, w2 = some_function_to_get_data()
@@ -1072,7 +1057,6 @@ def extended_selection(region: Union[Region, str], extra: str) -> str:
 
     Examples
     --------
-
     >>> from tdub.utils import extended_selection
     >>> extended_selection("2j2b", "met < 120")
     '((reg2j2b == True) & (OS == True)) & (met < 120)'
@@ -1097,7 +1081,6 @@ def minimal_branches(selection: str) -> Set[str]:
 
     Examples
     --------
-
     >>> from tdub.utils import minimal_selection_branches
     >>> selection = "(reg1j1b == True) & (OS == True) & (mass_lep1lep2 > 100)"
     >>> minimal_branches(selection)
