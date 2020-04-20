@@ -276,6 +276,7 @@ def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
     if outdir.exists():
         log.warn(f"fold result already exists for {scandir}, exiting")
         return 0
+    summary = None
     with summary_file.open("r") as f:
         summary = json.load(f)
     nlo_method = summary["nlo_method"]

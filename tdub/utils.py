@@ -276,18 +276,23 @@ def quick_files(datapath: FileLike, campaign: Optional[str] = None) -> Dict[str,
     The lists of files are sorted alphabetically. These types of
     samples are currently tested:
 
-    - ``ttbar`` (410472 full sim)
-    - ``ttbar_AFII`` (410472 fast sim)
-    - ``ttbar_PS`` (410558 fast sim)
-    - ``ttbar_hdamp`` (410482 fast sim)
-    - ``tW_DR`` (410648, 410649 full sim)
-    - ``tW_DR_AFII`` (410648, 410648 fast sim)
-    - ``tW_DR_PS`` (411038, 411039 fast sim)
-    - ``tW_DS`` (410656, 410657 full sim)
-    - ``Diboson``
-    - ``Zjets``
-    - ``MCNP``
-    - ``Data``
+    - `ttbar` (410472 full sim)
+    - `ttbar_AFII` (410472 fast sim)
+    - `ttbar_PS` (410558 fast sim)
+    - `ttbar_hdamp` (410482 fast sim)
+    - `ttbar_inc` (410470 full sim)
+    - `ttbar_inc_AFII` (410470 fast sim)
+    - `tW_DR` (410648, 410649 full sim)
+    - `tW_DR_AFII` (410648, 410648 fast sim)
+    - `tW_DR_PS` (411038, 411039 fast sim)
+    - `tW_DR_inc` (410646, 410647 full sim)
+    - `tW_DR_inc_AFII` (410646, 410647 fast sim)
+    - `tW_DS` (410656, 410657 full sim)
+    - `tW_DS_inc` (410654, 410655 ful sim)
+    - `Diboson`
+    - `Zjets`
+    - `MCNP`
+    - `Data`
 
     Parameters
     ----------
@@ -326,18 +331,48 @@ def quick_files(datapath: FileLike, campaign: Optional[str] = None) -> Dict[str,
         if campaign not in ("MC16a", "MC16d", "MC16e"):
             raise ValueError(f"{campaign} but be either 'MC16a', 'MC16d', or 'MC16e'")
         camp = f"_{campaign}"
+
     path = str(PosixPath(datapath).resolve())
+
+    # ttbar
     ttbar_files = sorted(glob(f"{path}/ttbar_410472_FS{camp}*nominal.root"))
     ttbar_AFII_files = sorted(glob(f"{path}/ttbar_410472_AFII{camp}*nominal.root"))
     ttbar_PS_files = sorted(glob(f"{path}/ttbar_410558*AFII{camp}*nominal.root"))
     ttbar_hdamp_files = sorted(glob(f"{path}/ttbar_410482_AFII{camp}*nominal.root"))
-    tW_DR_AFII_files = sorted(glob(f"{path}/tW_DR_41064*AFII{camp}*nominal.root"))
+    ttbar_inc_files = sorted(glob(f"{path}/ttbar_410470_FS{camp}*nominal.root"))
+    ttbar_inc_AFII_files = sorted(glob(f"{path}/ttbar_410470_AFII{camp}*nominal.root"))
+
+    # tW
     tW_DR_files = sorted(
         glob(f"{path}/tW_DR_410648_FS{camp}*nominal.root")
         + glob(f"{path}/tW_DR_410649_FS{camp}*nominal.root")
     )
-    tW_DR_PS_files = sorted(glob(f"{path}/tW_DR_41103*AFII{camp}*nominal.root"))
-    tW_DS_files = sorted(glob(f"{path}/tW_DS_41065*FS{camp}*nominal.root"))
+    tW_DR_AFII_files = sorted(
+        glob(f"{path}/tW_DR_410648_AFII{camp}*nominal.root")
+        + glob(f"{path}/tW_DR_410649_AFII{camp}*nominal.root")
+    )
+    tW_DR_inc_files = sorted(
+        glob(f"{path}/tW_DR_410646_FS{camp}*nominal.root")
+        + glob(f"{path}/tW_DR_410647_FS{camp}*nominal.root")
+    )
+    tW_DR_inc_AFII_files = sorted(
+        glob(f"{path}/tW_DR_410646_AFII{camp}*nominal.root")
+        + glob(f"{path}/tW_DR_410647_AFII{camp}*nominal.root")
+    )
+    tW_DR_PS_files = sorted(
+        glob(f"{path}/tW_DR_411038_AFII{camp}*nominal.root")
+        + glob(f"{path}/tW_DR_411039_AFII{camp}*nominal.root")
+    )
+    tW_DS_files = sorted(
+        glob(f"{path}/tW_DS_410656_FS{camp}*nominal.root")
+        + glob(f"{path}/tW_DS_410657_FS{camp}*nominal.root")
+    )
+    tW_DS_inc_files = sorted(
+        glob(f"{path}/tW_DS_410654_FS{camp}*nominal.root")
+        + glob(f"{path}/tW_DS_410655_FS{camp}*nominal.root")
+    )
+
+    # Minor backgrounds
     Diboson_files = sorted(glob(f"{path}/Diboson_*FS{camp}*nominal.root"))
     Zjets_files = sorted(glob(f"{path}/Zjets_*FS{camp}*nominal.root"))
     MCNP_files = sorted(glob(f"{path}/MCNP_*FS{camp}*nominal.root"))
@@ -358,10 +393,15 @@ def quick_files(datapath: FileLike, campaign: Optional[str] = None) -> Dict[str,
         "ttbar_AFII": ttbar_AFII_files,
         "ttbar_PS": ttbar_PS_files,
         "ttbar_hdamp": ttbar_hdamp_files,
+        "ttbar_inc": ttbar_inc_files,
+        "ttbar_inc_AFII": ttbar_inc_AFII_files,
         "tW_DR": tW_DR_files,
         "tW_DR_AFII": tW_DR_AFII_files,
         "tW_DR_PS": tW_DR_PS_files,
+        "tW_DR_inc": tW_DR_inc_files,
+        "tW_DR_inc_AFII": tW_DR_inc_AFII_files,
         "tW_DS": tW_DS_files,
+        "tW_DS_inc": tW_DS_inc_files,
         "Diboson": Diboson_files,
         "Zjets": Zjets_files,
         "MCNP": MCNP_files,
@@ -383,9 +423,9 @@ def files_for_tree(
     datapath : str or os.PathLike
        path where all of the ROOT files live
     sample_prefix : str
-       the prefix for the sample we want (``"ttbar"`` or ``"tW_DR"`` or ``"tW_DS"``)
+       the prefix for the sample we want (`"ttbar"` or `"tW_DR"` or `"tW_DS"`)
     tree_name : str
-       the name of the ATLAS systematic tree (e.g. ``"nominal"`` or ``"EG_RESOLUTION_ALL__1up"``)
+       the name of the ATLAS systematic tree (e.g. `"nominal"` or `"EG_RESOLUTION_ALL__1up"`)
     campaign : str, optional
        enforce a single campaign ("MC16a", "MC16d", or "MC16e")
 
