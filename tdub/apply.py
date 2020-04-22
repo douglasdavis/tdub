@@ -39,20 +39,7 @@ log = logging.getLogger(__name__)
 
 
 class BaseResult:
-    """Base class for encapsulating a BDT result to apply to other data.
-
-    Attributes
-    ----------
-    features : list(str)
-        the list of kinematic features used by the model
-    region : Region
-        the region for this training
-    selection_used : str
-        the selection that was used on the datasets used in training
-    summary : dict(str, Any)
-        the contents of the ``summary.json`` file.
-
-    """
+    """Base class for encapsulating a BDT result to apply to other data."""
 
     _features: List[str] = []
     _region: Region = Region.rUnkn
@@ -61,18 +48,22 @@ class BaseResult:
 
     @property
     def features(self) -> List[str]:
+        """The list of features used"""
         return self._features
 
     @property
     def region(self) -> Region:
+        """The region where the training was executed"""
         return self._region
 
     @property
     def selection_used(self) -> str:
+        """The selection used on the trained datasets"""
         return self._selection_used
 
     @property
     def summary(self) -> Dict[str, Any]:
+        """The training summary dictionary from the training json"""
         return self._summary
 
     def to_dataframe(
@@ -110,17 +101,6 @@ class FoldedResult(BaseResult):
     fold_output : str
        the directory with the folded training output
 
-    Attributes
-    ----------
-    model0 : lightgbm.LGBMClassifier
-       the model for the 0th fold from training
-    model1 : lightgbm.LGBMClassifier
-       the model for the 1st fold from training
-    model2 : lightgbm.LGBMClassifier
-       the model for the 2nd fold from training
-    folder : sklearn.model_selection.KFold
-       the folding object that the training session used
-
     Examples
     --------
     >>> from tdub.apply import FoldedResult
@@ -146,18 +126,22 @@ class FoldedResult(BaseResult):
 
     @property
     def model0(self) -> Classifier:
+        """The model for the 0th fold"""
         return self._model0
 
     @property
     def model1(self) -> Classifier:
+        """The model for the 1st fold"""
         return self._model1
 
     @property
     def model2(self) -> Classifier:
+        """The model for the 2nd fold"""
         return self._model2
 
     @property
     def folder(self) -> KFold:
+        """the folding object used during training"""
         return self._folder
 
     def to_dataframe(
@@ -230,11 +214,6 @@ class SingleResult(BaseResult):
     training_output : str
         the directory containing the training result
 
-    Attributes
-    ----------
-    model : lightgbm.LGBMClassifier
-        the trained lightgbm model object
-
     Examples
     --------
     >>> from tdub.apply import SingleResult
@@ -257,6 +236,7 @@ class SingleResult(BaseResult):
 
     @property
     def model(self) -> Classifier:
+        """The trained model"""
         return self._model
 
     def to_dataframe(
@@ -296,10 +276,10 @@ def generate_npy(
 ) -> None:
     """create a NumPy npy file which is the response for all events in a DataFrame.
 
-    This will use the to_dataframe function (see BaseResult docs) from
-    the list of results. We query the input dataframe to ensure that
-    we apply to the correct events. If the input dataframe is empty
-    then an empty array is written to disk
+    This will use the :py:func:`~BaseResult.to_dataframe` function
+    from the list of results. We query the input dataframe to ensure
+    that we apply to the correct events. If the input dataframe is
+    empty then an empty array is written to disk
 
     Parameters
     ----------

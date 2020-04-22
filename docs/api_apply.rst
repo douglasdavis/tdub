@@ -29,8 +29,10 @@ Reference
 
 .. autoclass:: FoldedResult
    :members:
+   :inherited-members:
 
 .. autoclass:: SingleResult
    :members:
+   :inherited-members:
 
 .. autofunction:: generate_npy
