@@ -358,7 +358,7 @@ def single_training(
             eval_sample_weight=[validation_w],
         )
 
-    joblib.dump(fitted_model, f"model.joblib.gz", compress=("gzip", 3))
+    joblib.dump(model, f"model.joblib.gz", compress=("gzip", 3))
 
     fig_proba, ax_proba = plt.subplots()
     fig_pred, ax_pred = plt.subplots()
