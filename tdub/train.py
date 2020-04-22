@@ -19,7 +19,7 @@ import pandas as pd
 import pygram11
 from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
-from sklearn.metrics import auc, roc_auc_score, roc_curve
+from sklearn.metrics import auc, roc_auc_score, roc_curve, plot_roc_curve
 
 # fmt: off
 try:
@@ -358,6 +358,8 @@ def single_training(
             eval_sample_weight=[validation_w],
         )
 
+    joblib.dump(fitted_model, f"model.joblib.gz", compress=("gzip", 3))
+
     fig_proba, ax_proba = plt.subplots()
     fig_pred, ax_pred = plt.subplots()
     fig_roc, ax_roc = plt.subplots()
@@ -522,12 +524,14 @@ def _inspect_single_training(
     ax_pred.set_xlabel("Classifier Response")
 
     # plot the auc
-    fpr, tpr, thresholds = roc_curve(y_test, test_proba, sample_weight=w_test)
-    roc_auc = auc(fpr, tpr)
-    ax_roc.plot(fpr, tpr, lw=1, label=f"AUC = {roc_auc:0.3}")
+    # use the new sklearn plot_roc_curve API
+    rcd = plot_roc_curve(model, X_test, y_test, sample_weight=w_test, ax=ax_roc, lw=2)
+    # fpr, tpr, thresholds = roc_curve(y_test, test_proba, sample_weight=w_test)
+    # roc_auc = auc(fpr, tpr)
+    # ax_roc.plot(fpr, tpr, lw=1, label=f"AUC = {roc_auc:0.3}")
     ax_roc.set_ylabel("True postive rate")
     ax_roc.set_xlabel("False positive rate")
-    ax_roc.grid(color="black", alpha=0.15)
+    ax_roc.grid(color="black", alpha=0.125)
     ax_roc.legend(loc="lower right")
     # fmt: on
 
@@ -539,7 +543,7 @@ def _inspect_single_training(
     )
 
     return SingleTrainingResult(
-        auc=float(roc_auc),
+        auc=float(rcd.roc_auc),
         ks_test_sig=float(ks_stat_sig),
         ks_pvalue_sig=float(ks_p_sig),
         ks_test_bkg=float(ks_stat_bkg),
