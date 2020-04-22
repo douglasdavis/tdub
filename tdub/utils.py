@@ -59,6 +59,7 @@ class Region(Enum):
     r1j1b = 0
     r2j1b = 1
     r2j2b = 2
+    rUnkn = 9
 
     @staticmethod
     def from_str(s: str) -> "Region":

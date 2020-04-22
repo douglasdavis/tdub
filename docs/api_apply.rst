@@ -10,7 +10,9 @@ Class Summary
 
 .. autosummary::
 
+   BaseResult
    FoldedResult
+   SingleResult
 
 Function Summary
 ^^^^^^^^^^^^^^^^
@@ -22,7 +24,13 @@ Function Summary
 Reference
 ^^^^^^^^^
 
+.. autoclass:: BaseResult
+   :members:
+
 .. autoclass:: FoldedResult
+   :members:
+
+.. autoclass:: SingleResult
    :members:
 
 .. autofunction:: generate_npy
