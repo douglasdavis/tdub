@@ -55,13 +55,27 @@ autodoc_typehints = "none"
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = "sphinx_rtd_theme"
-html_theme_options = {
-    "collapse_navigation": True,
-    "sticky_navigation": True,
-}
 
-# html_theme = "pydata_sphinx_theme"
+# Add any paths that contain custom static files (such as style sheets) here,
+# relative to this directory. They are copied after the builtin static files,
+# so a file named "default.css" will overwrite the builtin "default.css".
+html_static_path = ["_static"]
+
+
+#html_theme = "sphinx_rtd_theme"
+#html_theme_options = {
+#    "collapse_navigation": True,
+#    "sticky_navigation": True,
+#}
+
+
+html_theme = "pydata_sphinx_theme"
+html_css_files = [
+    'css/custom.css',
+]
+#html_theme_options = {
+#    "github_url": "https://github.com/douglasdavis/tdub",
+#}
 
 # html_theme = "alabaster"
 # html_theme_options = {
@@ -79,11 +93,6 @@ html_theme_options = {
 #     "show_relbars": True,
 #     "code_font_size": "1.0em",
 # }
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),

@@ -59,6 +59,29 @@ class BaseResult:
         """The training summary dictionary from the training json."""
         return self._summary
 
+    def parse_summary_json(self, summary_file: os.PathLike) -> None:
+        """Parse a traning's summary json file.
+
+        This populates the class properties with values and the
+        resulting dictionary is saved to be accessible via the summary
+        property. The common class properties (which all BaseResults
+        have by defition) besides `summary are `features`, `region`,
+        and `selecton_used`. This function will define those, so all
+        BaseResult inheriting classes should call the super
+        implementation of this method if a daughter implementation is
+        necessary to add additional summary properties.
+
+        Parameters
+        ----------
+        summary_file : str or os.PathLike
+            the summary json file
+
+        """
+        self._summary = json.loads(summary_file.read_text())
+        self._features = self.summary["features"]
+        self._region = self.summary["region"]
+        self._selection_used = self.summary["selection_used"]
+
     def apply_to_dataframe(
         self, df: pd.DataFrame, column_name: str, do_query: bool
     ) -> None:
@@ -85,20 +108,22 @@ class FoldedResult(BaseResult):
     """
 
     def __init__(self, fold_output: str) -> None:
-        fold_path = PosixPath(fold_output)
-        if not fold_path.exists():
-            raise ValueError(f"{fold_output} does not exist")
-        fold_path = fold_path.resolve()
+        fold_path = PosixPath(fold_output).resolve()
         self._model0 = joblib.load(fold_path / "model_fold0.joblib.gz")
         self._model1 = joblib.load(fold_path / "model_fold1.joblib.gz")
         self._model2 = joblib.load(fold_path / "model_fold2.joblib.gz")
+        self.parse_summary_json(fold_path / "summary.json")
 
-        summary_file = fold_path / "summary.json"
-        self._summary = json.loads(summary_file.read_text())
-        self._features = self._summary["features"]
-        self._folder = KFold(**(self._summary["kfold"]))
-        self._region = Region.from_str(self._summary["region"])
-        self._selection_used = self._summary["selection_used"]
+    def parse_summary_json(self, summary_file: os.PathLike) -> None:
+        """Parse a training's summary json file
+
+        Parameters
+        ----------
+        summary_file : str or os.PathLike
+            the summary json file
+        """
+        super().parse_summary_json(summary_file)
+        self._folder = KFold(**(self.summary["kfold"]))
 
     @property
     def model0(self) -> BaseEstimator:
@@ -197,19 +222,10 @@ class SingleResult(BaseResult):
 
     """
 
-    def __init__(self, training_output: str):
+    def __init__(self, training_output: os.PathLike) -> None:
         training_path = PosixPath(training_output)
-        if not training_path.exists():
-            raise ValueError(f"{training_output} does not exist")
-        training_path = training_path.resolve()
-
         self._model = joblib.load(training_path / "model.joblib.gz")
-
-        summary_file = training_path / "summary.json"
-        self._summary = json.loads(summary_file.read_text())
-        self._features = self._summary["features"]
-        self._region = Region.from_str(self._summary["region"])
-        self._selection_used = self._summary["selection_used"]
+        self.parse_summary_json(training_path / "summary.json")
 
     @property
     def model(self) -> BaseEstimator:
@@ -276,7 +292,7 @@ class SingleResult(BaseResult):
             df[column_name] = yhat
 
 
-def get_result_array(results: List[BaseResult], df: pd.DataFrame) -> np.ndarray:
+def build_array(results: List[BaseResult], df: pd.DataFrame) -> np.ndarray:
     """Get a NumPy array which is the response for all events in `df`
 
     This will use the :py:func:`~BaseResult.apply_to_dataframe` function
@@ -295,23 +311,23 @@ def get_result_array(results: List[BaseResult], df: pd.DataFrame) -> np.ndarray:
     --------
     Using folded results:
 
-    >>> from tdub.apply import FoldedResult, get_result_array
+    >>> from tdub.apply import FoldedResult, build_array
     >>> from tdub.frames import raw_dataframe
     >>> df = raw_dataframe("/path/to/file.root")
     >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
     >>> fr_2j1b = FoldedResult("/path/to/folded_training_2j1b")
     >>> fr_2j2b = FoldedResult("/path/to/folded_training_2j2b")
-    >>> res = get_result_array([fr_1j1b, fr_2j1b, fr_2j2b], df)
+    >>> res = build_array([fr_1j1b, fr_2j1b, fr_2j2b], df)
 
     Using single results:
 
-    >>> from tdub.apply import SingleResult, get_result_array
+    >>> from tdub.apply import SingleResult, build_array
     >>> from tdub.frames import raw_dataframe
     >>> df = raw_dataframe("/path/to/file.root")
     >>> sr_1j1b = SingleResult("/path/to/single_training_1j1b")
     >>> sr_2j1b = SingleResult("/path/to/single_training_2j1b")
     >>> sr_2j2b = SingleResult("/path/to/single_training_2j2b")
-    >>> res = get_result_array([sr_1j1b, sr_2j1b, sr_2j2b], df, "output.npy")
+    >>> res = build_array([sr_1j1b, sr_2j1b, sr_2j2b], df)
 
     """
 

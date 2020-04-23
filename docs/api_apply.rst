@@ -19,7 +19,7 @@ Function Summary
 
 .. autosummary::
 
-   get_result_array
+   build_array
 
 Reference
 ^^^^^^^^^
@@ -29,10 +29,10 @@ Reference
 
 .. autoclass:: FoldedResult
    :members:
-   :inherited-members:
+   :show-inheritance:
 
 .. autoclass:: SingleResult
    :members:
-   :inherited-members:
+   :show-inheritance:
 
-.. autofunction:: get_result_array
+.. autofunction:: build_array

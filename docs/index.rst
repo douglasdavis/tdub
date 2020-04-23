@@ -1,3 +1,4 @@
+====
 tdub
 ====
 
@@ -23,20 +24,10 @@ originate from `ROOT <https://root.cern/>`_ files).
    :maxdepth: 2
    :caption: Command Line Interface
 
-   cli.rst
+   cli
 
 .. toctree::
    :maxdepth: 2
    :caption: API Reference
 
-   api_apply.rst
-   api_art.rst
-   api_batch.rst
-   api_constants.rst
-   api_frames.rst
-   api_features.rst
-   api_hist.rst
-   api_raw_art.rst
-   api_rex_art.rst
-   api_train.rst
-   api_utils.rst
+   api

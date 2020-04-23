@@ -402,7 +402,7 @@ def apply_single(infile, arr_name, outdir, fold_results=None, single_results=Non
     if len(single_results) > 0 and len(fold_results) > 0:
         raise ValueError("Cannot use -f and -s together with apply-single")
 
-    from tdub.apply import get_result_array, FoldedResult, SingleResult
+    from tdub.apply import build_array, FoldedResult, SingleResult
     from tdub.utils import SampleInfo, minimal_branches
     from tdub.frames import raw_dataframe
     import numpy as np
@@ -433,7 +433,7 @@ def apply_single(infile, arr_name, outdir, fold_results=None, single_results=Non
     tree = f"WtLoop_{sampinfo.tree}"
     df = raw_dataframe(infile, tree=tree, branches=necessary_branches)
     npyfilename = outdir / f"{stem}.{arr_name}.npy"
-    result_arr = get_result_array(trs, df)
+    result_arr = build_array(trs, df)
     np.save(npyfilename, result_arr)
 
 
