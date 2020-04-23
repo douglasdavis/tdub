@@ -584,55 +584,6 @@ def get_branches(
     return list(set(bs) ^ weights)
 
 
-def conservative_branches(
-    file_name: FileOrFiles, tree: str = "WtLoop_nominal"
-) -> List[str]:
-    """Get branches in a ROOT file that form a conservative minimum
-
-    we define "conservative minimum" as the branches necessary for
-    using our BDT infrastructure, so this conservative minimum
-    includes all of the features used by the BDTs as well as the
-    variables necessary for region selection.
-
-    Parameters
-    ----------
-    file_name : str or os.PathLike or list(str) or list(os.PathLike)
-       the ROOT file name
-    tree : str
-       the ROOT tree name
-
-    Returns
-    -------
-    list(str)
-       list of branches
-
-    Examples
-    --------
-    Grab branches for a file that are relevant for applying BDT models
-    and do something useful
-
-    >>> from tdub.utils import conservative_branches
-    >>> from tdub.frames import raw_dataframe
-    >>> from tdub.apply import FoldedResult, to_dataframe
-    >>> cb = conservative_branches("/path/to/file.root")
-    >>> df = raw_dataframe("/path/to/file.root", branches=cb)
-    >>> fr_2j2b = FoldedResult("/path/to/trained/fold2j2b", "2j2b")
-    >>> fr_2j1b = FoldedResult("/path/to/trained/fold2j1b", "2j1b")
-    >>> fr_2j2b.to_dataframe(df, query=True)
-    >>> fr_2j1b.to_dataframe(df, query=True)
-
-    """
-    branches_in_file = get_branches(file_name)
-    good_branches = set(
-        {"reg1j1b", "reg2j1b", "reg2j2b", "OS"}
-        | set(tdub.constants.FEATURESET_1j1b)
-        | set(tdub.constants.FEATURESET_2j1b)
-        | set(tdub.constants.FEATURESET_2j2b)
-    )
-    good_branches = set(branches_in_file) & good_branches
-    return sorted(good_branches, key=str.lower)
-
-
 def get_selection(region: Union[str, Region]) -> str:
     """Get the selection given a region
 

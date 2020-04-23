@@ -218,14 +218,9 @@ def scan(
         suffix = "{}-{}-{}-{}-{}".format(
             max_depth, num_leaves, learning_rate, min_child_samples, n_estimators,
         )
-        outdir = "{}/res/{:04d}_{}".format(ws, i, suffix)
+        outdir = ws / "res" / f"{i:04d}_{suffix}"
         arglist = (
-            "{} "
-            "{} "
-            "{} "
-            "-n {} "
-            "-x {} "
-            "-i {} "
+            "{} {} {} -n {} -x {} -i {} "
             "--learning-rate {} "
             "--num-leaves {} "
             "--min-child-samples {} "

@@ -17,7 +17,6 @@ from tdub.constants import AVOID_IN_CLF
 from tdub.utils import (
     Region,
     categorize_branches,
-    conservative_branches,
     get_avoids,
     get_branches,
     minimal_branches
@@ -87,58 +86,6 @@ def raw_dataframe(
     result = pd.concat([d for d in itr])
     result.selection_used = None
     return result
-
-
-def conservative_dataframe(
-    files: Union[str, List[str]],
-    tree: str = "WtLoop_nominal",
-    weight_name: str = "weight_nominal",
-    entrysteps: Optional[Any] = None,
-    **kwargs,
-) -> pd.DataFrame:
-    """Construct a raw pandas flavored dataframe with conservative branches
-
-    This function does some hand-holding and grabs a conservative set
-    of branches from the input file(s). The branches that will be
-    columns in the dataframe are determined by
-    :py:func:`tdub.utils.conservative_branches`.
-
-    Parameters
-    ----------
-    files : list(str) or str
-       a single ROOT file or list of ROOT files
-    tree : str
-       the tree name to turn into a dataframe
-    weight_name: str
-       weight branch (we make sure to grab it)
-    entrysteps : Any, optional
-       see the ``entrysteps`` keyword for ``uproot.iterate``
-    kwargs
-       extra keyword arguments passed to :py:func:`raw_dataframe`
-
-    Returns
-    -------
-    :obj:`pandas.DataFrame`
-       the pandas flavored DataFrame with all requested branches
-
-    Examples
-    --------
-    >>> from tdub.utils import quick_files
-    >>> from tdub.frames import conservative_dataframe
-    >>> files = quick_files("/path/to/files")["ttbar"]
-    >>> df = conservative_dataframe(files)
-
-    """
-    branches = conservative_branches(files, tree)
-    branches = sorted(set(branches) | set([weight_name]), key=str.lower)
-    return raw_dataframe(
-        files,
-        tree=tree,
-        weight_name=weight_name,
-        entrysteps=entrysteps,
-        branches=branches,
-        **kwargs,
-    )
 
 
 def iterative_selection(

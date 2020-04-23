@@ -11,7 +11,6 @@ Factory Function Summary
 
 .. autosummary::
 
-   conservative_dataframe
    iterative_selection
    raw_dataframe
 
@@ -32,10 +31,8 @@ Helper Function Summary
 Reference
 ^^^^^^^^^
 
-.. autofunction:: conservative_dataframe
 .. autofunction:: iterative_selection
 .. autofunction:: raw_dataframe
-
 .. autofunction:: apply_weight
 .. autofunction:: apply_weight_campaign
 .. autofunction:: apply_weight_tptrw
