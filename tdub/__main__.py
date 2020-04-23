@@ -17,20 +17,6 @@ from tdub import setup_logging
 setup_logging()
 log = logging.getLogger("tdub-cli")
 
-DESCRIPTION = ""
-EXECUTABLE = str(PosixPath(__file__).resolve())
-BNL_CONDOR_HEADER = """
-Universe        = vanilla
-notification    = Error
-notify_user     = ddavis@phy.duke.edu
-GetEnv          = True
-Executable      = {exe}
-Output          = {outdir}/$(cluster).$(process)
-Error           = {errdir}/$(cluster).$(process)
-Log             = {logdir}/$(cluster).$(process)
-request_memory  = 2.0G
-"""
-
 
 @click.group(context_settings=dict(max_content_width=92))
 def cli():
@@ -244,7 +230,7 @@ def scan(
                         i += 1
     log.info(f"prepared {len(runs)} jobs for submission")
     with (ws / "scan.condor.sub").open("w") as f:
-        condor_header(ws, EXECUTABLE, memory="2GB", file=f)
+        condor_header(ws, PosixPath(__file__).resolve(), memory="2GB", file=f)
         for run in runs:
             add_condor_argument("train-single {run}", file=f)
 
