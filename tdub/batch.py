@@ -7,6 +7,7 @@ import logging
 import glob
 import os
 import shutil
+import subprocess
 from typing import List, Union, Optional, TextIO
 from pathlib import PosixPath
 
@@ -29,7 +30,7 @@ request_memory  = {memory}
 """
 
 
-def create_condor_workspace(name: PathLike, exist_ok=False) -> PosixPath:
+def create_condor_workspace(name: PathLike, overwrite: bool = False) -> PosixPath:
     """Create a condor workspace given a name
 
     This will create a new directory containing `log`, `out`, and
@@ -43,8 +44,8 @@ def create_condor_workspace(name: PathLike, exist_ok=False) -> PosixPath:
     ----------
     name : str or os.PathLike
         the desired filesystem path for the workspace
-    exist_ok : bool
-        if False, raises OSError if the directory exists
+    overwrite: bool
+        if True, an existing workspace will be overwritten
 
     Raises
     ------
@@ -67,7 +68,9 @@ def create_condor_workspace(name: PathLike, exist_ok=False) -> PosixPath:
 
     """
     ws = PosixPath(name).resolve()
-    ws.mkdir(exist_ok=exist_ok, parents=True)
+    if overwrite and ws.exists():
+        shutil.rmtree(ws)
+    ws.mkdir(exist_ok=False, parents=True)
     (ws / "log").mkdir()
     (ws / "err").mkdir()
     (ws / "out").mkdir()
@@ -162,3 +165,25 @@ def add_condor_arguments(arguments: str, to_file: TextIO) -> None:
     to_file.write("\n")
     to_file.write(f"Arguments = {arguments}\n")
     to_file.write(f"Queue\n")
+
+
+def condor_submit(workspace: PathLike) -> None:
+    """Execute condor_submit on the condor.sub file in a workspace.
+
+    Parameters
+    ----------
+    workspace : str or os.PathLike
+        the workspace containing the condor.sub file
+    """
+    ws = PosixPath(workspace).resolve()
+    proc = subprocess.Popen(
+        ["condor_submit", str(ws / "condor.sub")],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    out, err = proc.communicate()
+    try:
+        out = out.decode("utf-8")
+    except AttributeError:
+        pass
+    log.info(out)

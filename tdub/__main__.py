@@ -25,15 +25,9 @@ def cli():
 
 
 @cli.command("train-single", context_settings=dict(max_content_width=92))
-@click.option(
-    "-d",
-    "--datadir",
-    type=click.Path(exists=True),
-    help="directory containing data files",
-    required=True,
-)
-@click.option("-r", "--region", type=str, required=True, help="the region to train on")
-@click.option("-o", "--outdir", type=str, required=True, help="output directory name")
+@click.argument("datadir", type=click.Path(exists=True))
+@click.argument("region", type=str)
+@click.argument("outdir", type=click.Path())
 @click.option(
     "-n",
     "--nlo-method",
@@ -47,7 +41,14 @@ def cli():
 )
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
-@click.option("-e", "--early-stop", type=int, help="number of early stopping rounds")
+@click.option(
+    "-e",
+    "--early-stop",
+    type=int,
+    default=10,
+    help="number of early stopping rounds",
+    show_default=True,
+)
 @click.option("-u", "--use-dilep", is_flag=True, help="train with dilepton samples")
 @click.option(
     "--learning-rate", type=float, required=True, help="learning_rate model parameter"
@@ -123,8 +124,8 @@ def single(
 @cli.command("train-scan", context_settings=dict(max_content_width=140))
 @click.argument("config", type=click.Path(exists=True, resolve_path=True))
 @click.argument("datadir", type=click.Path(exists=True, resolve_path=True))
+@click.argument("region", type=str)
 @click.argument("workspace", type=click.Path(exists=False))
-@click.option("-r", "--region", type=str, required=True, help="the region to train on")
 @click.option(
     "-n",
     "--nlo-method",
@@ -138,19 +139,30 @@ def single(
 )
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
-@click.option("-e", "--early-stop", type=int, help="number of early stopping rounds")
+@click.option(
+    "-e",
+    "--early-stop",
+    type=int,
+    default=10,
+    help="number of early stopping rounds",
+    show_default=True,
+)
 @click.option("-u", "--use-dilep", is_flag=True, help="train with dilepton samples")
+@click.option("--overwrite", is_flag=True, help="overwrite existing workspace")
+@click.option("--and-submit", is_flag=True, help="submit the condor jobs")
 def scan(
     config,
     datadir,
-    workspace,
     region,
+    workspace,
     nlo_method,
     override_selection,
     use_tptrw,
     ignore_list,
     early_stop,
     use_dilep,
+    overwrite,
+    and_submit,
 ):
     """Perform a parameter scan via condor jobs.
 
@@ -164,10 +176,21 @@ def scan(
     with open(config, "r") as f:
         pd = json.load(f)
 
-    from tdub.batch import create_condor_workspace, condor_preamble, add_condor_arguments
+    from tdub.batch import (
+        create_condor_workspace,
+        condor_preamble,
+        add_condor_arguments,
+        condor_submit,
+    )
 
-    ws = create_condor_workspace(workspace, exist_ok=False)
+    ws = create_condor_workspace(workspace, overwrite=overwrite)
     (ws / "res").mkdir()
+
+    log.info(f"Preparing a scan in {workspace}")
+    log.info(f"  - region: {region}")
+    log.info(f"  - NLO method: {nlo_method}")
+    log.info("  - Using {} samples".format("dilepton" if use_dilep else "inclusive"))
+    log.info("  - Apply top pt reweight: {}".format("yes" if use_tptrw else "no"))
 
     runs = []
     i = 0
@@ -181,57 +204,59 @@ def scan(
     else:
         ignore_list = str(PosixPath(ignore_list).resolve())
 
-    for max_depth in pd.get("max_depth"):
-        for num_leaves in pd.get("num_leaves"):
-            for n_estimators in pd.get("n_estimators"):
-                for learning_rate in pd.get("learning_rate"):
-                    for min_child_samples in pd.get("min_child_samples"):
-                        suffix = "{}-{}-{}-{}-{}".format(
-                            learning_rate,
-                            num_leaves,
-                            n_estimators,
-                            min_child_samples,
-                            max_depth,
-                        )
-                        arglist = (
-                            "{}"
-                            "{}"
-                            "-d {} "
-                            "-o {}/res/{:04d}_{} "
-                            "-r {} "
-                            "-n {} "
-                            "-x {} "
-                            "-i {} "
-                            "--learning-rate {} "
-                            "--num-leaves {} "
-                            "--n-estimators {} "
-                            "--min-child-samples {} "
-                            "--max-depth {} "
-                            "--early-stop {} "
-                        ).format(
-                            "-t " if use_tptrw else "",
-                            "-u " if use_dilep else "",
-                            datadir,
-                            ws,
-                            i,
-                            suffix,
-                            region,
-                            nlo_method,
-                            override_sel,
-                            ignore_list,
-                            learning_rate,
-                            num_leaves,
-                            n_estimators,
-                            min_child_samples,
-                            max_depth,
-                            early_stop,
-                        )
-                        arglist = arglist.replace("-x _NONE ", "")
-                        arglist = arglist.replace("-i _NONE ", "")
-                        runs.append(arglist)
-                        i += 1
+    import itertools
+
+    itr = itertools.product(
+        pd.get("max_depth"),
+        pd.get("num_leaves"),
+        pd.get("learning_rate"),
+        pd.get("min_child_samples"),
+        pd.get("n_estimators"),
+    )
+
+    for (max_depth, num_leaves, learning_rate, min_child_samples, n_estimators) in itr:
+        suffix = "{}-{}-{}-{}-{}".format(
+            max_depth, num_leaves, learning_rate, min_child_samples, n_estimators,
+        )
+        outdir = "{}/res/{:04d}_{}".format(ws, i, suffix)
+        arglist = (
+            "{} "
+            "{} "
+            "{} "
+            "-n {} "
+            "-x {} "
+            "-i {} "
+            "--learning-rate {} "
+            "--num-leaves {} "
+            "--min-child-samples {} "
+            "--max-depth {} "
+            "--n-estimators {} "
+            "--early-stop {} "
+            "{}"
+            "{}"
+        ).format(
+            datadir,
+            region,
+            outdir,
+            nlo_method,
+            override_sel,
+            ignore_list,
+            learning_rate,
+            num_leaves,
+            min_child_samples,
+            max_depth,
+            n_estimators,
+            early_stop,
+            "-t " if use_tptrw else "",
+            "-u " if use_dilep else "",
+        )
+        arglist = arglist.replace("-x _NONE ", "")
+        arglist = arglist.replace("-i _NONE ", "")
+        runs.append(arglist)
+        i += 1
+
     log.info(f"prepared {len(runs)} jobs for submission")
-    with (ws / "scan.condor.sub").open("w") as f:
+    with (ws / "condor.sub").open("w") as f:
         condor_preamble(ws, shutil.which("tdub"), memory="2GB", GetEnv=True, to_file=f)
         for run in runs:
             add_condor_arguments(f"train-single {run}", f)
@@ -241,6 +266,9 @@ def scan(
         for run in runs:
             print(f"tdub train-single {run}\n", file=f)
     os.chmod(ws / "run.sh", 0o755)
+
+    if and_submit:
+        condor_submit(workspace)
 
     return 0
 
