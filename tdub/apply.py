@@ -1,5 +1,5 @@
 """
-Module for applying trained models
+Module for applying trained models.
 """
 
 # stdlib
@@ -29,39 +29,53 @@ except ImportError:
         XGBClassifier = None
 # fmt: on
 
-Classifier = BaseEstimator
-
 # tdub
-from tdub.utils import Region
+from tdub.utils import Region, FileLike
 
 
 log = logging.getLogger(__name__)
 
 
-class FoldedResult:
-    """Provides access to the properties of a folded training result
+class BaseResult:
+    """Base class for describing a training result to apply to other data."""
+
+    @property
+    def features(self) -> List[str]:
+        """The list of features used."""
+        return self._features
+
+    @property
+    def region(self) -> Region:
+        """The region where the training was executed."""
+        return self._region
+
+    @property
+    def selection_used(self) -> str:
+        """The selection used on the trained datasets."""
+        return self._selection_used
+
+    @property
+    def summary(self) -> Dict[str, Any]:
+        """The training summary dictionary from the training json."""
+        return self._summary
+
+    def apply_to_dataframe(
+        self, df: pd.DataFrame, column_name: str, do_query: bool
+    ) -> None:
+        """Apply trained model(s) to events in a dataframe `df`.
+
+        All BaseResult classes must implement this function.
+        """
+        raise NotImplementedError("This method must be implemented")
+
+
+class FoldedResult(BaseResult):
+    """Provides access to the properties of a folded training result.
 
     Parameters
     ----------
     fold_output : str
        the directory with the folded training output
-
-    Attributes
-    ----------
-    model0 : lightgbm.LGBMClassifier
-       the model for the 0th fold from training
-    model1 : lightgbm.LGBMClassifier
-       the model for the 1st fold from training
-    model2 : lightgbm.LGBMClassifier
-       the model for the 2nd fold from training
-    region : Region
-       the region for this training
-    features : list(str)
-       the list of kinematic features used by the model
-    folder : sklearn.model_selection.KFold
-       the folding object that the training session used
-    summary : dict(str, Any)
-       the contents of the ``summary.json`` file.
 
     Examples
     --------
@@ -87,70 +101,32 @@ class FoldedResult:
         self._selection_used = self._summary["selection_used"]
 
     @property
-    def model0(self) -> Classifier:
+    def model0(self) -> BaseEstimator:
+        """The model for the 0th fold"""
         return self._model0
 
     @property
-    def model1(self) -> Classifier:
+    def model1(self) -> BaseEstimator:
+        """The model for the 1st fold"""
         return self._model1
 
     @property
-    def model2(self) -> Classifier:
+    def model2(self) -> BaseEstimator:
+        """The model for the 2nd fold"""
         return self._model2
 
     @property
-    def features(self) -> List[str]:
-        return self._features
-
-    @property
-    def region(self) -> Region:
-        return self._region
-
-    @property
-    def selection_used(self) -> str:
-        return self._selection_used
-
-    @property
     def folder(self) -> KFold:
+        """the folding object used during training"""
         return self._folder
 
-    @property
-    def summary(self) -> Dict[str, Any]:
-        return self._summary
-
-    def to_files(
-        self, files: Union[str, List[str]], tree: str = "WtLoop_nominal"
-    ) -> np.ndarray:
-        """apply the folded result to a set of files
-
-        Parameters
-        ----------
-        files : str or list(str)
-          the input file(s) to open and apply to
-        tree : str
-          the name of the tree to extract data from
-
-        Returns
-        -------
-        numpy.ndarray
-          the classifier output for the region associated with ``fr``
-
-        Examples
-        --------
-        >>> from tdub.apply import FoldedResult
-        >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
-        >>> y = fr_1j1b.to_files(["/path/to/file1.root", "/path/to/file2.root"])
-
-        """
-        raise NotImplementedError
-
-    def to_dataframe(
+    def apply_to_dataframe(
         self,
         df: pd.DataFrame,
-        column_name: str = "unnamed_bdt_response",
-        query: bool = False,
+        column_name: str = "unnamed_response",
+        do_query: bool = False,
     ) -> None:
-        """apply trained models to an arbitrary dataframe.
+        """Apply trained models to an arbitrary dataframe.
 
         This function will augment the dataframe with a new column
         (with a name given by the ``column_name`` argument) if it
@@ -163,7 +139,7 @@ class FoldedResult:
            the dataframe to read and augment
         column_name : str
            name to give the BDT response variable
-        query : bool
+        do_query : bool
            perform a query on the dataframe to select events belonging to
            the region associated with ``fr`` necessary if the dataframe
            hasn't been pre-filtered
@@ -171,10 +147,10 @@ class FoldedResult:
         Examples
         --------
         >>> from tdub.apply import FoldedResult
-        >>> from tdub.frames import conservative_dataframe
-        >>> df = conservative_dataframe("/path/to/file.root")
+        >>> from tdub.frames import raw_dataframe
+        >>> df = raw_dataframe("/path/to/file.root")
         >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
-        >>> fr_1j1b.to_dataframe(df, query=True)
+        >>> fr_1j1b.apply_to_dataframe(df, do_query=True)
 
         """
         if df.shape[0] == 0:
@@ -185,7 +161,7 @@ class FoldedResult:
             log.info(f"Creating {column_name} column")
             df[column_name] = -9999.0
 
-        if query:
+        if do_query:
             log.info(f"applying selection filter '{self.selection_used}'")
             mask = df.eval(self.selection_used)
             X = df[self.features].to_numpy()[mask]
@@ -200,57 +176,151 @@ class FoldedResult:
         y2 = self.model2.predict_proba(X)[:, 1]
         y = np.mean([y0, y1, y2], axis=0)
 
-        if query:
+        if do_query:
             df.loc[mask, column_name] = y
         else:
             df[column_name] = y
 
 
-def generate_npy(
-    frs: List[FoldedResult], df: pd.DataFrame, output_file: Union[str, os.PathLike]
-) -> None:
-    """create a NumPy npy file which is the response for all events in a DataFrame
-
-    this will use all folds in the ``frs`` argument to get BDT
-    response any each region associated to a ``FoldedResult``. We
-    query the input df to ensure that we apply to the correct
-    event. If the input dataframe is empty (no rows) then an empty
-    array is written to disk.
+class SingleResult(BaseResult):
+    """Provides access to the properties of a single result
 
     Parameters
     ----------
-    frs : list(FoldedResult)
-       the folded results to use
-    df : pandas.DataFrame
-       the dataframe of events to get the responses for
-    output_file : str or os.PathLike
-       name of the output NumPy file
+    training_output : str
+        the directory containing the training result
 
     Examples
     --------
+    >>> from tdub.apply import SingleResult
+    >>> res_1j1b = SingleResult("/path/to/some_1j1b_training_outdir")
+
+    """
+
+    def __init__(self, training_output: str):
+        training_path = PosixPath(training_output)
+        if not training_path.exists():
+            raise ValueError(f"{training_output} does not exist")
+        training_path = training_path.resolve()
+
+        self._model = joblib.load(training_path / "model.joblib.gz")
+
+        summary_file = training_path / "summary.json"
+        self._summary = json.loads(summary_file.read_text())
+        self._features = self._summary["features"]
+        self._region = Region.from_str(self._summary["region"])
+        self._selection_used = self._summary["selection_used"]
+
+    @property
+    def model(self) -> BaseEstimator:
+        """The trained model"""
+        return self._model
+
+    def apply_to_dataframe(
+        self,
+        df: pd.DataFrame,
+        column_name: str = "unnamed_response",
+        do_query: bool = False,
+    ) -> None:
+        """Apply trained model to an arbitrary dataframe.
+
+        This function will augment the dataframe with a new column
+        (with a name given by the ``column_name`` argument) if it
+        doesn't already exist. If the dataframe is empty this function
+        does nothing.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            the dataframe to read and augment
+        column_name : str
+            name to give the BDT response variable
+        do_query : bool
+            perform a query on the dataframe to select events belonging to
+            the region associated with ``fr`` necessary if the dataframe
+            hasn't been pre-filtered
+
+        Examples
+        --------
+        >>> from tdub.apply import FoldedResult
+        >>> from tdub.frames import raw_dataframe
+        >>> df = raw_dataframe("/path/to/file.root")
+        >>> sr_1j1b = SingleResult("/path/to/single_training_1j1b")
+        >>> sr_1j1b.apply_to_dataframe(df, do_query=True)
+
+        """
+
+        if df.shape[0] == 0:
+            log.info("Dataframe is empty, doing nothing")
+            return None
+
+        if column_name not in df.columns:
+            log.info(f"Creating {column_name} column")
+            df[column_name] = -9999.0
+
+        if do_query:
+            log.info(f"applying selection filter '{self.selection_used}'")
+            mask = df.eval(self.selection_used)
+            X = df[self.features].to_numpy()[mask]
+        else:
+            X = df[self.features].to_numpy()
+
+        if X.shape[0] == 0:
+            return None
+
+        yhat = self.model.predict_proba(X)[:, 1]
+
+        if do_query:
+            df.loc[mask, column_name] = yhat
+        else:
+            df[column_name] = yhat
+
+
+def get_result_array(results: List[BaseResult], df: pd.DataFrame) -> np.ndarray:
+    """Get a NumPy array which is the response for all events in `df`
+
+    This will use the :py:func:`~BaseResult.apply_to_dataframe` function
+    from the list of results. We query the input dataframe to ensure
+    that we apply to the correct events. If the input dataframe is
+    empty then an empty array is written to disk
+
+    Parameters
+    ----------
+    results : list(BaseResult)
+       the training results to use
+    df : pandas.DataFrame
+       the dataframe of events to get the responses for
+
+    Examples
+    --------
+    Using folded results:
+
     >>> from tdub.apply import FoldedResult, generate_npy
     >>> from tdub.frames import raw_dataframe
     >>> df = raw_dataframe("/path/to/file.root")
     >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
     >>> fr_2j1b = FoldedResult("/path/to/folded_training_2j1b")
     >>> fr_2j2b = FoldedResult("/path/to/folded_training_2j2b")
-    >>> generate_npy([fr_1j1b, fr_2j1b, fr_2j2b], df, "output.npy")
+    >>> res = generate_npy([fr_1j1b, fr_2j1b, fr_2j2b], df)
+
+    Using single results:
+
+    >>> from tdub.apply import SingleResult, generate_npy
+    >>> from tdub.frames import raw_dataframe
+    >>> df = raw_dataframe("/path/to/file.root")
+    >>> sr_1j1b = SingleResult("/path/to/single_training_1j1b")
+    >>> sr_2j1b = SingleResult("/path/to/single_training_2j1b")
+    >>> sr_2j2b = SingleResult("/path/to/single_training_2j2b")
+    >>> res = generate_npy([sr_1j1b, sr_2j1b, sr_2j2b], df, "output.npy")
 
     """
 
     if df.shape[0] == 0:
         log.info(f"Saving empty array to {output_file}")
-        np.save(output_file, np.array([], dtype=np.float64))
-        return None
-
-    outfile = PosixPath(output_file)
-    outfile.parent.mkdir(parents=True, exist_ok=True)
+        return np.array([], dtype=np.float64)
 
     colname = "_temp_col"
     log.info(f"The {colname} column will be deleted at the end of this function")
-    for fr in frs:
-        fr.to_dataframe(df, column_name=colname, query=True)
-    np.save(outfile, df[colname].to_numpy())
-    log.info(f"Saved output to {outfile}")
-    df.drop(columns=[colname], inplace=True)
-    log.info(f"Temporary column '{colname}' deleted")
+    for tr in results:
+        tr.apply_to_dataframe(df, column_name=colname, do_query=True)
+    return df.pop(colname).to_numpy()

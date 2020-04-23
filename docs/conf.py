@@ -55,11 +55,13 @@ autodoc_typehints = "none"
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = "sphinx_rtd_theme"
-html_theme_options = {
-    "collapse_navigation": True,
-    "sticky_navigation": True,
-}
+# html_theme = "sphinx_rtd_theme"
+# html_theme_options = {
+#     "collapse_navigation": True,
+#     "sticky_navigation": True,
+# }
+
+html_theme = "pydata_sphinx_theme"
 
 # html_theme = "alabaster"
 # html_theme_options = {

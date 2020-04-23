@@ -1,7 +1,7 @@
 tdub.batch
 ----------
 
-A module for running batch jobs (currently compatible with USATLAS BNL
+A module for running batch jobs (currently targets the US ATLAS BNL
 cluster).
 
 .. currentmodule:: tdub.batch
@@ -11,11 +11,13 @@ Function Summary
 
 .. autosummary::
 
-   gen_apply_npy_script
-   parse_samples
+   add_condor_arguments
+   condor_header
+   create_condor_workspace
 
 Reference
 ^^^^^^^^^
 
-.. autofunction:: gen_apply_npy_script
-.. autofunction:: parse_samples
+.. autofunction:: add_condor_arguments
+.. autofunction:: condor_header
+.. autofunction:: create_condor_workspace
