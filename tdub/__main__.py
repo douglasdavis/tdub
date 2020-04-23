@@ -232,7 +232,7 @@ def scan(
                         i += 1
     log.info(f"prepared {len(runs)} jobs for submission")
     with (ws / "scan.condor.sub").open("w") as f:
-        condor_preamble(ws, shutil.which("tdub"), memory="2GB", file=f)
+        condor_preamble(ws, shutil.which("tdub"), memory="2GB", GetEnv=True, to_file=f)
         for run in runs:
             add_condor_arguments(f"train-single {run}", f)
 
