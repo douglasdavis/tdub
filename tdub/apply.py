@@ -295,23 +295,23 @@ def get_result_array(results: List[BaseResult], df: pd.DataFrame) -> np.ndarray:
     --------
     Using folded results:
 
-    >>> from tdub.apply import FoldedResult, generate_npy
+    >>> from tdub.apply import FoldedResult, get_result_array
     >>> from tdub.frames import raw_dataframe
     >>> df = raw_dataframe("/path/to/file.root")
     >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
     >>> fr_2j1b = FoldedResult("/path/to/folded_training_2j1b")
     >>> fr_2j2b = FoldedResult("/path/to/folded_training_2j2b")
-    >>> res = generate_npy([fr_1j1b, fr_2j1b, fr_2j2b], df)
+    >>> res = get_result_array([fr_1j1b, fr_2j1b, fr_2j2b], df)
 
     Using single results:
 
-    >>> from tdub.apply import SingleResult, generate_npy
+    >>> from tdub.apply import SingleResult, get_result_array
     >>> from tdub.frames import raw_dataframe
     >>> df = raw_dataframe("/path/to/file.root")
     >>> sr_1j1b = SingleResult("/path/to/single_training_1j1b")
     >>> sr_2j1b = SingleResult("/path/to/single_training_2j1b")
     >>> sr_2j2b = SingleResult("/path/to/single_training_2j2b")
-    >>> res = generate_npy([sr_1j1b, sr_2j1b, sr_2j2b], df, "output.npy")
+    >>> res = get_result_array([sr_1j1b, sr_2j1b, sr_2j2b], df, "output.npy")
 
     """
 
