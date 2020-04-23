@@ -19,7 +19,7 @@ Function Summary
 
 .. autosummary::
 
-   generate_npy
+   get_result_array
 
 Reference
 ^^^^^^^^^
@@ -35,4 +35,4 @@ Reference
    :members:
    :inherited-members:
 
-.. autofunction:: generate_npy
+.. autofunction:: get_result_array
