@@ -164,7 +164,7 @@ def scan(
     with open(config, "r") as f:
         pd = json.load(f)
 
-    from tdub.batch import create_condor_workspace, condor_header, add_condor_arguments
+    from tdub.batch import create_condor_workspace, condor_preamble, add_condor_arguments
 
     ws = create_condor_workspace(workspace, exist_ok=False)
     (ws / "res").mkdir()
@@ -232,7 +232,7 @@ def scan(
                         i += 1
     log.info(f"prepared {len(runs)} jobs for submission")
     with (ws / "scan.condor.sub").open("w") as f:
-        condor_header(ws, shutil.which("tdub"), memory="2GB", file=f)
+        condor_preamble(ws, shutil.which("tdub"), memory="2GB", file=f)
         for run in runs:
             add_condor_arguments(f"train-single {run}", f)
 

@@ -12,12 +12,12 @@ Function Summary
 .. autosummary::
 
    add_condor_arguments
-   condor_header
+   condor_preamble
    create_condor_workspace
 
 Reference
 ^^^^^^^^^
 
 .. autofunction:: add_condor_arguments
-.. autofunction:: condor_header
+.. autofunction:: condor_preamble
 .. autofunction:: create_condor_workspace
