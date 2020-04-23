@@ -6,6 +6,7 @@ tdub command line interface
 import json
 import logging
 import os
+import shutil
 from pathlib import PosixPath
 
 # third party
@@ -163,7 +164,7 @@ def scan(
     with open(config, "r") as f:
         pd = json.load(f)
 
-    from tdub.batch import create_condor_workspace, condor_header, add_condor_argument
+    from tdub.batch import create_condor_workspace, condor_header, add_condor_arguments
 
     ws = create_condor_workspace(workspace, exist_ok=False)
     (ws / "res").mkdir()
@@ -179,6 +180,7 @@ def scan(
         ignore_list = "_NONE"
     else:
         ignore_list = str(PosixPath(ignore_list).resolve())
+
     for max_depth in pd.get("max_depth"):
         for num_leaves in pd.get("num_leaves"):
             for n_estimators in pd.get("n_estimators"):
@@ -230,9 +232,9 @@ def scan(
                         i += 1
     log.info(f"prepared {len(runs)} jobs for submission")
     with (ws / "scan.condor.sub").open("w") as f:
-        condor_header(ws, PosixPath(__file__).resolve(), memory="2GB", file=f)
+        condor_header(ws, shutil.which("tdub"), memory="2GB", file=f)
         for run in runs:
-            add_condor_argument("train-single {run}", file=f)
+            add_condor_arguments(f"train-single {run}", f)
 
     with (ws / "run.sh").open("w") as f:
         print("#!/bin/bash\n\n", file=f)
@@ -405,7 +407,8 @@ def apply_single(infile, arr_name, outdir, fold_results=None, single_results=Non
     from tdub.frames import raw_dataframe
     import numpy as np
 
-    outdir = PosixPath(outdir)
+    outdir = PosixPath(outdir).resolve()
+    outdir.mkdir(parents=True, exist_ok=True)
 
     trs = None
     if len(fold_results) > 0:

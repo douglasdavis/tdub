@@ -10,6 +10,7 @@ import shutil
 from typing import List, Union, Optional, IO
 from pathlib import PosixPath
 
+# tdub
 from tdub.utils import PathLike, FileLike
 
 log = logging.getLogger(__name__)
@@ -66,9 +67,8 @@ def create_condor_workspace(name: PathLike, exist_ok=False) -> PosixPath:
     ...     tb.add_condor_arguments("train-single ......", f)
 
     """
-    ws = PosixPath(name)
+    ws = PosixPath(name).resolve()
     ws.mkdir(exist_ok=exist_ok, parents=True)
-    ws.resolve()
     (ws / "log").mkdir()
     (ws / "err").mkdir()
     (ws / "out").mkdir()
