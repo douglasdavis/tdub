@@ -250,59 +250,57 @@ def scan(
         runs.append(arglist)
         i += 1
 
-    import pycondor
-    # Instantiate a Dagman
-    cDag = pycondor.Dagman(name="dag_train_scan",
-                           submit=str(ws / "sub"))
-    cJob = pycondor.Job(name="job_train_scan",
-                        universe="vanilla",
-                        getenv=True,
-                        notification="Error",
-                        extra_lines=["email = ddavis@phy.duke.edu"],
-                        executable=shutil.which("tdub"),
-                        submit=str(ws / "sub"),
-                        error=str(ws / "err"),
-                        output=str(ws / "out"),
-                        log=str(ws / "log"),
-                        dag=cDag)
-
-    cJobCheck = pycondor.Job(name="job_train_scan",
-                             universe="vanilla",
-                             getenv=True,
-                             notification="Error",
-                             extra_lines=["email = ddavis@phy.duke.edu"],
-                             executable=shutil.which("tdub"),
-                             submit=str(ws / "sub"),
-                             error=str(ws / "err"),
-                             output=str(ws / "out"),
-                             log=str(ws / "log"),
-                             dag=cDag)
-
-    cJobCheck.add_arg(f"train-check {ws}")
-
-    cJobCheck.add_parent(cJob)
-
-    for run in runs:
-        cJob.add_arg(f"train-single {run}")
-
-    cDag.build()
-
-    # log.info(f"prepared {len(runs)} jobs for submission")
-    # with (ws / "condor.sub").open("w") as f:
-    #     condor_preamble(ws, shutil.which("tdub"), memory="2GB", GetEnv=True, to_file=f)
-    #     for run in runs:
-    #         add_condor_arguments(f"train-single {run}", f)
-
-
-
     with (ws / "run.sh").open("w") as f:
         print("#!/bin/bash\n\n", file=f)
         for run in runs:
             print(f"tdub train-single {run}\n", file=f)
     os.chmod(ws / "run.sh", 0o755)
 
+    import pycondor
+    condor_dag = pycondor.Dagman(name="dag_train_scan", submit=str(ws / "sub"))
+    condor_job_scan = pycondor.Job(
+        name="job_train_scan",
+        universe="vanilla",
+        getenv=True,
+        notification="Error",
+        extra_lines=["email = ddavis@phy.duke.edu"],
+        executable=shutil.which("tdub"),
+        submit=str(ws / "sub"),
+        error=str(ws / "err"),
+        output=str(ws / "out"),
+        log=str(ws / "log"),
+        dag=condor_dag,
+    )
+    for run in runs:
+        condor_job_scan.add_arg(f"train-single {run}")
+    condor_job_check = pycondor.Job(
+        name="job_train_check",
+        universe="vanilla",
+        getenv=True,
+        notification="Error",
+        extra_lines=["email = ddavis@phy.duke.edu"],
+        executable=shutil.which("tdub"),
+        submit=str(ws / "sub"),
+        error=str(ws / "err"),
+        output=str(ws / "out"),
+        log=str(ws / "log"),
+        dag=condor_dag,
+    )
+    condor_job_check.add_arg(f"train-check {ws}")
+    condor_job_check.add_parent(condor_job_scan)
+
     if and_submit:
-        condor_submit(workspace)
+        condor_dag.build_submit()
+    else:
+        condor_dag.build()
+
+    # log.info(f"prepared {len(runs)} jobs for submission")
+    # with (ws / "condor.sub").open("w") as f:
+    #     condor_preamble(ws, shutil.which("tdub"), memory="2GB", GetEnv=True, to_file=f)
+    #     for run in runs:
+    #         add_condor_arguments(f"train-single {run}", f)
+    # if and_submit:
+    #     condor_submit(workspace)
 
     return 0
 
