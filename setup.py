@@ -11,11 +11,13 @@ with (project_root / "requirements.txt").open("r") as f:
 with (project_root / "README.md").open("r") as f:
     readme = f.read()
 
+
 def get_version():
     with (project_root / "tdub" / "__init__.py").open("r") as f:
         for line in f.readlines():
             if "__version__ = " in line:
                 return line.strip().split(" = ")[-1][1:-1]
+
 
 with (project_root / "docs" / "requirements.txt").open("r") as f:
     dev_requirements = f.read().splitlines()
@@ -25,9 +27,7 @@ setup(
     version=get_version(),
     scripts=[],
     packages=find_packages(exclude=["tests"]),
-    entry_points={
-        "console_scripts": ["tdub = tdub.__main__:run_cli", "tdub_old = tdub._app:cli",]
-    },
+    entry_points={"console_scripts": ["tdub = tdub.__main__:run_cli"]},
     description="tW analysis tools",
     long_description=readme,
     long_description_content_type="text/markdown",
