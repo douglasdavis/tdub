@@ -149,7 +149,11 @@ def single(
 @click.option("-u", "--use-dilep", is_flag=True, help="train with dilepton samples")
 @click.option("--overwrite", is_flag=True, help="overwrite existing workspace")
 @click.option("--and-submit", is_flag=True, help="submit the condor jobs")
-@click.option("--scan-params", type=click.Path(exists=True), help="override default scan parameters")
+@click.option(
+    "--scan-params",
+    type=click.Path(exists=True),
+    help="override default scan parameters with json file",
+)
 def scan(
     datadir,
     region,
@@ -260,6 +264,7 @@ def scan(
     os.chmod(ws / "run.sh", 0o755)
 
     import pycondor
+
     condor_dag = pycondor.Dagman(name="dag_train_scan", submit=str(ws / "sub"))
     condor_job_scan = pycondor.Job(
         name="job_train_scan",
