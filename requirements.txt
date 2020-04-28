@@ -10,3 +10,4 @@ pandas >= 1.0.0
 scikit-learn >= 0.21
 scikit-optimize >= 0.7.0
 uproot >= 3.11.0
+pycondor >= 0.5.0
