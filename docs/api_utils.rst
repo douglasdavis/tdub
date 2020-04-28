@@ -21,8 +21,6 @@ Function Summary
    augment_features
    bin_centers
    categorize_branches
-   chisquared_cdf_c
-   chisquared_test
    edges_and_centers
    extended_selection
    files_for_tree
@@ -30,8 +28,6 @@ Function Summary
    get_branches
    get_features
    get_selection
-   kolmogorov_prob
-   ks_twosample_binned
    minimal_branches
    override_features
    quick_files
@@ -50,8 +46,6 @@ Reference
 .. autofunction:: augment_features
 .. autofunction:: bin_centers
 .. autofunction:: categorize_branches
-.. autofunction:: chisquared_cdf_c
-.. autofunction:: chisquared_test
 .. autofunction:: edges_and_centers
 .. autofunction:: extended_selection
 .. autofunction:: files_for_tree
@@ -59,8 +53,6 @@ Reference
 .. autofunction:: get_branches
 .. autofunction:: get_features
 .. autofunction:: get_selection
-.. autofunction:: kolmogorov_prob
-.. autofunction:: ks_twosample_binned
 .. autofunction:: minimal_branches
 .. autofunction:: override_features
 .. autofunction:: quick_files

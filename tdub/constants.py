@@ -195,3 +195,12 @@ AVOID_IN_CLF_2j2b = sorted(["deltaR_jet1_jet2"])
 """
 list(str): list of features to avoid specifically in 2j2b classifiers
 """
+
+
+DEFAULT_SCAN_PARAMETERS = {
+    "max_depth" : [4, 5, 6, 7, 8],
+    "num_leaves" : [20, 31, 64],
+    "learning_rate" : [0.07, 0.1, 0.2],
+    "min_child_samples" : [50, 60, 80, 120, 180],
+    "n_estimators" : [250]
+}

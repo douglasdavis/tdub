@@ -19,7 +19,7 @@ setup_logging()
 log = logging.getLogger("tdub-cli")
 
 
-@click.group(context_settings=dict(max_content_width=92))
+@click.group(context_settings=dict(max_content_width=82))
 def cli():
     pass
 
@@ -122,7 +122,6 @@ def single(
 
 
 @cli.command("train-scan", context_settings=dict(max_content_width=140))
-@click.argument("config", type=click.Path(exists=True, resolve_path=True))
 @click.argument("datadir", type=click.Path(exists=True, resolve_path=True))
 @click.argument("region", type=str)
 @click.argument("workspace", type=click.Path(exists=False))
@@ -135,11 +134,6 @@ def single(
     show_default=True,
 )
 @click.option(
-    "-x", "--override-selection", type=str, help="override selection with contents of file"
-)
-@click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
-@click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
-@click.option(
     "-e",
     "--early-stop",
     type=int,
@@ -147,34 +141,37 @@ def single(
     help="number of early stopping rounds",
     show_default=True,
 )
+@click.option(
+    "-x", "--override-selection", type=str, help="override selection with contents of file"
+)
+@click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
+@click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
 @click.option("-u", "--use-dilep", is_flag=True, help="train with dilepton samples")
 @click.option("--overwrite", is_flag=True, help="overwrite existing workspace")
 @click.option("--and-submit", is_flag=True, help="submit the condor jobs")
+@click.option("--scan-params", type=click.Path(exists=True), help="override default scan parameters")
 def scan(
-    config,
     datadir,
     region,
     workspace,
     nlo_method,
+    early_stop,
     override_selection,
     use_tptrw,
     ignore_list,
-    early_stop,
     use_dilep,
     overwrite,
     and_submit,
+    scan_params,
 ):
     """Perform a parameter scan via condor jobs.
 
-    The scan parameters are defined in the CONFIG file, and the data
-    to use is in the DATADIR. All relevant output will be saved to
-    the WORKSPACE directory. Example:
+    DATADIR points to the intput ROOT files, training is performed on
+    the REGION and all output is saved to WORKSPACE.
 
-    $ tdub train-scan grid.json /data/path scan_2j1b -r 2j1b -e 10
+    $ tdub train-scan /data/path 2j2b scan_2j2b
 
     """
-    with open(config, "r") as f:
-        pd = json.load(f)
 
     from tdub.batch import (
         create_condor_workspace,
@@ -182,6 +179,12 @@ def scan(
         add_condor_arguments,
         condor_submit,
     )
+    from tdub.constants import DEFAULT_SCAN_PARAMETERS
+
+    if scan_params is None:
+        pd = DEFAULT_SCAN_PARAMETERS
+    else:
+        pd = json.loads(PosixPath(scan_params).read_text())
 
     ws = create_condor_workspace(workspace, overwrite=overwrite)
     (ws / "res").mkdir()

@@ -11,6 +11,7 @@ API Reference
    api_frames.rst
    api_features.rst
    api_hist.rst
+   api_math.rst
    api_raw_art.rst
    api_rex_art.rst
    api_train.rst

@@ -37,11 +37,11 @@ except ImportError:
 # tdub
 from tdub.art import setup_style
 from tdub.frames import iterative_selection, drop_cols
+from tdub.math import ks_twosample_binned
 from tdub.utils import (
     Region,
     bin_centers,
     quick_files,
-    ks_twosample_binned,
     get_selection,
     get_features,
 )

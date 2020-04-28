@@ -1,6 +1,9 @@
 # macOS
 .DS_Store
 
+# emacs
+.projectile
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
