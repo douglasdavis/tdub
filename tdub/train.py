@@ -323,6 +323,7 @@ def single_training(
         df, labels, weights, test_size=test_size, random_state=random_state, shuffle=True
     )
 
+    log.info(f"test size used: {test_size}")
     log.info("selection used on the datasets:")
     log.info("  '%s'" % df.selection_used)
     log.info("features training with:")

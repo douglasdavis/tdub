@@ -42,6 +42,14 @@ def cli():
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
 @click.option(
+    "-s",
+    "--test-size",
+    type=float,
+    default=0.5,
+    help="training test size",
+    show_default=True,
+)
+@click.option(
     "-e",
     "--early-stop",
     type=int,
@@ -69,6 +77,7 @@ def single(
     override_selection,
     use_tptrw,
     ignore_list,
+    test_size,
     early_stop,
     use_dilep,
     learning_rate,
@@ -115,6 +124,7 @@ def single(
         w,
         params,
         outdir,
+        test_size=test_size,
         early_stopping_rounds=early_stop,
         extra_summary_entries=extra_sum,
     )
@@ -438,14 +448,8 @@ def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
 
 @cli.command("apply-single", context_settings=dict(max_content_width=92))
 @click.argument("infile", type=click.Path(exists=True))
-@click.option(
-    "-n",
-    "--arr-name",
-    type=str,
-    help="name array name (eventual TTree branch name)",
-    required=True,
-)
-@click.option("-o", "--outdir", type=str, help="save output to directory", required=True)
+@click.argument("arrname", type=str)
+@click.argument("outdir", type=click.Path())
 @click.option(
     "-f",
     "--fold-results",
@@ -460,7 +464,7 @@ def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
     multiple=True,
     help="single result dirs",
 )
-def apply_single(infile, arr_name, outdir, fold_results=None, single_results=None):
+def apply_single(infile, arrname, outdir, fold_results=None, single_results=None):
     """Generate BDT response array for INFILE and save to .npy file.
 
     We generate the .npy files using either single training results
@@ -499,10 +503,77 @@ def apply_single(infile, arr_name, outdir, fold_results=None, single_results=Non
     stem = PosixPath(infile).stem
     sampinfo = SampleInfo(stem)
     tree = f"WtLoop_{sampinfo.tree}"
+    log.info(f"Using tree {tree}")
     df = raw_dataframe(infile, tree=tree, branches=necessary_branches)
-    npyfilename = outdir / f"{stem}.{arr_name}.npy"
+    npyfilename = outdir / f"{stem}.{arrname}.npy"
     result_arr = build_array(trs, df)
     np.save(npyfilename, result_arr)
+
+
+@cli.command("apply-all", context_settings=dict(max_content_width=92))
+@click.argument("datadir", type=click.Path(exists=True))
+@click.argument("arrname", type=str)
+@click.argument("outdir", type=click.Path(resolve_path=True))
+@click.argument("workspace", type=click.Path())
+@click.option(
+    "-f",
+    "--fold-results",
+    type=click.Path(exists=True),
+    multiple=True,
+    help="fold output directories",
+)
+@click.option(
+    "-s",
+    "--single-results",
+    type=click.Path(exists=True),
+    multiple=True,
+    help="single result dirs",
+)
+@click.option("--and-submit", is_flag=True, help="submit the condor jobs")
+def apply_all(datadir, arrname, outdir, workspace, fold_results=None, single_results=None, and_submit=False):
+    """Generate BDT response arrays for all ROOT files in DATAIR"""
+    import glob, shutil
+    import pycondor
+
+    if len(single_results) > 0 and len(fold_results) > 0:
+        raise ValueError("Cannot use -f and -s together with apply-single")
+    results_flags = None
+    if len(fold_results) > 0:
+        results_flags = "-f {}".format("-f".join(fold_results))
+    elif len(single_results) > 0:
+        results_flags = "-s {}".format(" -s ".join(single_results))
+    else:
+        raise ValueError("-f or -s required")
+
+    ws = PosixPath(workspace).resolve()
+    outpath = PosixPath(outdir)
+    outpath.mkdir(exist_ok=False)
+
+    datapath = PosixPath(datadir).resolve(strict=True)
+    all_files = glob.glob(f"{datapath}/*.root")
+    arglist = [f"{f} {arrname} {outpath} {results_flags}" for f in all_files]
+
+    condor_dag = pycondor.Dagman(name="dag_train_scan", submit=str(ws / "sub"))
+    condor_job_scan = pycondor.Job(
+        name="job_apply_all",
+        universe="vanilla",
+        getenv=True,
+        notification="Error",
+        extra_lines=["email = ddavis@phy.duke.edu"],
+        executable=shutil.which("tdub"),
+        submit=str(ws / "sub"),
+        error=str(ws / "err"),
+        output=str(ws / "out"),
+        log=str(ws / "log"),
+        dag=condor_dag,
+    )
+    for run in arglist:
+        condor_job_scan.add_arg(f"apply-single {run}")
+
+    if and_submit:
+        condor_dag.build_submit()
+    else:
+        condor_dag.build()
 
 
 @cli.command("soverb", context_settings=dict(max_content_width=92))
