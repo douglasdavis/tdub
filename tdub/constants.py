@@ -205,3 +205,4 @@ DEFAULT_SCAN_PARAMETERS = {
 }
 """
 dict(str, list): The default grid to perform a parameter scan.
+"""
