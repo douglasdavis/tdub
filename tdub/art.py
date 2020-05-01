@@ -1,6 +1,4 @@
-"""
-Art utilities
-"""
+"""Art utilities."""
 
 # stdlib
 from typing import Any, Dict, Optional, Tuple, List
@@ -26,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 class TRExHistogram:
-    """Defines a histogram built from a TRExFitter output file
+    """Defines a histogram built from a TRExFitter output file.
 
     Attributes
     ----------
@@ -109,7 +107,7 @@ class TRExHistogram:
         return round(self.bins[-1] - self.bins[-2], 2)
 
     def has_uniform_bins(self) -> bool:
-        """determines if the histogram has uniform bin widths
+        """determines if the histogram has uniform bin widths.
 
         Returns
         -------
@@ -121,7 +119,7 @@ class TRExHistogram:
 
 
 class TRExRegionSources:
-    """The sources for TRExFitter objects associated with a region
+    """The sources for TRExFitter objects associated with a region.
 
     Attributes
     ----------
@@ -188,7 +186,7 @@ class TRExRegionSources:
 
 
 def regions_from_fitdir(fitdir: PathLike) -> List[str]:
-    """get a list of regions from a TRExFitter directory
+    """get a list of regions from a TRExFitter directory.
 
     Parameters
     ----------
@@ -245,7 +243,7 @@ def canvas_from_counts(
     ratio_error_band: Optional[Any] = None,
     **subplots_kw,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
-    """create a plot canvas given a dictionary of counts and bin edges
+    """create a plot canvas given a dictionary of counts and bin edges.
 
     The ``counts`` and ``errors`` dictionaries are expected to have
     the following keys:
@@ -280,7 +278,6 @@ def canvas_from_counts(
         the matplotlib axes for the histogram stack
     axr : :obj:`matplotlib.axes.Axes`
         the matplotlib axes for the ratio comparison
-
     """
     centers = tdub.utils.bin_centers(bin_edges)
     start, stop = bin_edges[0], bin_edges[-1]

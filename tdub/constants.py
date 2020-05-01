@@ -1,22 +1,21 @@
-"""
-a module to house some constants
-"""
+"""A place for constants."""
+
 
 SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
 """
-str: The pandas flavor selection string for the 1j1b region
+str: The numexpr selection string for the 1j1b region.
 """
 
 
 SELECTION_2j1b = "(reg2j1b == True) & (OS == True)"
 """
-str: The pandas flavor selection string for the 2j1b region
+str: The numexpr selection string for the 2j1b region.
 """
 
 
 SELECTION_2j2b = "(reg2j2b == True) & (OS == True)"
 """
-str: The pandas flavor selection string for the 2j2b region
+str: The numexpr selection string for the 2j2b region.
 """
 
 
@@ -38,7 +37,7 @@ FEATURESET_1j1b_TMVA = sorted(
     key=str.lower,
 )
 """
-list(str): list of features we use for classifiers in the 1j1b region
+list(str): List of features we use for classifiers in the 1j1b region.
 """
 
 
@@ -56,7 +55,7 @@ FEATURESET_2j1b_TMVA = sorted(
     key=str.lower,
 )
 """
-list(str): list of features we use for classifiers in the 2j1b region
+list(str): List of features we use for classifiers in the 2j1b region.
 """
 
 
@@ -73,7 +72,7 @@ FEATURESET_2j2b_TMVA = sorted(
     key=str.lower,
 )
 """
-list(str): list of features we use for classifiers in the 2j2b region
+list(str): List of features we use for classifiers in the 2j2b region.
 """
 
 
@@ -95,7 +94,7 @@ FEATURESET_1j1b = sorted(
     key=str.lower,
 )
 """
-list(str): list of features we use for classifiers in the 1j1b region
+list(str): List of features we use for classifiers in the 1j1b region.
 """
 
 
@@ -123,7 +122,7 @@ FEATURESET_2j1b = sorted(
     key=str.lower,
 )
 """
-list(str): list of features we use for classifiers in the 2j1b region
+list(str): List of features we use for classifiers in the 2j1b region.
 """
 
 
@@ -141,7 +140,7 @@ FEATURESET_2j2b = sorted(
     key=str.lower,
 )
 """
-list(str): list of features we use for classifiers in the 2j2b region
+list(str): List of features we use for classifiers in the 2j2b region.
 """
 
 
@@ -173,13 +172,13 @@ AVOID_IN_CLF = sorted(
     key=str.lower,
 )
 """
-list(str): list of features to avoid in classifiers
+list(str): List of features to avoid in classifiers.
 """
 
 
 AVOID_IN_CLF_1j1b = sorted(["_nothing"])
 """
-list(str): list of features to avoid specifically in 1j1b classifiers
+list(str): List of features to avoid specifically in 1j1b classifiers.
 """
 
 
@@ -187,20 +186,22 @@ AVOID_IN_CLF_2j1b = sorted(
     ["HT_jet1jet2", "deltaR_lep1lep2_jet1jet2met", "mass_lep2jet1", "pT_jet2"]
 )
 """
-list(str): list of features to avoid specifically in 2j1b classifiers
+list(str): List of features to avoid specifically in 2j1b classifiers.
 """
 
 
 AVOID_IN_CLF_2j2b = sorted(["deltaR_jet1_jet2"])
 """
-list(str): list of features to avoid specifically in 2j2b classifiers
+list(str): List of features to avoid specifically in 2j2b classifiers.
 """
 
 
 DEFAULT_SCAN_PARAMETERS = {
-    "max_depth" : [4, 5, 6, 7, 8],
-    "num_leaves" : [20, 31, 64],
-    "learning_rate" : [0.07, 0.1, 0.2],
-    "min_child_samples" : [50, 60, 80, 120, 180],
-    "n_estimators" : [250]
+    "max_depth": [4, 5, 6, 7, 8],
+    "num_leaves": [20, 31, 64],
+    "learning_rate": [0.07, 0.1, 0.2],
+    "min_child_samples": [50, 60, 80, 120, 180],
+    "n_estimators": [250],
 }
+"""
+dict(str, list): The default grid to perform a parameter scan.

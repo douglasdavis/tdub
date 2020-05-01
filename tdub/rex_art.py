@@ -1,6 +1,4 @@
-"""
-Module for art from TRExFitter
-"""
+"""Module for art from TRExFitter."""
 
 # stdlib
 import logging
@@ -29,7 +27,7 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class Sample:
-    """Defines a physics sample
+    """Defines a physics sample.
 
     Attributes
     ----------
@@ -51,7 +49,7 @@ class Sample:
 
 @dataclass
 class NuisPar:
-    """Defines a nuisance parameter from TRExFitter
+    """Defines a nuisance parameter from TRExFitter.
 
     Attributes
     ----------
@@ -79,7 +77,7 @@ class NuisPar:
 
 @dataclass
 class Template:
-    """Defines a template for generation by TREx
+    """Defines a template for generation by TREx.
 
     Attributes
     ----------
@@ -119,7 +117,7 @@ class Template:
 
 @dataclass
 class TRExHistogram:
-    """Defines a histogram built from a TRExFitter output file
+    """Defines a histogram built from a TRExFitter output file.
 
     Attributes
     ----------
@@ -192,7 +190,7 @@ class TRExHistogram:
         return round(self.bins[-1] - self.bins[-2], 2)
 
     def has_uniform_bins(self) -> bool:
-        """determines if the histogram has uniform bin widths
+        """determines if the histogram has uniform bin widths.
 
         Returns
         -------
@@ -226,7 +224,7 @@ def draw_ratio_with_line(
     yline: float = 1.0,
     autoxscale: bool = True,
 ) -> None:
-    """ draw the ratio with a horizontal line on the axis """
+    """draw the ratio with a horizontal line on the axis."""
     x1 = data.bins[0]
     x2 = data.bins[-1]
     err = np.sqrt(
@@ -240,7 +238,7 @@ def draw_ratio_with_line(
 
 
 def set_labels(ax: plt.Axes, histogram: TRExHistogram) -> None:
-    """ define the axis labels """
+    """define the axis labels."""
     if histogram.has_uniform_bins():
         ylabel_suffix = f" / {histogram.bin_width} {histogram.unit}"
     else:
@@ -249,7 +247,7 @@ def set_labels(ax: plt.Axes, histogram: TRExHistogram) -> None:
 
 
 def shrink_pdf(file_path: str) -> None:
-    """ shrink pdf file using ghostscript """
+    """shrink pdf file using ghostscript."""
     command = (
         "gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 "
         "-dNOPAUSE -dQUIET -dBATCH "
@@ -273,7 +271,7 @@ def stackem(
     band: Optional[Any] = None,
     figsize: Optional[Tuple[float, float]] = None,
 ) -> Tuple[matplotlib.figure.Figure, Tuple[plt.Axes, plt.Axes]]:
-    """Create a stack plot
+    """Create a stack plot.
 
     Parameters
     ----------
@@ -363,7 +361,7 @@ def stackem(
 def prefit_histograms(
     args: Any, fit_name: str, region: str, samples: List[Sample]
 ) -> Tuple[TRExHistogram, List[TRExHistogram], Any]:
-    """Prepare prefit histogram objects
+    """Prepare prefit histogram objects.
 
     Parameters
     ---------
@@ -396,7 +394,7 @@ def prefit_histograms(
 def postfit_histograms(
     args: Any, fit_name: str, region: str, samples: List[Sample]
 ) -> Tuple[TRExHistogram, List[TRExHistogram], Any]:
-    """Prepare postfit histogram objects
+    """Prepare postfit histogram objects.
 
     Parameters
     ---------
@@ -417,7 +415,6 @@ def postfit_histograms(
        MC histograms
     band : uproot_methods.classes.TGraphAsymmErrors
        uncertainty band
-
     """
     hfile = f"{args.workspace}/Histograms/{region}_postFit.root"
     bfile = f"{args.workspace}/Histograms/{region}_postFit.root"
@@ -435,12 +432,11 @@ def split_region_str(region: str) -> Tuple[str, str]:
 
 
 def run_stacks(args: Any) -> None:
-    """Given command line arguments generate stack plots
+    """Given command line arguments generate stack plots.
 
     Parameters
     ----------
     args : argparse.Namespace
-
     """
     setup_style()
     samples = _get_plot_samples()
@@ -494,7 +490,7 @@ def run_stacks(args: Any) -> None:
 
 
 def get_blank_systematics(config_file: str) -> Tuple[List[NuisPar], Set[str]]:
-    """Get list of NPs and categories from TRExFitter config file
+    """Get list of NPs and categories from TRExFitter config file.
 
     Parameters
     ----------
@@ -528,7 +524,7 @@ def get_blank_systematics(config_file: str) -> Tuple[List[NuisPar], Set[str]]:
 
 
 def draw_pulls(args: Any, nps: List[NuisPar]) -> Tuple[plt.Figure, plt.Axes]:
-    """Draw pulls from command line arguments and nuisance parameters
+    """Draw pulls from command line arguments and nuisance parameters.
 
     Parameters
     ----------
@@ -593,12 +589,11 @@ def draw_pulls(args: Any, nps: List[NuisPar]) -> Tuple[plt.Figure, plt.Axes]:
 
 
 def run_pulls(args: Any) -> None:
-    """Given command line arguments generate pull plots
+    """Given command line arguments generate pull plots.
 
     Parameters
     ----------
     args : argparse.Namespace
-
     """
     setup_style()
     systematics, categories = get_blank_systematics(args.config)

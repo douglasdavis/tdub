@@ -1,6 +1,4 @@
-"""
-A module to aid working with histograms
-"""
+"""A module to aid working with histograms."""
 
 # stdlib
 from typing import Tuple, Optional, Union, List, Dict, Any, Iterable
@@ -13,13 +11,13 @@ from pygram11 import fix1dmw
 
 
 class CustomTH1(TH1.Methods, list):
-    """A TH1 like skeleton object"""
+    """A TH1 like skeleton object."""
 
     pass
 
 
 class CustomTAxis:
-    """A TAxis like object"""
+    """A TAxis like object."""
 
     def __init__(self, edges: np.ndarray) -> None:
         self._fNbins = len(edges) - 1
@@ -62,7 +60,7 @@ def prepare_padded(
 def arrays_to_th1(
     content: np.ndarray, error: np.ndarray, bins: np.ndarray, title: str = "none"
 ) -> CustomTH1:
-    """Create a TH1-like object built from arrays
+    """Create a TH1-like object built from arrays.
 
     Parameters
     ----------
@@ -101,7 +99,7 @@ def df_to_th1(
     dfe: pd.DataFrame,
     weight_col: Optional[Union[List[str], str]] = None,
 ) -> Union[CustomTH1, Dict[str, CustomTH1]]:
-    """Create a TH1-like object built from a dataframe structure
+    """Create a TH1-like object built from a dataframe structure.
 
     Parameters
     ----------
@@ -118,7 +116,6 @@ def df_to_th1(
     -------
     :obj:`CustomTH1` or dict(str, :obj:`CustomTH1`)
        the ROOT like histogram object(s)
-
     """
     binning = np.linspace(dfc._xmin, dfc._xmax, dfc._nbins + 1)
     if weight_col is None:
@@ -163,7 +160,7 @@ def generate_from_df(
     nominal_weight: bool = True,
     systematic_weights: bool = False,
 ) -> Any:
-    """Generate histogram(s) from a dataframe
+    """Generate histogram(s) from a dataframe.
 
     Parameters
     ----------
@@ -201,7 +198,6 @@ def generate_from_df(
     ...     range=(0.0, 200.0),
     ...     systematic_weights=True
     ... )
-
     """
     weight_cols: List[str] = []
     if nominal_weight:
@@ -221,7 +217,7 @@ def generate_from_df(
 
 
 def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
-    """Get bin centers given bin edges
+    """Get bin centers given bin edges.
 
     Parameters
     ----------
@@ -243,13 +239,12 @@ def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
     array([ 25.,  45.,  65.,  85., 105., 125., 145., 165., 185., 205., 225.])
     >>> centers
     array([ 35.,  55.,  75.,  95., 115., 135., 155., 175., 195., 215.])
-
     """
     return (bin_edges[1:] + bin_edges[:-1]) * 0.5
 
 
 def to_uniform_bins(bin_edges: np.ndarray):
-    """Convert a set of variable width bins to arbitrary uniform bins
+    """Convert a set of variable width bins to arbitrary uniform bins.
 
     This will create a set of bin edges such that the bin centers are
     at whole numbers, i.e. 5 variable width bins will return an array
@@ -272,7 +267,6 @@ def to_uniform_bins(bin_edges: np.ndarray):
     >>> var_width = [0, 1, 3, 7, 15]
     >>> to_uniform_bins(var_width)
     array([0.5, 1.5, 2.5, 3.5, 4.5])
-
     """
     return np.arange(0.5, len(bin_edges) + 0.5, dtype=np.float64)
 
@@ -280,7 +274,7 @@ def to_uniform_bins(bin_edges: np.ndarray):
 def edges_and_centers(
     bins: Union[int, Iterable], range: Optional[Tuple[float, float]] = None
 ) -> np.array:
-    """Create arrays for edges and bin centers
+    """Create arrays for edges and bin centers.
 
     Parameters
     ----------
@@ -306,7 +300,6 @@ def edges_and_centers(
     from pre-existing edges
 
     >>> edges, centers = edges_and_centers(np.linspace(0, 10, 21))
-
     """
     if isinstance(bins, int):
         if range is None:

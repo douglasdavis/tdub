@@ -1,6 +1,4 @@
-"""
-Module with some mathematical utilities
-"""
+"""Module with some mathematical utilities."""
 
 # stdlib
 from typing import Tuple
@@ -12,7 +10,7 @@ import scipy.special
 
 
 def kolmogorov_prob(z: float) -> float:
-    """Calculates the Kolmogorov distribution function
+    """Calculates the Kolmogorov distribution function.
 
     See ROOT's implementation in TMath_ (TMath::KolmogorovProb).
 
@@ -34,7 +32,6 @@ def kolmogorov_prob(z: float) -> float:
     >>> from tdub.utils import kolmogorov_prob
     >>> kolmogorov_prob(1.13)
     0.15549781841748692
-
     """
     w = 2.50662827
     # c1 - -pi**2/8, c2 = 9*c1, c3 = 25*c1
@@ -62,7 +59,7 @@ def kolmogorov_prob(z: float) -> float:
 def ks_twosample_binned(
     hist1: np.ndarray, hist2: np.ndarray, err1: np.ndarray, err2: np.ndarray
 ) -> Tuple[float, float]:
-    """Calculate KS statistic and p-value for two binned distributions
+    """Calculate KS statistic and p-value for two binned distributions.
 
     See ROOT's implementation in TH1_ (TH1::KolmogorovTest).
 
@@ -93,7 +90,6 @@ def ks_twosample_binned(
     >>> h1, err1 = pygram11.histogram(data1, weights=w1, bins=40, range=(-3, 3))
     >>> h2, err2 = pygram11.histogram(data2, weights=w2, bins=40, range=(-3, 3))
     >>> kst, ksp = ks_twosample_binned(h1, h2, err1, err2)
-
     """
     sum1 = np.sum(hist1)
     sum2 = np.sum(hist2)

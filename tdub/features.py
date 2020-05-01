@@ -1,6 +1,4 @@
-"""
-Module for selecting features
-"""
+"""Module for selecting features."""
 
 # stdlib
 import copy
@@ -25,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 class FeatureSelector:
-    """A class to steer the steps of feature selection
+    """A class to steer the steps of feature selection.
 
     Parameters
     ----------
@@ -90,7 +88,6 @@ class FeatureSelector:
     >>> from tdub.features import FeatureSelector, prepare_from_parquet
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
     >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
-
     """
 
     def __init__(
@@ -188,12 +185,12 @@ class FeatureSelector:
         return self._model_params
 
     def check_for_uniques(self, and_drop: bool = True) -> None:
-        """check the dataframe for features that have a single unique value
+        """Check the dataframe for features that have a single unique value.
 
         Parameters
         ----------
         and_drop : bool
-           if ``True``, and_drop any unique columns
+           If ``True``, and_drop any unique columns.
 
         Examples
         --------
@@ -201,7 +198,6 @@ class FeatureSelector:
         >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
         >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
         >>> fs.check_for_uniques(and_drop=True)
-
         """
         log.info("starting check_for_uniques step")
         uqcounts = pd.DataFrame(self.df.nunique()).T
@@ -217,11 +213,11 @@ class FeatureSelector:
             self._df.drop(columns=to_drop, inplace=True)
 
     def check_collinearity(self, threshold: Optional[float] = None) -> None:
-        """calculate the correlations of the features
+        """Calculate the correlations of the features.
 
-        given a correlation threshold this will construct a list of
+        Given a correlation threshold this will construct a list of
         features that should be dropped based on the correlation
-        values. This also adds a new property to the
+        values. This also adds a new property to the instance.
 
         If the ``threshold`` argument is not None then the class
         instance's ``corr_threshold`` property is updated.
@@ -229,7 +225,7 @@ class FeatureSelector:
         Parameters
         ----------
         threshold : float, optional
-           override the existing correlations threshold
+           Override the existing correlations threshold.
 
         Examples
         --------
@@ -244,7 +240,6 @@ class FeatureSelector:
         >>> fs.check_collinearity(threshold=0.85)
         >>> fs.corr_threshold
         0.85
-
         """
         log.info("starting check_collinearity step")
         if threshold is not None:
@@ -279,7 +274,7 @@ class FeatureSelector:
         test_size: float = 0.5,
         random_state: int = 414,
     ) -> None:
-        """train vanilla GBDT to calculate feature importance
+        """Train vanilla GBDT to calculate feature importance.
 
         some default options are used for the
         :py:class:`lightgbm.LGBMClassifier` instance and fit (see
@@ -307,7 +302,6 @@ class FeatureSelector:
         >>> fs.check_for_uniques(and_drop=True)
         >>> fs.check_collinearity()
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
-
         """
         import lightgbm as lgbm
 
@@ -362,9 +356,9 @@ class FeatureSelector:
         self._importances.reset_index(inplace=True)
 
     def check_candidates(self, n: int = 20) -> None:
-        """get the top uncorrelated features
+        """Get the top uncorrelated features.
 
-        this will parse the correlations and most important features
+        This will parse the correlations and most important features
         and build a list of ordered important features. When a feature
         that should be dropped due to a collinear feature is found, we
         ensure that the more important member of the pair is included
@@ -430,9 +424,9 @@ class FeatureSelector:
         extra_clf_opts: Optional[Dict[str, Any]] = None,
         extra_fit_opts: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """calculate the aucs iteratively removing one feature at a time
+        """Calculate the aucs iteratively removing one feature at a time.
 
-        after calling the check_candidates function we have a good
+        After calling the check_candidates function we have a good
         sete of candidate features; this function will train vanilla
         BDTs one at a time removing one of the candidate features. We
         rank the feature based on how impactful its removal is.
@@ -534,9 +528,9 @@ class FeatureSelector:
         extra_clf_opts: Optional[Dict[str, Any]] = None,
         extra_fit_opts: Optional[Dict[str, Any]] = None,
     ) -> None:
-        """calculate aucs iteratively adding the next best feature
+        """Calculate aucs iteratively adding the next best feature.
 
-        after calling the check_candidates function we have a good set
+        After calling the check_candidates function we have a good set
         of candidate features; this function will train vanilla BDTs
         iteratively including one more feater at a time starting with
         the most important.
@@ -562,7 +556,6 @@ class FeatureSelector:
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
         >>> fs.check_candidates(n=25)
         >>> fs.check_iterative_add_aucs(max_features=20)
-
         """
         import lightgbm as lgbm
 
@@ -619,7 +612,7 @@ class FeatureSelector:
         self._iterative_add_aucs = np.array(self._iterative_add_aucs)
 
     def save_result(self) -> None:
-        """save the results to a directory
+        """Save the results to a directory.
 
         Parameters
         ----------
@@ -638,7 +631,6 @@ class FeatureSelector:
         >>> fs.check_iterative_add_aucs(max_features=20)
         >>> fs.name = "2j1b_DR"
         >>> fs.save_result()
-
         """
         if self.name is None:
             raise ValueError("name attribute cannot be None to save result")
@@ -666,7 +658,7 @@ def create_parquet_files(
     entrysteps: Optional[Any] = None,
     use_campaign_weight: bool = False,
 ) -> None:
-    """create slimmed and selected parquet files from ROOT files
+    """Create slimmed and selected parquet files from ROOT files.
 
     this function requires pyarrow_.
 
@@ -691,7 +683,6 @@ def create_parquet_files(
     --------
     >>> from tdub.features import create_parquet_files
     >>> create_parquet_files("/path/to/root/files", "/path/to/pq/output", entrysteps="250 MB")
-
     """
     indir = str(PosixPath(qf_dir).resolve())
     qf = quick_files(indir)
@@ -738,7 +729,7 @@ def prepare_from_parquet(
     scale_sum_weights: bool = True,
     test_case_size: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
-    """prepare feature selection data from parquet files
+    """Prepare feature selection data from parquet files.
 
     this function requires pyarrow_.
 
@@ -783,7 +774,6 @@ def prepare_from_parquet(
     --------
     >>> from tdub.features import prepare_from_parquet
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
-
     """
     if weight_scale is not None and weight_mean is not None:
         raise ValueError("weight_scale and weight_mean cannot be used together")

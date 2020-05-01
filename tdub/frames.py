@@ -1,6 +1,4 @@
-"""
-Module for handling dataframes
-"""
+"""Module for handling dataframes."""
 
 # stdlib
 import logging
@@ -34,7 +32,7 @@ def raw_dataframe(
     drop_weight_sys: bool = False,
     entrysteps: Optional[Any] = None,
 ) -> pd.DataFrame:
-    """Construct a raw pandas flavored Dataframe with help from uproot
+    """Construct a raw pandas flavored Dataframe with help from uproot.
 
     We call this dataframe "raw" because it hasn't been parsed by any
     other tdub.frames functionality (no selection performed, kinematic
@@ -69,7 +67,6 @@ def raw_dataframe(
     >>> from tdub.frames import raw_dataframe
     >>> files = quick_files("/path/to/files")["ttbar"]
     >>> df = raw_dataframe(files)
-
     """
     if branches is not None:
         branches = sorted(set(branches) | set([weight_name]), key=str.lower)
@@ -100,9 +97,9 @@ def iterative_selection(
     use_tptrw: bool = False,
     **iterate_opts,
 ) -> pd.DataFrame:
-    """build a selected dataframe via uproot's iterate
+    """Build a selected dataframe via uproot's iterate.
 
-    if we want to build a memory-hungry dataframe and apply a
+    If we want to build a memory-hungry dataframe and apply a
     selection this helps us avoid crashing due to using all of our
     RAM.
 
@@ -160,7 +157,6 @@ def iterative_selection(
 
     >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"), exclue_avoids=True,
     ...                             keep_category="kinematics")
-
     """
     # determine which branches will be used for selection only and
     # which branches we need for weights
@@ -217,7 +213,7 @@ def iterative_selection(
 
 
 def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFrame]:
-    """get subsets of dataframes that satisfy a selection
+    """Get subsets of dataframes that satisfy a selection.
 
     Parameters
     ----------
@@ -242,13 +238,12 @@ def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFram
     >>> tW_DR_selected, ttbar_selected = satisfying_selection(
     ...     dfim_tW_DR.df, dfim_ttbar.df, selection=low_bdt
     ... )
-
     """
     return [df.query(selection) for df in dfs]
 
 
 def drop_cols(df: pd.DataFrame, *cols: str) -> None:
-    """drop some columns from a dataframe
+    """Drop some columns from a dataframe.
 
     this is a convenient function because it just ignores branches
     that don't exist in the dataframe that are present in ``cols``.
@@ -281,7 +276,6 @@ def drop_cols(df: pd.DataFrame, *cols: str) -> None:
     >>> df.drop_cols("mass_jet2") # use augmented df class
     >>> "mass_jet2" in df.columns:
     False
-
     """
     in_dataframe = set(df.columns)
     in_cols = set(cols)
@@ -293,7 +287,7 @@ def drop_cols(df: pd.DataFrame, *cols: str) -> None:
 
 
 def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) -> None:
-    """drop columns that we avoid in classifiers
+    """Drop columns that we avoid in classifiers.
 
     this uses :py:func:`tdub.frames.drop_cols` with a predefined set
     of columns (:py:data:`tdub.utils.AVOID_IN_CLF`).
@@ -318,7 +312,6 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
     >>> drop_avoid(df)
     >>> "E_jetL1" in df.columns:
     False
-
     """
     to_drop = AVOID_IN_CLF
     if region is not None:
@@ -327,13 +320,13 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
 
 
 def drop_jet2(df: pd.DataFrame) -> None:
-    """drop all columns with jet2 properties
+    """Drop all columns with jet2 properties.
 
-    in the 1j1b region we obviously don't have a second jet; so this
+    In the 1j1b region we obviously don't have a second jet; so this
     lets us get rid of all columns dependent on jet2 kinematic
     properties.
 
-    we augment :py:class:`pandas.DataFrame` with this function
+    We augment :py:class:`pandas.DataFrame` with this function
 
     Parameters
     ----------
@@ -350,7 +343,6 @@ def drop_jet2(df: pd.DataFrame) -> None:
     >>> drop_jet2(df)
     >>> "pTsys_lep1lep2jet1jet2met" in df.columns:
     False
-
     """
     j2cols = [col for col in df.columns if "jet2" in col]
     drop_cols(df, *j2cols)
@@ -359,12 +351,12 @@ def drop_jet2(df: pd.DataFrame) -> None:
 def apply_weight(
     df: pd.DataFrame, weight_name: str, exclude: Optional[List[str]] = None
 ) -> None:
-    """apply (multiply) a weight to all other weights in the DataFrame
+    """Apply (multiply) a weight to all other weights in the DataFrame.
 
     This will multiply the nominal weight and all systematic weights
     in the DataFrame by the ``weight_name`` column.
 
-    we augment :py:class:`pandas.DataFrame` with this function
+    We augment :py:class:`pandas.DataFrame` with this function.
 
     Parameters
     ----------
@@ -381,7 +373,6 @@ def apply_weight(
     >>> import tdub.frames
     >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
     >>> df.apply_weight("weight_campaign")
-
     """
     sys_weight_cols = [c for c in df.columns if "weight_sys" in c]
     cols = ["weight_nominal"] + sys_weight_cols
@@ -397,12 +388,12 @@ def apply_weight(
 
 
 def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
-    """multiply nominal and systematic weights by the campaign weight
+    """Multiply nominal and systematic weights by the campaign weight.
 
-    this is useful for samples that were produced without the campaign
-    weight term already applied to all other weights
+    This is useful for samples that were produced without the campaign
+    weight term already applied to all other weights.
 
-    we augment :py:class:`pandas.DataFrame` with this function
+    We augment :py:class:`pandas.DataFrame` with this function.
 
     Parameters
     ----------
@@ -429,12 +420,12 @@ def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None)
 
 
 def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
-    """multiply nominal and systematic weights by the top pt reweight term
+    """Multiply nominal and systematic weights by the top pt reweight term.
 
-    this is useful for samples that were produced without the top pt
-    reweighting term already applied to all other weights
+    This is useful for samples that were produced without the top pt
+    reweighting term already applied to all other weights.
 
-    we augment :py:class:`pandas.DataFrame` with this function
+    We augment :py:class:`pandas.DataFrame` with this function.
 
     Parameters
     ----------
@@ -455,7 +446,6 @@ def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) ->
     >>> df.apply_weight_tptrw()
     >>> df.weight_nominal[5]
     0.00196
-
     """
     excludes = ["weight_sys_noreweight"]
     if exclude is not None:

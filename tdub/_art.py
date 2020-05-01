@@ -1,6 +1,4 @@
-"""
-Backend art utilities
-"""
+"""Backend art utilities."""
 
 # std
 from dataclasses import dataclass
@@ -53,7 +51,7 @@ def draw_atlas_label(
     s1: int = 14,
     s2: int = 12,
 ) -> None:
-    """ draw the ATLAS label on the plot, with extra lines if desired """
+    """draw the ATLAS label on the plot, with extra lines if desired."""
     ax.text(
         x,
         y,

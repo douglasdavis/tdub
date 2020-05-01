@@ -1,6 +1,4 @@
-"""
-Module to help running batch jobs
-"""
+"""Module to help running batch jobs."""
 
 # stdlib
 import logging
@@ -31,7 +29,7 @@ request_memory  = {memory}
 
 
 def create_condor_workspace(name: PathLike, overwrite: bool = False) -> PosixPath:
-    """Create a condor workspace given a name
+    """Create a condor workspace given a name.
 
     This will create a new directory containing `log`, `out`, and
     `err` directories inside. The `workspace` argument to the
@@ -65,7 +63,6 @@ def create_condor_workspace(name: PathLike, overwrite: bool = False) -> PosixPat
     >>> with open(ws / "condor.sub", "w") as f:
     ...     preamble = tb.condor_preamble(ws, shutil.which("tdub"), to_file=f)
     ...     tb.add_condor_arguments("train-single ......", f)
-
     """
     ws = PosixPath(name).resolve()
     if overwrite and ws.exists():
@@ -87,7 +84,7 @@ def condor_preamble(
     to_file: TextIO = None,
     **kwargs,
 ) -> str:
-    """Create the preamble of a condor submission script
+    """Create the preamble of a condor submission script.
 
     Extra kwargs create additional preamble entries. See the HTCondor
     documentation for more details on all parameters.
@@ -122,7 +119,6 @@ def condor_preamble(
     >>> with open(ws / "condor.sub", "w") as f:
     ...     preamble = tb.condor_preamble(ws, shutil.which("tdub"), to_file=f)
     ...     tb.add_condor_arguments("train-single ......", f)
-
     """
     res = BNL_CONDOR_PREAMBLE.format(
         universe=universe,
@@ -140,7 +136,7 @@ def condor_preamble(
 
 
 def add_condor_arguments(arguments: str, to_file: TextIO) -> None:
-    """Add an arguments line to a condor submission script
+    """Add an arguments line to a condor submission script.
 
     the `arguments` argument is prefixed with `"Arguments = "` and
     written to `to_file`.
@@ -160,7 +156,6 @@ def add_condor_arguments(arguments: str, to_file: TextIO) -> None:
     >>> with open(ws / "condor.sub", "w") as f:
     ...     preamble = tb.condor_preamble(ws, shutil.which("tdub"), to_file=f)
     ...     tb.add_condor_arguments("train-single ......", f)
-
     """
     to_file.write("\n")
     to_file.write(f"Arguments = {arguments}\n")

@@ -1,6 +1,4 @@
-"""
-Module for art from raw data
-"""
+"""Module for art from raw data."""
 
 # stdlib
 import numbers
@@ -25,7 +23,7 @@ def draw_rocs(
     draw_guess: bool = False,
     draw_grid: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes]:
-    """draw ROC curves from a set of folded training results
+    """Draw ROC curves from a set of folded training results.
 
     Parameters
     ----------
@@ -57,7 +55,6 @@ def draw_rocs(
     >>> fr_2j1b = FoldedResult("/path/to/train_2j1b")
     >>> fr_2j2b = FoldedResult("/path/to/train_2j2b")
     >>> fig, ax = draw_rocs([fr_1j1b, fr_2j1b, fr_2j2b])
-
     """
     if labels is None:
         labels = [str(fr.region) for fr in frs]
@@ -100,7 +97,7 @@ def draw_stack(
     legend_ncol: int = 2,
     y_scalefac: float = 1.35,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
-    """using some dataframes, draw the stacked histograms for some distribution
+    """Given dataframes draw the stacked histograms for a distribution.
 
     Parameters
     ----------
@@ -158,7 +155,6 @@ def draw_stack(
     ... )
     >>> fig.savefig("mass_lep1jet2.pdf")
     >>> plt.close(fig)
-
     """
     data_count, __ = pygram11.histogram(
         data_df[distribution].to_numpy(), bins=bins, range=range, flow=True

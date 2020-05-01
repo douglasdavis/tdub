@@ -1,6 +1,4 @@
-"""
-Module for general utilities
-"""
+"""Module for general utilities."""
 
 # stdlib
 import copy
@@ -29,7 +27,7 @@ log = logging.getLogger(__name__)
 
 
 class Region(Enum):
-    """A simple enum class for easily using region information
+    """A simple enum class for easily using region information.
 
     Attributes
     ----------
@@ -48,7 +46,6 @@ class Region(Enum):
     >>> from tdub.utils import Region, get_selection
     >>> from tdub.frames import iterative_selection
     >>> df = iterative_selection(files, get_selection(Region.r2j2b))
-
     """
 
     r1j1b = 0
@@ -58,7 +55,7 @@ class Region(Enum):
 
     @staticmethod
     def from_str(s: str) -> "Region":
-        """Get enum value for the given string
+        """Get enum value for the given string.
 
         This function supports three ways to define a region; prefixed
         with "r", prefixed with "reg", or no prefix at all. For
@@ -83,7 +80,6 @@ class Region(Enum):
         >>> from tdub.utils import Region
         >>> Region.from_str("1j1b")
         <Region.r1j1b: 0>
-
         """
         if s.startswith("reg"):
             rsuff = s.split("reg")[-1]
@@ -106,7 +102,7 @@ class Region(Enum):
 
 @dataclass
 class SampleInfo:
-    """Describes a sample's attritubes given it's name
+    """Describes a sample's attritubes given it's name.
 
     Parameters
     ----------
@@ -140,7 +136,6 @@ class SampleInfo:
     MC16d
     >>> sampinfo.tree
     nominal
-
     """
 
     phy_process: str
@@ -182,7 +177,7 @@ class SampleInfo:
 def categorize_branches(
     source: Union[FileLike, Iterable[str]], tree: str = "WtLoop_nominal",
 ) -> Dict[str, List[str]]:
-    """Categorize branches into a separate lists
+    """Categorize branches into a separate lists.
 
     The categories:
 
@@ -223,7 +218,6 @@ def categorize_branches(
     >>> cbed = categorize_branches("/path/to/file.root")
     >>> root_file = PosixPath("/path/to/file.root")
     >>> cbed = categorized_branches(root_file)
-
     """
     metas = {
         "reg1j1b",
@@ -409,7 +403,7 @@ def quick_files(datapath: FileLike, campaign: Optional[str] = None) -> Dict[str,
 def files_for_tree(
     datapath: FileLike, sample_prefix: str, tree_name: str, campaign: Optional[str] = None,
 ) -> List[str]:
-    """Get a list of files for the sample and desired tree
+    """Get a list of files for the sample and desired tree.
 
     Parameters
     ----------
@@ -434,7 +428,6 @@ def files_for_tree(
     ['/data/path/ttbar_410472_FS_MC16a_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root',
      '/data/path/ttbar_410472_FS_MC16d_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root',
      '/data/path/ttbar_410472_FS_MC16e_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root']
-
     """
     if campaign is None:
         camp = ""
@@ -462,7 +455,7 @@ def get_branches(
     ignore_weights: bool = False,
     sort: bool = False,
 ) -> List[str]:
-    """Get list of branches in a ROOT TTree
+    """Get list of branches in a ROOT TTree.
 
     Parameters
     ----------
@@ -489,7 +482,6 @@ def get_branches(
     ["pT_lep1", "pT_lep2"]
     >>> get_branches("/path/to/file.root")
     ["pT_lep1", "pT_lep2", "weight_nominal", "weight_tptrw"]
-
     """
     if isinstance(file_name, list):
         t = uproot.open(file_name[0]).get(tree)
@@ -509,7 +501,7 @@ def get_branches(
 
 
 def get_selection(region: Union[str, Region]) -> str:
-    """Get the selection given a region
+    """Get the selection given a region.
 
     See the tdub.constants module for the defition of the
     selections. See :py:func:`tdub.utils.Region.from_str` for the
@@ -534,7 +526,6 @@ def get_selection(region: Union[str, Region]) -> str:
     '(reg1j1b == True) & (OS == True)'
     >>> get_selection("2j2b")
     '(reg2j2b == True) & (OS == True)'
-
     """
     options = {
         Region.r1j1b: tdub.constants.SELECTION_1j1b,
@@ -570,7 +561,6 @@ def get_avoids(region: Union[str, Region]) -> List[str]:
     ['HT_jet1jet2', 'deltaR_lep1lep2_jet1jet2met', 'mass_lep2jet1', 'pT_jet2']
     >>> get_avoids("2j2b")
     ['deltaR_jet1_jet2']
-
     """
     options = {
         Region.r1j1b: tdub.constants.AVOID_IN_CLF_1j1b,
@@ -583,7 +573,7 @@ def get_avoids(region: Union[str, Region]) -> List[str]:
 
 
 def get_features(region: Union[str, Region]) -> List[str]:
-    """Get the feature list for a region
+    """Get the feature list for a region.
 
     See the tdub.constants module for the defition of the feature
     lists. See :py:func:`tdub.utils.Region.from_str` for the
@@ -613,7 +603,6 @@ def get_features(region: Union[str, Region]) -> List[str]:
      'pTsys_lep1lep2jet1jet2met',
      'psuedoContTagBin_jet1',
      'psuedoContTagBin_jet2']
-
     """
     # first allow retrieval of all features
     if region == "ALL":
@@ -636,7 +625,7 @@ def get_features(region: Union[str, Region]) -> List[str]:
 
 
 def augment_features(region: Union[str, Region], to_add: List[str]) -> None:
-    """Add some features to the existing lists
+    """Add some features to the existing lists.
 
     See the tdub.constants module for the defition of the feature
     lists. See :py:func:`tdub.utils.Region.from_str` for the
@@ -661,7 +650,6 @@ def augment_features(region: Union[str, Region], to_add: List[str]) -> None:
     True
     >>> "feature" in get_features("2j2b")
     True
-
     """
     if isinstance(region, str):
         region = Region.from_str(region)
@@ -676,7 +664,7 @@ def augment_features(region: Union[str, Region], to_add: List[str]) -> None:
 
 
 def override_features(table: Dict[str, List[str]]) -> None:
-    """Override feature constants ``tdub.constants.FEATURESET_{1j1b, 2j1b, 2j2b}``
+    """Programacically override feature lists in tdub.constants module.
 
     Given a dictionary of the form
 
@@ -688,7 +676,7 @@ def override_features(table: Dict[str, List[str]]) -> None:
             "r2j2b": ["new1", "new2"],
         }
 
-    we override the module constants
+    we override the module constants:
 
     - :py:data:`tdub.constants.FEATURESET_1j1b`
     - :py:data:`tdub.constants.FEATURESET_2j1b`
@@ -720,7 +708,6 @@ def override_features(table: Dict[str, List[str]]) -> None:
     ["new1", "new2", "new3"]
     >>> tdub.constants.FEATURESET_1j1b
     ["new1", "new2", "new3"]
-
     """
     if "r1j1b" in table:
         log.info("Overriding tdub.constants.FEATURESET_1j1b")
@@ -734,7 +721,7 @@ def override_features(table: Dict[str, List[str]]) -> None:
 
 
 def extended_selection(region: Union[Region, str], extra: str) -> str:
-    """Construct an extended selection string for a region
+    """Construct an extended selection string for a region.
 
     Parameters
     ----------
@@ -753,14 +740,13 @@ def extended_selection(region: Union[Region, str], extra: str) -> str:
     >>> from tdub.utils import extended_selection
     >>> extended_selection("2j2b", "met < 120")
     '((reg2j2b == True) & (OS == True)) & (met < 120)'
-
     """
     raw = get_selection(region)
     return f"({raw}) & ({extra})"
 
 
 def minimal_branches(selection: str) -> Set[str]:
-    """Get the minimal set of branches necessary to perform a selection
+    """Get the minimal set of branches necessary to perform a selection.
 
     Parameters
     ----------
@@ -778,6 +764,5 @@ def minimal_branches(selection: str) -> Set[str]:
     >>> selection = "(reg1j1b == True) & (OS == True) & (mass_lep1lep2 > 100)"
     >>> minimal_branches(selection)
     {'OS', 'mass_lep1lep2', 'reg1j1b'}
-
     """
     return formulate.from_numexpr(selection).variables

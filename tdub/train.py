@@ -312,7 +312,6 @@ def single_training(
     ...     params,
     ...     "training_output",
     ... )
-
     """
     starting_dir = os.getcwd()
     output_path = PosixPath(output_dir)
@@ -625,7 +624,6 @@ def folded_training(
     ...     "2j2b",
     ...     kfold_kw={"n_splits": 5, "shuffle": True, "random_state": 17}
     ... )
-
     """
     starting_dir = os.getcwd()
     output_path = PosixPath(output_dir)
@@ -885,7 +883,6 @@ def gp_minimize_auc(
     >>> from tdub.train import prepare_from_root, gp_minimize_auc
     >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DS", "opt_DS_2j1b")
     >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DR", "opt_DR_2j1b")
-
     """
 
     from skopt.utils import use_named_args

@@ -1,6 +1,4 @@
-"""
-Module for applying trained models.
-"""
+"""Module for applying trained models."""
 
 # stdlib
 import json
@@ -75,7 +73,6 @@ class BaseResult:
         ----------
         summary_file : str or os.PathLike
             the summary json file
-
         """
         self._summary = json.loads(summary_file.read_text())
         self._features = self.summary["features"]
@@ -104,7 +101,6 @@ class FoldedResult(BaseResult):
     --------
     >>> from tdub.apply import FoldedResult
     >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
-
     """
 
     def __init__(self, fold_output: str) -> None:
@@ -115,7 +111,7 @@ class FoldedResult(BaseResult):
         self.parse_summary_json(fold_path / "summary.json")
 
     def parse_summary_json(self, summary_file: os.PathLike) -> None:
-        """Parse a training's summary json file
+        """Parse a training's summary json file.
 
         Parameters
         ----------
@@ -127,22 +123,22 @@ class FoldedResult(BaseResult):
 
     @property
     def model0(self) -> BaseEstimator:
-        """The model for the 0th fold"""
+        """The model for the 0th fold."""
         return self._model0
 
     @property
     def model1(self) -> BaseEstimator:
-        """The model for the 1st fold"""
+        """The model for the 1st fold."""
         return self._model1
 
     @property
     def model2(self) -> BaseEstimator:
-        """The model for the 2nd fold"""
+        """The model for the 2nd fold."""
         return self._model2
 
     @property
     def folder(self) -> KFold:
-        """the folding object used during training"""
+        """the folding object used during training."""
         return self._folder
 
     def apply_to_dataframe(
@@ -176,7 +172,6 @@ class FoldedResult(BaseResult):
         >>> df = raw_dataframe("/path/to/file.root")
         >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
         >>> fr_1j1b.apply_to_dataframe(df, do_query=True)
-
         """
         if df.shape[0] == 0:
             log.info("Dataframe is empty, doing nothing")
@@ -208,7 +203,7 @@ class FoldedResult(BaseResult):
 
 
 class SingleResult(BaseResult):
-    """Provides access to the properties of a single result
+    """Provides access to the properties of a single result.
 
     Parameters
     ----------
@@ -219,7 +214,6 @@ class SingleResult(BaseResult):
     --------
     >>> from tdub.apply import SingleResult
     >>> res_1j1b = SingleResult("/path/to/some_1j1b_training_outdir")
-
     """
 
     def __init__(self, training_output: os.PathLike) -> None:
@@ -229,7 +223,7 @@ class SingleResult(BaseResult):
 
     @property
     def model(self) -> BaseEstimator:
-        """The trained model"""
+        """The trained model."""
         return self._model
 
     def apply_to_dataframe(
@@ -263,7 +257,6 @@ class SingleResult(BaseResult):
         >>> df = raw_dataframe("/path/to/file.root")
         >>> sr_1j1b = SingleResult("/path/to/single_training_1j1b")
         >>> sr_1j1b.apply_to_dataframe(df, do_query=True)
-
         """
 
         if df.shape[0] == 0:
@@ -328,7 +321,6 @@ def build_array(results: List[BaseResult], df: pd.DataFrame) -> np.ndarray:
     >>> sr_2j1b = SingleResult("/path/to/single_training_2j1b")
     >>> sr_2j2b = SingleResult("/path/to/single_training_2j2b")
     >>> res = build_array([sr_1j1b, sr_2j1b, sr_2j2b], df)
-
     """
 
     if df.shape[0] == 0:
