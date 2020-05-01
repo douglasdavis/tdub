@@ -21,6 +21,7 @@ import yaml
 
 # tdub
 import tdub.utils
+import tdub.hist
 from tdub._art import draw_atlas_label, setup_style, var_to_axis_meta
 
 log = logging.getLogger(__name__)
@@ -183,7 +184,7 @@ class TRExHistogram:
     @property
     def bin_centers(self) -> np.ndarray:
         """numpy.ndarray: the bin centers"""
-        return tdub.utils.bin_centers(self.bins)
+        return tdub.hist.bin_centers(self.bins)
 
     @property
     def bin_width(self) -> np.ndarray:

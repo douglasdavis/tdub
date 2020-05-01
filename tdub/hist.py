@@ -3,7 +3,7 @@ A module to aid working with histograms
 """
 
 # stdlib
-from typing import Tuple, Optional, Union, List, Dict, Any
+from typing import Tuple, Optional, Union, List, Dict, Any, Iterable
 
 # ext
 import numpy as np
@@ -31,7 +31,7 @@ class CustomTAxis:
 def prepare_padded(
     content: np.ndarray, errors: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """Prepare arrays for saving to ROOT histogram with over/underflow
+    """Prepare arrays for saving to ROOT with over/underflow.
 
     Parameters
     ----------
@@ -59,7 +59,7 @@ def prepare_padded(
     return content_padded, sumw2_padded
 
 
-def arrays2th1(
+def arrays_to_th1(
     content: np.ndarray, error: np.ndarray, bins: np.ndarray, title: str = "none"
 ) -> CustomTH1:
     """Create a TH1-like object built from arrays
@@ -96,7 +96,7 @@ def arrays2th1(
     return output
 
 
-def df2th1(
+def df_to_th1(
     dfc: pd.DataFrame,
     dfe: pd.DataFrame,
     weight_col: Optional[Union[List[str], str]] = None,
@@ -127,7 +127,7 @@ def df2th1(
         if weight_col == "ALL":
             res = {}
             for weight_name in dfc.columns:
-                res[weight_name] = arrays2th1(
+                res[weight_name] = arrays_to_th1(
                     dfc[weight_name].to_numpy(),
                     dfe[weight_name].to_numpy(),
                     binning,
@@ -136,7 +136,7 @@ def df2th1(
             return res
         else:
             return {
-                weight_col: arrays2th1(
+                weight_col: arrays_to_th1(
                     dfc[weight_col].to_numpy(),
                     dfe[weight_col].to_numpy(),
                     binning,
@@ -146,7 +146,7 @@ def df2th1(
     else:
         res = {}
         for weight_name in weight_col:
-            res[weight_name] = arrays2th1(
+            res[weight_name] = arrays_to_th1(
                 dfc[weight_name].to_numpy(),
                 dfe[weight_name].to_numpy(),
                 binning,
@@ -218,3 +218,103 @@ def generate_from_df(
     res0._xmax = range[1]
     res1.var_used = var
     return (res0, res1)
+
+
+def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
+    """Get bin centers given bin edges
+
+    Parameters
+    ----------
+    bin_edges : numpy.ndarray
+       edges defining binning
+
+    Returns
+    -------
+    numpy.ndarray
+       the centers associated with the edges
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from tdub.utils import bin_centers
+    >>> bin_edges = np.linspace(25, 225, 11)
+    >>> centers = bin_centers(bin_edges)
+    >>> bin_edges
+    array([ 25.,  45.,  65.,  85., 105., 125., 145., 165., 185., 205., 225.])
+    >>> centers
+    array([ 35.,  55.,  75.,  95., 115., 135., 155., 175., 195., 215.])
+
+    """
+    return (bin_edges[1:] + bin_edges[:-1]) * 0.5
+
+
+def to_uniform_bins(bin_edges: np.ndarray):
+    """Convert a set of variable width bins to arbitrary uniform bins
+
+    This will create a set of bin edges such that the bin centers are
+    at whole numbers, i.e. 5 variable width bins will return an array
+    from 0.5 to 5.5: [0.5, 1.5, 2.5, 3.5, 4.5, 5.5].
+
+    Parameters
+    ----------
+    bin_edges : numpy.ndarray
+        Array of bin edges.
+
+    Returns
+    -------
+    numpy.ndarray
+        The new set of uniform bins
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from tdub.utils import to_uniform_bins
+    >>> var_width = [0, 1, 3, 7, 15]
+    >>> to_uniform_bins(var_width)
+    array([0.5, 1.5, 2.5, 3.5, 4.5])
+
+    """
+    return np.arange(0.5, len(bin_edges) + 0.5, dtype=np.float64)
+
+
+def edges_and_centers(
+    bins: Union[int, Iterable], range: Optional[Tuple[float, float]] = None
+) -> np.array:
+    """Create arrays for edges and bin centers
+
+    Parameters
+    ----------
+    bins : int or sequence of scalers
+       the number of bins or sequence representing bin edges
+    range : tuple(float, float), optional
+       the minimum and maximum defining the bin range (used if bins is integral)
+
+    Returns
+    -------
+    :py:obj:`numpy.ndarray`
+       the bin edges
+    :py:obj:`numpy.ndarray`
+       the bin centers
+
+    Examples
+    --------
+    from bin multiplicity and a range
+
+    >>> from tdub.utils import edges_and_centers
+    >>> edges, centers = edges_and_centers(bins=20, range=(25, 225))
+
+    from pre-existing edges
+
+    >>> edges, centers = edges_and_centers(np.linspace(0, 10, 21))
+
+    """
+    if isinstance(bins, int):
+        if range is None:
+            raise ValueError("for integral bins we require the range argument")
+        edges = np.linspace(range[0], range[1], bins + 1)
+    else:
+        edges = np.asarray(bins)
+        if not np.all(edges[1:] >= edges[:-1]):
+            raise ValueError("bins edges must monotonically increase")
+    centers = bin_centers(edges)
+    return edges, centers

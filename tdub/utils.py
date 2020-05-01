@@ -5,20 +5,16 @@ Module for general utilities
 # stdlib
 import copy
 import logging
-import numbers
-import math
 import os
 import re
 from dataclasses import dataclass
 from enum import Enum
 from glob import glob
 from pathlib import PosixPath
-from typing import Union, Iterable, Optional, Dict, List, Tuple, Set
+from typing import Union, Iterable, Optional, Dict, List, Set
 
 # external
-import numpy as np
 import uproot
-import pandas as pd
 import formulate
 
 # tdub
@@ -460,77 +456,6 @@ def files_for_tree(
         )
 
 
-def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
-    """Get bin centers given bin edges
-
-    Parameters
-    ----------
-    bin_edges : numpy.ndarray
-       edges defining binning
-
-    Returns
-    -------
-    numpy.ndarray
-       the centers associated with the edges
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from tdub.utils import bin_centers
-    >>> bin_edges = np.linspace(25, 225, 11)
-    >>> centers = bin_centers(bin_edges)
-    >>> bin_edges
-    array([ 25.,  45.,  65.,  85., 105., 125., 145., 165., 185., 205., 225.])
-    >>> centers
-    array([ 35.,  55.,  75.,  95., 115., 135., 155., 175., 195., 215.])
-
-    """
-    return (bin_edges[1:] + bin_edges[:-1]) * 0.5
-
-
-def edges_and_centers(
-    bins: Union[int, Iterable], range: Optional[Tuple[float, float]] = None
-) -> np.array:
-    """Create arrays for edges and bin centers
-
-    Parameters
-    ----------
-    bins : int or sequence of scalers
-       the number of bins or sequence representing bin edges
-    range : tuple(float, float), optional
-       the minimum and maximum defining the bin range (used if bins is integral)
-
-    Returns
-    -------
-    :py:obj:`numpy.ndarray`
-       the bin edges
-    :py:obj:`numpy.ndarray`
-       the bin centers
-
-    Examples
-    --------
-    from bin multiplicity and a range
-
-    >>> from tdub.utils import edges_and_centers
-    >>> edges, centers = edges_and_centers(bins=20, range=(25, 225))
-
-    from pre-existing edges
-
-    >>> edges, centers = edges_and_centers(np.linspace(0, 10, 21))
-
-    """
-    if isinstance(bins, numbers.Integral):
-        if range is None:
-            raise ValueError("for integral bins we require non-None range")
-        edges = np.linspace(range[0], range[1], bins + 1)
-    else:
-        edges = np.asarray(bins)
-        if not np.all(edges[1:] >= edges[:-1]):
-            raise ValueError("bins edges must monotonically increase")
-    centers = bin_centers(edges)
-    return edges, centers
-
-
 def get_branches(
     file_name: FileOrFiles,
     tree: str = "WtLoop_nominal",
@@ -806,8 +731,6 @@ def override_features(table: Dict[str, List[str]]) -> None:
     if "r2j2b" in table:
         log.info("Overriding tdub.constants.FEATURESET_2j2b")
         tdub.constants.FEATURESET_2j2b = copy.deepcopy(table["r2j2b"])
-
-
 
 
 def extended_selection(region: Union[Region, str], extra: str) -> str:

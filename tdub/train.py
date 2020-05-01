@@ -38,9 +38,9 @@ except ImportError:
 from tdub.art import setup_style
 from tdub.frames import iterative_selection, drop_cols
 from tdub.math import ks_twosample_binned
+from tdub.hist import bin_centers
 from tdub.utils import (
     Region,
-    bin_centers,
     quick_files,
     get_selection,
     get_features,

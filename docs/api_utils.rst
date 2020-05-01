@@ -19,9 +19,7 @@ Function Summary
 .. autosummary::
 
    augment_features
-   bin_centers
    categorize_branches
-   edges_and_centers
    extended_selection
    files_for_tree
    get_avoids
@@ -44,9 +42,7 @@ Reference
    :members:
 
 .. autofunction:: augment_features
-.. autofunction:: bin_centers
 .. autofunction:: categorize_branches
-.. autofunction:: edges_and_centers
 .. autofunction:: extended_selection
 .. autofunction:: files_for_tree
 .. autofunction:: get_avoids

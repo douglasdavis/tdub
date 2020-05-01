@@ -14,7 +14,7 @@ import pygram11
 
 # tdub
 from tdub._art import setup_style
-from tdub.utils import edges_and_centers
+from tdub.hist import edges_and_centers
 from tdub.apply import FoldedResult
 
 
