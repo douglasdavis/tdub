@@ -9,22 +9,17 @@ from dataclasses import dataclass
 from enum import Enum
 from glob import glob
 from pathlib import PosixPath
-from typing import Union, Iterable, Optional, Dict, List, Set
-
-# external
-import uproot
-import formulate
-import numexpr
+from typing import Union, Optional, Dict, List
 
 # tdub
 import tdub.constants
+
+log = logging.getLogger(__name__)
 
 FileLike = Union[str, os.PathLike]
 PathLike = Union[str, os.PathLike]
 FileOrFiles = Union[List[FileLike], FileLike]
 PathOrPaths = Union[List[PathLike], PathLike]
-
-log = logging.getLogger(__name__)
 
 
 class Region(Enum):
@@ -44,7 +39,8 @@ class Region(Enum):
     Using this enum for grabing the ``2j2b`` region from a set of
     files:
 
-    >>> from tdub.utils import Region, get_selection
+    >>> from tdub.utils import Region
+    >>> from tdub.branches import get_selection
     >>> from tdub.frames import iterative_selection
     >>> df = iterative_selection(files, get_selection(Region.r2j2b))
     """
@@ -173,89 +169,6 @@ class SampleInfo:
             self.sim_type = m.group("sim_type")
             self.campaign = m.group("campaign")
             self.tree = m.group("tree")
-
-
-def categorize_branches(
-    source: Union[FileLike, Iterable[str]], tree: str = "WtLoop_nominal",
-) -> Dict[str, List[str]]:
-    """Categorize branches into a separate lists.
-
-    The categories:
-
-    - ``kinematics`` for kinematic features (used for classifiers)
-    - ``weights`` for any branch that starts or ends with ``weight``
-    - ``meta`` for meta information (final state information)
-
-    Parameters
-    ----------
-    source : os.PathLike or str or Iterable(str)
-       if iterable of strings, use that as list of branches, if
-       os.PathLike or str then the source is interpreted as a ROOT
-       file and we get the branches by passing the file and ``tree``
-       argument to :py:func:`get_branches`.
-    tree : str, optional
-       the tree name in the file if ``source`` is os.PathLike; this is
-       ignored if ``source`` is an iterable of strings.
-
-    Returns
-    -------
-    dict(str, list(str))
-       dictionary of ``{category : list-of-branches}``
-
-    Examples
-    --------
-    >>> from tdub.utils import categorize_branches
-    >>> branches = ["pT_lep1", "pT_lep2", "weight_nominal", "weight_sys_jvt", "reg2j2b"]
-    >>> cated = categorize_branches(branches)
-    >>> cated["weights"]
-    ['weight_sys_jvt', 'weight_nominal']
-    >>> cated["meta"]
-    ['reg2j2b']
-    >>> cated["kinematics"]
-    ['pT_lep1', 'pT_lep2']
-
-    Using the file name
-
-    >>> cbed = categorize_branches("/path/to/file.root")
-    >>> root_file = PosixPath("/path/to/file.root")
-    >>> cbed = categorized_branches(root_file)
-    """
-    metas = {
-        "reg1j1b",
-        "reg2j1b",
-        "reg2j2b",
-        "reg1j0b",
-        "reg2j0b",
-        "isMC16a",
-        "isMC16d",
-        "isMC16e",
-        "OS",
-        "SS",
-        "elmu",
-        "elel",
-        "mumu",
-        "charge_lep1",
-        "charge_lep2",
-        "pdgId_lep1",
-        "pdgId_lep2",
-        "runNumber",
-        "randomRunNumber",
-        "eventNumber",
-    }
-
-    if isinstance(source, str) or isinstance(source, os.PathLike):
-        bset = set(get_branches(source, tree=tree))
-    else:
-        bset = set(source)
-    weight_re = re.compile(r"(^weight_\w+)|(\w+_weight$)")
-    weights = set(filter(weight_re.match, bset))
-    metas = metas & set(bset)
-    kinematics = (set(bset) ^ weights) ^ metas
-    return {
-        "kinematics": sorted(kinematics, key=str.lower),
-        "weights": sorted(weights, key=str.lower),
-        "meta": sorted(metas, key=str.lower),
-    }
 
 
 def quick_files(datapath: FileLike, campaign: Optional[str] = None) -> Dict[str, List[str]]:
@@ -450,94 +363,6 @@ def files_for_tree(
         )
 
 
-def get_branches(
-    file_name: FileOrFiles,
-    tree: str = "WtLoop_nominal",
-    ignore_weights: bool = False,
-    sort: bool = False,
-) -> List[str]:
-    """Get list of branches in a ROOT TTree.
-
-    Parameters
-    ----------
-    file_name : str, list(str), os.PathLike, list(os.PathLike)
-       the ROOT file name
-    tree : str
-       the ROOT tree name
-    ignore_weights : bool
-       ignore all branches which start with ``weight_``.
-    sort : bool
-       sort the resulting branch list before returning
-
-    Returns
-    -------
-    list(str)
-       list of branches
-
-    Examples
-    --------
-    A file with two kinematic variables and two weights
-
-    >>> from tdub.utils import get_branches
-    >>> get_branches("/path/to/file.root", ignore_weights=True)
-    ["pT_lep1", "pT_lep2"]
-    >>> get_branches("/path/to/file.root")
-    ["pT_lep1", "pT_lep2", "weight_nominal", "weight_tptrw"]
-    """
-    if isinstance(file_name, list):
-        t = uproot.open(file_name[0]).get(tree)
-    else:
-        t = uproot.open(file_name).get(tree)
-    bs = [b.decode("utf-8") for b in t.allkeys()]
-    if not ignore_weights:
-        if sort:
-            return sorted(bs)
-        return bs
-
-    weight_re = re.compile(r"(^weight_\w+)")
-    weights = set(filter(weight_re.match, bs))
-    if sort:
-        return sorted(set(bs) ^ weights, key=str.lower)
-    return list(set(bs) ^ weights)
-
-
-def get_selection(region: Union[str, Region]) -> str:
-    """Get the selection given a region.
-
-    See the tdub.constants module for the defition of the
-    selections. See :py:func:`tdub.utils.Region.from_str` for the
-    compatible strings.
-
-    Parameters
-    ----------
-    region : str or tdub.utils.Region
-       the region as a string or enum entry
-
-    Returns
-    -------
-    str
-       the selection string
-
-    Examples
-    --------
-    >>> from tdub.utils import get_selection, Region
-    >>> get_selection(Region.r2j1b)
-    '(reg2j1b == True) & (OS == True)'
-    >>> get_selection("reg1j1b")
-    '(reg1j1b == True) & (OS == True)'
-    >>> get_selection("2j2b")
-    '(reg2j2b == True) & (OS == True)'
-    """
-    options = {
-        Region.r1j1b: tdub.constants.SELECTION_1j1b,
-        Region.r2j1b: tdub.constants.SELECTION_2j1b,
-        Region.r2j2b: tdub.constants.SELECTION_2j2b,
-    }
-    if isinstance(region, str):
-        return options[Region.from_str(region)]
-    return options[region]
-
-
 def get_avoids(region: Union[str, Region]) -> List[str]:
     """Get the features to avoid for the given region.
 
@@ -719,98 +544,3 @@ def override_features(table: Dict[str, List[str]]) -> None:
     if "r2j2b" in table:
         log.info("Overriding tdub.constants.FEATURESET_2j2b")
         tdub.constants.FEATURESET_2j2b = copy.deepcopy(table["r2j2b"])
-
-
-def extended_selection(region: Union[Region, str], extra: str) -> str:
-    """Construct an extended selection string for a region.
-
-    Parameters
-    ----------
-    region : str or tdub.utils.Region
-        the region as a string or enum entry
-    extra : str
-        the extra selection string
-
-    Returns
-    -------
-    str
-        the complete new selection string
-
-    Examples
-    --------
-    >>> from tdub.utils import extended_selection
-    >>> extended_selection("2j2b", "met < 120")
-    '((reg2j2b == True) & (OS == True)) & (met < 120)'
-    """
-    raw = get_selection(region)
-    return f"({raw}) & ({extra})"
-
-
-def root_to_numexpr(selection: str) -> str:
-    """Get the equivalent numexpr selection from a ROOT selection.
-
-    Parameters
-    -----------
-    selection : str
-        The selection string in ROOT (C++) format.
-
-    Returns
-    -------
-    str
-        The same selection in numexpr format.
-
-    Examples
-    --------
-    >>> selection = "reg1j1b == true && OS == true && mass_lep1jet1 < 155"
-    >>> from tdub.utils import root_to_numexpr
-    >>> root_to_numexpr(selection)
-    '(reg1j1b == True) & (OS == True) & (mass_lep1jet1 < 155)'
-
-    """
-    return formulate.from_root(selection).to_numexpr()
-
-
-def minimal_branches(selection: str) -> Set[str]:
-    """Get the minimal set of branches for a numexpr selection.
-
-    Parameters
-    ----------
-    selection : str
-        the selection string
-
-    Returns
-    -------
-    set(str)
-        the set of necessary branches/variables
-
-    Examples
-    --------
-    >>> from tdub.utils import minimal_selection_branches
-    >>> selection = "(reg1j1b == True) & (OS == True) & (mass_lep1lep2 > 100)"
-    >>> minimal_branches(selection)
-    {'OS', 'mass_lep1lep2', 'reg1j1b'}
-    """
-    return set(numexpr.NumExpr(selection).input_names)
-
-
-def minimal_branches_root(selection: str) -> Set[str]:
-    """Get the minimal set of branches for a ROOT selection.
-
-    Parameters
-    ----------
-    selection : str
-        the selection string
-
-    Returns
-    -------
-    set(str)
-        the set of necessary branches/variables
-
-    Examples
-    --------
-    >>> from tdub.utils import minimal_selection_branches
-    >>> selection = "reg2j1b && OS && (mass_lep1jet1 > 100)"
-    >>> minimal_branches_root(selection)
-    {'OS', 'mass_lep1jet1', 'reg2j1b'}
-    """
-    return minimal_branches(root_to_numexpr(selection))

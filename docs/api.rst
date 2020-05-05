@@ -5,6 +5,7 @@ API Reference
    :maxdepth: 2
 
    api_apply.rst
+   api_branches.rst
    api_art.rst
    api_batch.rst
    api_constants.rst
@@ -12,7 +13,5 @@ API Reference
    api_features.rst
    api_hist.rst
    api_math.rst
-   api_raw_art.rst
-   api_rex_art.rst
    api_train.rst
    api_utils.rst

@@ -17,7 +17,8 @@ from sklearn.model_selection import train_test_split
 
 # tdub
 from tdub.frames import iterative_selection, drop_cols
-from tdub.utils import quick_files, get_selection, Region
+from tdub.utils import quick_files, Region
+from tdub.branches import get_selection
 
 log = logging.getLogger(__name__)
 

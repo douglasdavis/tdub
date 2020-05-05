@@ -12,13 +12,8 @@ import uproot
 
 # tdub
 from tdub.constants import AVOID_IN_CLF
-from tdub.utils import (
-    Region,
-    categorize_branches,
-    get_avoids,
-    get_branches,
-    minimal_branches
-)
+from tdub.utils import Region, get_avoids
+from tdub.branches import  categorize_branches, get_branches, minimal_branches
 
 
 log = logging.getLogger(__name__)

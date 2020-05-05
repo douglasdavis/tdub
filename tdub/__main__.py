@@ -475,7 +475,8 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
         raise ValueError("Cannot use -f and -s together with apply-single")
 
     from tdub.apply import build_array, FoldedResult, SingleResult
-    from tdub.utils import SampleInfo, minimal_branches
+    from tdub.utils import SampleInfo
+    from tdub.branches import minimal_branches
     from tdub.frames import raw_dataframe
     import numpy as np
 
@@ -596,7 +597,8 @@ def soverb(datadir, selections, use_tptrw):
 
     """
     from tdub.frames import raw_dataframe, apply_weight_tptrw, satisfying_selection
-    from tdub.utils import quick_files, minimal_branches
+    from tdub.utils import quick_files
+    from tdub.branches import minimal_branches
 
     with open(selections, "r") as f:
         selections = json.load(f)
