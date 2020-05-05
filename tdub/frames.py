@@ -58,7 +58,7 @@ def raw_dataframe(
 
     Returns
     -------
-    :obj:`pandas.DataFrame`
+    pandas.DataFrame
         The pandas flavored DataFrame with all requested branches
 
     Examples
@@ -129,7 +129,7 @@ def iterative_selection(
         Multiply the nominal weight by the campaign weight. this is
         potentially necessary if the samples were prepared without the
         campaign weight included in the product which forms the nominal
-        weight
+        weight.
     use_tptrw : bool
         Apply the top pt reweighting factor.
 
@@ -217,7 +217,7 @@ def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFram
     *dfs : sequence of :py:obj:`pandas.DataFrame`
         Dataframes to apply the selection to.
     selection : str
-        Selection string (in :py:func:`pandas.eval` form).
+        Selection string (in numexpr form).
 
     Returns
     -------
@@ -286,18 +286,17 @@ def drop_cols(df: pd.DataFrame, *cols: str) -> None:
 def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) -> None:
     """Drop columns that we avoid in classifiers.
 
-    this uses :py:func:`tdub.frames.drop_cols` with a predefined set
-    of columns (:py:data:`tdub.utils.AVOID_IN_CLF`).
-
-    we augment :py:class:`pandas.DataFrame` with this function
+    Uses :py:func:`tdub.frames.drop_cols` with a predefined set of
+    columns (:py:data:`tdub.utils.AVOID_IN_CLF`). We augment
+    :py:class:`pandas.DataFrame` with this function.
 
     Parameters
     ----------
-    df : :py:obj:`pandas.DataFrame`
-       the df which we want to slim
+    df : pandas.DataFrame
+        Dataframe that you want to slim.
     region : optional, str or tdub.utils.Region
-       region to augment the list of dropped columns (see the region
-       specific AVOID constants in the constants module).
+        Region to augment the list of dropped columns (see the region
+        specific AVOID constants in the constants module).
 
     Examples
     --------
@@ -309,6 +308,7 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
     >>> drop_avoid(df)
     >>> "E_jetL1" in df.columns:
     False
+
     """
     to_drop = AVOID_IN_CLF
     if region is not None:
@@ -321,14 +321,13 @@ def drop_jet2(df: pd.DataFrame) -> None:
 
     In the 1j1b region we obviously don't have a second jet; so this
     lets us get rid of all columns dependent on jet2 kinematic
-    properties.
-
-    We augment :py:class:`pandas.DataFrame` with this function
+    properties. We augment :py:class:`pandas.DataFrame` with this
+    function.
 
     Parameters
     ----------
-    df : :py:obj:`pandas.DataFrame`
-       the df which we want to slim
+    df : pandas.DataFrame
+        Dataframe that we want to slim.
 
     Examples
     --------
@@ -340,6 +339,7 @@ def drop_jet2(df: pd.DataFrame) -> None:
     >>> drop_jet2(df)
     >>> "pTsys_lep1lep2jet1jet2met" in df.columns:
     False
+
     """
     j2cols = [col for col in df.columns if "jet2" in col]
     drop_cols(df, *j2cols)
@@ -351,19 +351,18 @@ def apply_weight(
     """Apply (multiply) a weight to all other weights in the DataFrame.
 
     This will multiply the nominal weight and all systematic weights
-    in the DataFrame by the ``weight_name`` column.
-
-    We augment :py:class:`pandas.DataFrame` with this function.
+    in the DataFrame by the ``weight_name`` column. We augment
+    :py:class:`pandas.DataFrame` with this function.
 
     Parameters
     ----------
-    df : :py:obj:`pandas.DataFrame`
-       the df we want to operate on
+    df : pandas.DataFrame
+        Dataaframe to operate on.
     weight_name : str
-       the column name to multiple all other weight columns by
+        Column name to multiple all other weight columns by.
     exclude : list(str), optional
-       a list of columns ot exclude when determining the other weight
-       columns to operate on
+        List of columns ot exclude when determining the other weight
+        columns to operate on.
 
     Examples
     --------
@@ -388,17 +387,16 @@ def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None)
     """Multiply nominal and systematic weights by the campaign weight.
 
     This is useful for samples that were produced without the campaign
-    weight term already applied to all other weights.
-
-    We augment :py:class:`pandas.DataFrame` with this function.
+    weight term already applied to all other weights. We augment
+    :py:class:`pandas.DataFrame` with this function.
 
     Parameters
     ----------
-    df : :py:obj:`pandas.DataFrame`
-       the df we want to operate on
+    df : pandas.DataFrame
+        Dataframe to operate on.
     exclude : list(str), optional
-       a list of columns to exclude when determining the other weight
-       columns to operate on
+        List of columns to exclude when determining the other weight
+        columns to operate on.
 
     Examples
     --------
@@ -411,7 +409,6 @@ def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None)
     >>> df.apply_weight_campaign()
     >>> df.weight_nominal[5]
     0.0012
-
     """
     apply_weight(df, "weight_campaign", exclude=exclude)
 
@@ -420,17 +417,16 @@ def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) ->
     """Multiply nominal and systematic weights by the top pt reweight term.
 
     This is useful for samples that were produced without the top pt
-    reweighting term already applied to all other weights.
-
-    We augment :py:class:`pandas.DataFrame` with this function.
+    reweighting term already applied to all other weights. We augment
+    :py:class:`pandas.DataFrame` with this function.
 
     Parameters
     ----------
-    df : :py:obj:`pandas.DataFrame`
-       the df we want to operate on
+    df : pandas.DataFrame
+        Dataframe to operate on.
     exclude : list(str), optional
-       a list of columns to exclude when determining the other weight
-       columns to operate on
+        List of columns to exclude when determining the other weight
+        columns to operate on.
 
     Examples
     --------
