@@ -124,14 +124,14 @@ def iterative_selection(
         :py:func:`tdub.utils.categorize_branches`). The weight branch
         is always kept.
     exclude_avoids : bool
-       Exclude branches defined by :py:data:`tdub.utils.AVOID_IN_CLF`.
+        Exclude branches defined by :py:data:`tdub.utils.AVOID_IN_CLF`.
     use_campaign_weight : bool
-       Multiply the nominal weight by the campaign weight. this is
-       potentially necessary if the samples were prepared without the
-       campaign weight included in the product which forms the nominal
-       weight
+        Multiply the nominal weight by the campaign weight. this is
+        potentially necessary if the samples were prepared without the
+        campaign weight included in the product which forms the nominal
+        weight
     use_tptrw : bool
-       Apply the top pt reweighting factor.
+        Apply the top pt reweighting factor.
 
     Returns
     -------
