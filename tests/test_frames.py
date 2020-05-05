@@ -2,7 +2,7 @@ from pathlib import PosixPath
 
 from tdub.constants import AVOID_IN_CLF
 from tdub.frames import iterative_selection, drop_avoid
-from tdub.utils import minimal_branches
+from tdub.branches import minimal_branches
 
 test_file_root = PosixPath(__file__).parent / "test_data"
 
