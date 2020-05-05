@@ -8,6 +8,9 @@ from tdub.utils import (
     get_features,
     get_selection,
     get_avoids,
+    minimal_branches,
+    minimal_branches_root,
+    root_to_numexpr,
 )
 
 from tdub.constants import (
@@ -177,3 +180,21 @@ def test_get_avoids():
     assert get_avoids("r2j2b") == AVOID_IN_CLF_2j2b
     assert get_avoids("2j2b") == AVOID_IN_CLF_2j2b
     assert get_avoids(Region.r2j2b) == AVOID_IN_CLF_2j2b
+
+
+def test_root_to_numexpr():
+    sel = "reg1j1b == true && OS == true && mass_lep1jet1 < 155"
+    newsel = root_to_numexpr(sel)
+    assert newsel == "(reg1j1b == True) & (OS == True) & (mass_lep1jet1 < 155)"
+
+
+def test_minimal_branches():
+    sel = "(reg1j1b == True) & (OS == True) & (mass_lep1jet1 < 155)"
+    varsin = set(("reg1j1b", "OS", "mass_lep1jet1"))
+    assert minimal_branches(sel) == varsin
+
+
+def test_minimal_branches_root():
+    sel = "reg1j1b == true && OS == true && mass_lep1jet1 < 155"
+    varsin = set(("reg1j1b", "OS", "mass_lep1jet1"))
+    assert minimal_branches_root(sel) == varsin

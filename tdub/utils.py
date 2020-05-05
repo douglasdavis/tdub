@@ -14,6 +14,7 @@ from typing import Union, Iterable, Optional, Dict, List, Set
 # external
 import uproot
 import formulate
+import numexpr
 
 # tdub
 import tdub.constants
@@ -745,8 +746,32 @@ def extended_selection(region: Union[Region, str], extra: str) -> str:
     return f"({raw}) & ({extra})"
 
 
+def root_to_numexpr(selection: str) -> str:
+    """Get the equivalent numexpr selection from a ROOT selection.
+
+    Parameters
+    -----------
+    selection : str
+        The selection string in ROOT (C++) format.
+
+    Returns
+    -------
+    str
+        The same selection in numexpr format.
+
+    Examples
+    --------
+    >>> selection = "reg1j1b == true && OS == true && mass_lep1jet1 < 155"
+    >>> from tdub.utils import root_to_numexpr
+    >>> root_to_numexpr(selection)
+    '(reg1j1b == True) & (OS == True) & (mass_lep1jet1 < 155)'
+
+    """
+    return formulate.from_root(selection).to_numexpr()
+
+
 def minimal_branches(selection: str) -> Set[str]:
-    """Get the minimal set of branches necessary to perform a selection.
+    """Get the minimal set of branches for a numexpr selection.
 
     Parameters
     ----------
@@ -765,4 +790,27 @@ def minimal_branches(selection: str) -> Set[str]:
     >>> minimal_branches(selection)
     {'OS', 'mass_lep1lep2', 'reg1j1b'}
     """
-    return formulate.from_numexpr(selection).variables
+    return set(numexpr.NumExpr(selection).input_names)
+
+
+def minimal_branches_root(selection: str) -> Set[str]:
+    """Get the minimal set of branches for a ROOT selection.
+
+    Parameters
+    ----------
+    selection : str
+        the selection string
+
+    Returns
+    -------
+    set(str)
+        the set of necessary branches/variables
+
+    Examples
+    --------
+    >>> from tdub.utils import minimal_selection_branches
+    >>> selection = "reg2j1b && OS && (mass_lep1jet1 > 100)"
+    >>> minimal_branches_root(selection)
+    {'OS', 'mass_lep1jet1', 'reg2j1b'}
+    """
+    return minimal_branches(root_to_numexpr(selection))

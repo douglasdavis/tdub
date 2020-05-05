@@ -30,7 +30,7 @@ def raw_dataframe(
     weight_name: str = "weight_nominal",
     branches: Optional[Iterable[str]] = None,
     drop_weight_sys: bool = False,
-    entrysteps: Optional[Any] = None,
+    **kwargs,
 ) -> pd.DataFrame:
     """Construct a raw pandas flavored Dataframe with help from uproot.
 
@@ -39,27 +39,27 @@ def raw_dataframe(
     and weight branches won't be separated, etc.) -- just a pure raw
     dataframe from some ROOT files.
 
+    Extra `kwargs` are fed to uproot.pandas.iterate
+
     Parameters
     ----------
     files : list(str) or str
-       a single ROOT file or list of ROOT files
+        Single ROOT file or list of ROOT files.
     tree : str
-       the tree name to turn into a dataframe
+        The tree name to turn into a dataframe.
     weight_name: str
-       weight branch (we make sure to grab it if you give something
-       other than ``None`` to ``branches``).
+        Weight branch (we make sure to grab it if you give something
+        other than ``None`` to ``branches``).
     branches : list(str), optional
-       a list of branches to include as columns in the dataframe,
-       default is ``None``, includes all branches.
+        List of branches to include as columns in the dataframe,
+        default is ``None``, includes all branches.
     drop_weight_sys : bool
-       drop all weight systematics from the being grabbed
-    entrysteps : Any, optional
-       see the ``entrysteps`` keyword for ``uproot.iterate``
+        Drop all weight systematics from the being grabbed.
 
     Returns
     -------
     :obj:`pandas.DataFrame`
-       the pandas flavored DataFrame with all requested branches
+        The pandas flavored DataFrame with all requested branches
 
     Examples
     --------
@@ -79,7 +79,7 @@ def raw_dataframe(
         branches = sorted(
             set(branches) ^ set(filter(weight_sys_re.match, branches)), key=str.lower
         )
-    itr = uproot.pandas.iterate(files, tree, branches=branches, entrysteps=entrysteps)
+    itr = uproot.pandas.iterate(files, tree, branches=branches, **kwargs)
     result = pd.concat([d for d in itr])
     result.selection_used = None
     return result
@@ -95,52 +95,48 @@ def iterative_selection(
     exclude_avoids: bool = False,
     use_campaign_weight: bool = False,
     use_tptrw: bool = False,
-    **iterate_opts,
+    **kwargs,
 ) -> pd.DataFrame:
     """Build a selected dataframe via uproot's iterate.
 
     If we want to build a memory-hungry dataframe and apply a
     selection this helps us avoid crashing due to using all of our
-    RAM.
-
-    ``iterate_opts`` are fed to :py:func:`uproot.pandas.iterate`
-
-    this dataframe construction function is useful when we want to
-    grab all of the branches in a large dataset that won't fit in
+    RAM. Constructing a dataframe with this function is useful when we
+    want to grab many branches in a large dataset that won't fit in
     memory before the selection.
 
     Parameters
     ----------
     files : list(str) or str
-       a single ROOT file or list of ROOT files
+        A single ROOT file or list of ROOT files.
     selection : str
-       the selection string (in :py:func:`pandas.eval` form)
+        Selection string (in numexpr form).
     tree : str
-       the tree name to turn into a dataframe
+        Tree name to turn into a dataframe.
     weight_name: str
-       weight branch to preserve
+        Weight branch to preserve.
     branches : list(str), optional
-       a list of branches to include as columns in the dataframe,
-       default is ``None`` (all branches)
+        List of branches to include as columns in the dataframe,
+        default is ``None`` (all branches).
     keep_category : str, optional
-       if not ``None``, the selected dataframe(s) will only include
-       columns which are part of the given category (see
-       :py:func:`tdub.utils.categorize_branches`). The weight branch
-       is always kept.
+        If not ``None``, the selected dataframe(s) will only include
+        columns which are part of the given category (see
+        :py:func:`tdub.utils.categorize_branches`). The weight branch
+        is always kept.
     exclude_avoids : bool
-       exclude branches defined by :py:data:`tdub.utils.AVOID_IN_CLF`
+       Exclude branches defined by :py:data:`tdub.utils.AVOID_IN_CLF`.
     use_campaign_weight : bool
-       multiply the nominal weight by the campaign weight. this is
+       Multiply the nominal weight by the campaign weight. this is
        potentially necessary if the samples were prepared without the
        campaign weight included in the product which forms the nominal
        weight
     use_tptrw : bool
-       apply the top pt reweighting factor.
+       Apply the top pt reweighting factor.
 
     Returns
     -------
-    list(pandas.DataFrame) or pandas.DataFrame
-       the final selected dataframe(s) from the files
+    pandas.DataFrame
+        The final selected dataframe(s) from the files.
 
     Examples
     --------
@@ -157,6 +153,7 @@ def iterative_selection(
 
     >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"), exclue_avoids=True,
     ...                             keep_category="kinematics")
+
     """
     # determine which branches will be used for selection only and
     # which branches we need for weights
@@ -197,7 +194,7 @@ def iterative_selection(
     keep = sorted(keep, key=str.lower)
 
     dfs = []
-    itr = uproot.pandas.iterate(files, tree, branches=list(read_branches), **iterate_opts)
+    itr = uproot.pandas.iterate(files, tree, branches=list(read_branches), **kwargs)
     for i, df in enumerate(itr):
         if use_campaign_weight:
             apply_weight_campaign(df)
@@ -218,14 +215,14 @@ def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFram
     Parameters
     ----------
     *dfs : sequence of :py:obj:`pandas.DataFrame`
-       the dataframes to apply the selection to
+        Dataframes to apply the selection to.
     selection : str
-       the selection string (in :py:func:`pandas.eval` form)
+        Selection string (in :py:func:`pandas.eval` form).
 
     Returns
     -------
     list(pandas.DataFrame)
-       the dataframes satisfying the selection string
+        Dataframes satisfying the selection string.
 
     Examples
     --------
@@ -245,17 +242,16 @@ def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFram
 def drop_cols(df: pd.DataFrame, *cols: str) -> None:
     """Drop some columns from a dataframe.
 
-    this is a convenient function because it just ignores branches
-    that don't exist in the dataframe that are present in ``cols``.
-
-    we augment :py:class:`pandas.DataFrame` with this function
+    This is a convenient function because it just ignores branches
+    that don't exist in the dataframe that are present in ``cols``. We
+    augment :py:class:`pandas.DataFrame` with this function
 
     Parameters
     ----------
     df : :py:obj:`pandas.DataFrame`
-       the df which we want to slim
+        Dataframe which we want to slim.
     *cols : sequence of strings
-       the columns to remove
+        Columns to remove
 
     Examples
     --------
@@ -276,6 +272,7 @@ def drop_cols(df: pd.DataFrame, *cols: str) -> None:
     >>> df.drop_cols("mass_jet2") # use augmented df class
     >>> "mass_jet2" in df.columns:
     False
+
     """
     in_dataframe = set(df.columns)
     in_cols = set(cols)
