@@ -10,9 +10,9 @@ Class Summary
 
 .. autosummary::
 
-   BaseResult
-   FoldedResult
-   SingleResult
+   BaseTrainSummary
+   FoldedTrainSummary
+   SingleTrainSummary
 
 Function Summary
 ^^^^^^^^^^^^^^^^
@@ -24,14 +24,14 @@ Function Summary
 Reference
 ^^^^^^^^^
 
-.. autoclass:: BaseResult
+.. autoclass:: BaseTrainSummary
    :members:
 
-.. autoclass:: FoldedResult
+.. autoclass:: FoldedTrainSummary
    :members:
    :show-inheritance:
 
-.. autoclass:: SingleResult
+.. autoclass:: SingleTrainSummary
    :members:
    :show-inheritance:
 

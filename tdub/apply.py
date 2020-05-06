@@ -34,8 +34,8 @@ from tdub.utils import Region, FileLike
 log = logging.getLogger(__name__)
 
 
-class BaseResult:
-    """Base class for describing a training result to apply to other data."""
+class BaseTrainSummary:
+    """Base class for describing a completed training to apply to other data."""
 
     @property
     def features(self) -> List[str]:
@@ -62,17 +62,19 @@ class BaseResult:
 
         This populates the class properties with values and the
         resulting dictionary is saved to be accessible via the summary
-        property. The common class properties (which all BaseResults
-        have by defition) besides `summary are `features`, `region`,
-        and `selecton_used`. This function will define those, so all
-        BaseResult inheriting classes should call the super
-        implementation of this method if a daughter implementation is
-        necessary to add additional summary properties.
+        property. The common class properties (which all
+        BaseTrainSummarys have by defition) besides `summary are
+        `features`, `region`, and `selecton_used`. This function will
+        define those, so all BaseTrainSummary inheriting classes
+        should call the super implementation of this method if a
+        daughter implementation is necessary to add additional summary
+        properties.
 
         Parameters
         ----------
         summary_file : str or os.PathLike
-            the summary json file
+            The summary json file.
+
         """
         self._summary = json.loads(summary_file.read_text())
         self._features = self.summary["features"]
@@ -84,23 +86,23 @@ class BaseResult:
     ) -> None:
         """Apply trained model(s) to events in a dataframe `df`.
 
-        All BaseResult classes must implement this function.
+        All BaseTrainSummary classes must implement this function.
         """
         raise NotImplementedError("This method must be implemented")
 
 
-class FoldedResult(BaseResult):
-    """Provides access to the properties of a folded training result.
+class FoldedTrainSummary(BaseTrainSummary):
+    """Provides access to the properties of a folded training.
 
     Parameters
     ----------
     fold_output : str
-       the directory with the folded training output
+        Directory with the folded training output.
 
     Examples
     --------
-    >>> from tdub.apply import FoldedResult
-    >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
+    >>> from tdub.apply import FoldedTrainSummary
+    >>> fr_1j1b = FoldedTrainSummary("/path/to/folded_training_1j1b")
     """
 
     def __init__(self, fold_output: str) -> None:
@@ -157,20 +159,20 @@ class FoldedResult(BaseResult):
         Parameters
         ----------
         df : pandas.DataFrame
-           the dataframe to read and augment
+            Dataframe to read and augment.
         column_name : str
-           name to give the BDT response variable
+            Name to give the BDT response variable.
         do_query : bool
-           perform a query on the dataframe to select events belonging to
-           the region associated with ``fr`` necessary if the dataframe
-           hasn't been pre-filtered
+            Perform a query on the dataframe to select events belonging to
+            the region associated with ``fr`` necessary if the dataframe
+            hasn't been pre-filtered.
 
         Examples
         --------
-        >>> from tdub.apply import FoldedResult
+        >>> from tdub.apply import FoldedTrainSummary
         >>> from tdub.frames import raw_dataframe
         >>> df = raw_dataframe("/path/to/file.root")
-        >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
+        >>> fr_1j1b = FoldedTrainSummary("/path/to/folded_training_1j1b")
         >>> fr_1j1b.apply_to_dataframe(df, do_query=True)
         """
         if df.shape[0] == 0:
@@ -202,18 +204,18 @@ class FoldedResult(BaseResult):
             df[column_name] = y
 
 
-class SingleResult(BaseResult):
+class SingleTrainSummary(BaseTrainSummary):
     """Provides access to the properties of a single result.
 
     Parameters
     ----------
     training_output : str
-        the directory containing the training result
+        Directory containing the training result.
 
     Examples
     --------
-    >>> from tdub.apply import SingleResult
-    >>> res_1j1b = SingleResult("/path/to/some_1j1b_training_outdir")
+    >>> from tdub.apply import SingleTrainSummary
+    >>> res_1j1b = SingleTrainSummary("/path/to/some_1j1b_training_outdir")
     """
 
     def __init__(self, training_output: os.PathLike) -> None:
@@ -242,20 +244,20 @@ class SingleResult(BaseResult):
         Parameters
         ----------
         df : pandas.DataFrame
-            the dataframe to read and augment
+            Dataframe to read and augment.
         column_name : str
-            name to give the BDT response variable
+            Name to give the BDT response variable.
         do_query : bool
-            perform a query on the dataframe to select events belonging to
+            Perform a query on the dataframe to select events belonging to
             the region associated with ``fr`` necessary if the dataframe
-            hasn't been pre-filtered
+            hasn't been pre-filtered.
 
         Examples
         --------
-        >>> from tdub.apply import FoldedResult
+        >>> from tdub.apply import FoldedTrainSummary
         >>> from tdub.frames import raw_dataframe
         >>> df = raw_dataframe("/path/to/file.root")
-        >>> sr_1j1b = SingleResult("/path/to/single_training_1j1b")
+        >>> sr_1j1b = SingleTrainSummary("/path/to/single_training_1j1b")
         >>> sr_1j1b.apply_to_dataframe(df, do_query=True)
         """
 
@@ -285,41 +287,41 @@ class SingleResult(BaseResult):
             df[column_name] = yhat
 
 
-def build_array(results: List[BaseResult], df: pd.DataFrame) -> np.ndarray:
+def build_array(results: List[BaseTrainSummary], df: pd.DataFrame) -> np.ndarray:
     """Get a NumPy array which is the response for all events in `df`
 
-    This will use the :py:func:`~BaseResult.apply_to_dataframe` function
+    This will use the :py:func:`~BaseTrainSummary.apply_to_dataframe` function
     from the list of results. We query the input dataframe to ensure
     that we apply to the correct events. If the input dataframe is
-    empty then an empty array is written to disk
+    empty then an empty array is written to disk.
 
     Parameters
     ----------
-    results : list(BaseResult)
-       the training results to use
+    results : list(BaseTrainSummary)
+        Sequence of training results to use.
     df : pandas.DataFrame
-       the dataframe of events to get the responses for
+        Dataframe of events to use to calculate the response.
 
     Examples
     --------
     Using folded results:
 
-    >>> from tdub.apply import FoldedResult, build_array
+    >>> from tdub.apply import FoldedTrainSummary, build_array
     >>> from tdub.frames import raw_dataframe
     >>> df = raw_dataframe("/path/to/file.root")
-    >>> fr_1j1b = FoldedResult("/path/to/folded_training_1j1b")
-    >>> fr_2j1b = FoldedResult("/path/to/folded_training_2j1b")
-    >>> fr_2j2b = FoldedResult("/path/to/folded_training_2j2b")
+    >>> fr_1j1b = FoldedTrainSummary("/path/to/folded_training_1j1b")
+    >>> fr_2j1b = FoldedTrainSummary("/path/to/folded_training_2j1b")
+    >>> fr_2j2b = FoldedTrainSummary("/path/to/folded_training_2j2b")
     >>> res = build_array([fr_1j1b, fr_2j1b, fr_2j2b], df)
 
     Using single results:
 
-    >>> from tdub.apply import SingleResult, build_array
+    >>> from tdub.apply import SingleTrainSummary, build_array
     >>> from tdub.frames import raw_dataframe
     >>> df = raw_dataframe("/path/to/file.root")
-    >>> sr_1j1b = SingleResult("/path/to/single_training_1j1b")
-    >>> sr_2j1b = SingleResult("/path/to/single_training_2j1b")
-    >>> sr_2j2b = SingleResult("/path/to/single_training_2j2b")
+    >>> sr_1j1b = SingleTrainSummary("/path/to/single_training_1j1b")
+    >>> sr_2j1b = SingleTrainSummary("/path/to/single_training_2j1b")
+    >>> sr_2j2b = SingleTrainSummary("/path/to/single_training_2j2b")
     >>> res = build_array([sr_1j1b, sr_2j1b, sr_2j2b], df)
     """
 

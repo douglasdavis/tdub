@@ -474,7 +474,7 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
     if len(single_results) > 0 and len(fold_results) > 0:
         raise ValueError("Cannot use -f and -s together with apply-single")
 
-    from tdub.apply import build_array, FoldedResult, SingleResult
+    from tdub.apply import build_array, FoldedTrainSummary, SingleTrainSummary
     from tdub.utils import SampleInfo
     from tdub.branches import minimal_branches
     from tdub.frames import raw_dataframe
@@ -485,9 +485,9 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
 
     trs = None
     if len(fold_results) > 0:
-        trs = [FoldedResult(p) for p in fold_results]
+        trs = [FoldedTrainSummary(p) for p in fold_results]
     elif len(single_results) > 0:
-        trs = [SingleResult(p) for p in single_results]
+        trs = [SingleTrainSummary(p) for p in single_results]
     else:
         raise ValueError("-f or -s required")
 
