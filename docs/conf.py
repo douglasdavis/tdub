@@ -62,17 +62,18 @@ autodoc_typehints = "none"
 html_static_path = ["_static"]
 
 
-#html_theme = "sphinx_rtd_theme"
-#html_theme_options = {
-#    "collapse_navigation": True,
-#    "sticky_navigation": True,
-#}
+html_theme = "sphinx_rtd_theme"
+html_theme_options = {
+    "collapse_navigation": True,
+    "sticky_navigation": True,
+}
 
 
-html_theme = "pydata_sphinx_theme"
-html_css_files = [
-    'css/custom.css',
-]
+#html_theme = "pydata_sphinx_theme"
+#html_css_files = [
+#    'css/custom.css',
+#]
+
 #html_theme_options = {
 #    "github_url": "https://github.com/douglasdavis/tdub",
 #}

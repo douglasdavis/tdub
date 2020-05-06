@@ -272,11 +272,11 @@ def canvas_from_counts(
 
     Returns
     -------
-    fig : :obj:`matplotlib.figure.Figure`
+    :py:obj:`matplotlib.figure.Figure`
         the matplotlib figure
-    ax : :obj:`matplotlib.axes.Axes`
+    :py:obj:`matplotlib.axes.Axes`
         the matplotlib axes for the histogram stack
-    axr : :obj:`matplotlib.axes.Axes`
+    :py:obj:`matplotlib.axes.Axes`
         the matplotlib axes for the ratio comparison
     """
     centers = tdub.utils.bin_centers(bin_edges)

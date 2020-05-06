@@ -21,13 +21,23 @@ API mainly provides quick and easy access to pythonic representations
 originate from `ROOT <https://root.cern/>`_ files).
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Command Line Interface
 
    cli
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: API Reference
 
-   api
+   api_apply.rst
+   api_branches.rst
+   api_art.rst
+   api_batch.rst
+   api_constants.rst
+   api_frames.rst
+   api_features.rst
+   api_hist.rst
+   api_math.rst
+   api_train.rst
+   api_utils.rst
