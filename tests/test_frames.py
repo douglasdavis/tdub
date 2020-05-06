@@ -58,3 +58,18 @@ def test_selection_augmented():
     manual = {"OS", "reg1j1b", "mass_lep1jet1"}
     assert sel_vars == manual
     assert df.selection_used == "(OS == True) & (reg1j1b == True) & (mass_lep1jet1 < 155)"
+
+
+def test_selection_strings():
+    files = [str(test_file_root / "testfile1.root"), str(test_file_root / "testfile3.root")]
+    root_sel1 = "OS == 1 && reg2j2b == 1 && mass_lep1jet1 < 155"
+    nume_sel1 = "(OS == 1) & (reg2j2b == 1) & (mass_lep1jet1 < 155)"
+    root_sel2 = "OS == true && reg2j2b == true && mass_lep1jet1 < 155"
+    nume_sel2 = "(OS == True) & (reg2j2b == True) & (mass_lep1jet1 < 155)"
+    df_r_sel1 = iterative_selection(files, root_sel1)
+    df_r_sel2 = iterative_selection(files, root_sel2)
+    df_n_sel1 = iterative_selection(files, nume_sel1)
+    df_n_sel2 = iterative_selection(files, nume_sel2)
+    assert df_r_sel1.equals(df_r_sel2)
+    assert df_r_sel1.equals(df_n_sel1)
+    assert df_r_sel1.equals(df_n_sel2)

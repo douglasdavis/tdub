@@ -13,7 +13,12 @@ import uproot
 # tdub
 from tdub.constants import AVOID_IN_CLF
 from tdub.utils import Region, get_avoids
-from tdub.branches import  categorize_branches, get_branches, minimal_branches
+from tdub.branches import (
+    categorize_branches,
+    get_branches,
+    minimal_branches,
+    numexpr_selection,
+)
 
 
 log = logging.getLogger(__name__)
@@ -100,12 +105,16 @@ def iterative_selection(
     want to grab many branches in a large dataset that won't fit in
     memory before the selection.
 
+    The selection can be in either numexpr or ROOT form, we ensure
+    that a ROOT style selection is converted to numexpr for use with
+    :py:func:`pandas.eval`.
+
     Parameters
     ----------
     files : list(str) or str
         A single ROOT file or list of ROOT files.
     selection : str
-        Selection string (in numexpr form).
+        Selection string (numexpr or ROOT form accepted).
     tree : str
         Tree name to turn into a dataframe.
     weight_name: str
@@ -188,6 +197,8 @@ def iterative_selection(
     keep.add(weight_name)
     keep = sorted(keep, key=str.lower)
 
+    numexpr_sel = numexpr_selection(selection)
+
     dfs = []
     itr = uproot.pandas.iterate(files, tree, branches=list(read_branches), **kwargs)
     for i, df in enumerate(itr):
@@ -195,7 +206,7 @@ def iterative_selection(
             apply_weight_campaign(df)
         if use_tptrw:
             apply_weight_tptrw(df)
-        idf = df.query(selection)
+        idf = df.query(numexpr_sel)
         idf = idf[keep]
         dfs.append(idf)
         log.debug(f"finished iteration {i}")
@@ -207,12 +218,15 @@ def iterative_selection(
 def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFrame]:
     """Get subsets of dataframes that satisfy a selection.
 
+    The selection string can be in either ROOT or numexpr form (we
+    ensure to convert ROOT to numexpr).
+
     Parameters
     ----------
     *dfs : sequence of :py:obj:`pandas.DataFrame`
         Dataframes to apply the selection to.
     selection : str
-        Selection string (in numexpr form).
+        Selection string (in numexpr or ROOT form).
 
     Returns
     -------
@@ -230,8 +244,10 @@ def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFram
     >>> tW_DR_selected, ttbar_selected = satisfying_selection(
     ...     dfim_tW_DR.df, dfim_ttbar.df, selection=low_bdt
     ... )
+
     """
-    return [df.query(selection) for df in dfs]
+    numexprsel = numexpr_selection(selection)
+    return [df.query(numexprsel) for df in dfs]
 
 
 def drop_cols(df: pd.DataFrame, *cols: str) -> None:
