@@ -13,11 +13,11 @@ import pygram11
 # tdub
 from tdub._art import setup_style
 from tdub.hist import edges_and_centers
-from tdub.apply import FoldedResult
+from tdub.apply import FoldedTrainSummary
 
 
 def draw_rocs(
-    frs: List[FoldedResult],
+    frs: List[FoldedTrainSummary],
     ax: Optional[plt.Axes] = None,
     labels: Optional[List[str]] = None,
     draw_guess: bool = False,
@@ -27,7 +27,7 @@ def draw_rocs(
 
     Parameters
     ----------
-    frs : list(FoldedResult)
+    frs : list(FoldedTrainSummary)
        the set of folded training results to plot
     ax : :py:obj:`matplotlib.axes.Axes`, optional
        an existing matplotlib axis to plot on
@@ -49,11 +49,11 @@ def draw_rocs(
 
     Examples
     --------
-    >>> from tdub.apply import FoldedResult
+    >>> from tdub.apply import FoldedTrainSummary
     >>> from tdub.raw_art import draw_rocs
-    >>> fr_1j1b = FoldedResult("/path/to/train_1j1b")
-    >>> fr_2j1b = FoldedResult("/path/to/train_2j1b")
-    >>> fr_2j2b = FoldedResult("/path/to/train_2j2b")
+    >>> fr_1j1b = FoldedTrainSummary("/path/to/train_1j1b")
+    >>> fr_2j1b = FoldedTrainSummary("/path/to/train_2j1b")
+    >>> fr_2j2b = FoldedTrainSummary("/path/to/train_2j2b")
     >>> fig, ax = draw_rocs([fr_1j1b, fr_2j1b, fr_2j2b])
     """
     if labels is None:
