@@ -4,7 +4,7 @@
 import logging
 import re
 
-from typing import Optional, Union, List, Any, Iterable
+from typing import Optional, Union, List, Iterable
 
 # externals
 import pandas as pd
@@ -150,12 +150,15 @@ def iterative_selection(
     >>> from tdub.utils import quick_files
     >>> from tdub.utils import get_selection
     >>> qf = quick_files("/path/to/files")
-    >>> ttbar_dfs = iterative_selection(qf["ttbar"], get_selection("2j2b"), entrysteps="1 GB")
+    >>> ttbar_dfs = iterative_selection(qf["ttbar"], get_selection("2j2b"),
+    ...                                 entrysteps="1 GB")
     >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"))
 
-    Keep only the kinematic branches after selection and ignore avoided columns:
+    Keep only kinematic branches after selection and ignore avoided columns:
 
-    >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"), exclue_avoids=True,
+    >>> tW_df = iterative_selection(qf["tW_DR"],
+    ...                             get_selection("2j2b"),
+    ...                             exclue_avoids=True,
     ...                             keep_category="kinematics")
 
     """
