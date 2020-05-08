@@ -2,11 +2,10 @@
 
 # stdlib
 import logging
-import glob
 import os
 import shutil
 import subprocess
-from typing import List, Union, Optional, TextIO
+from typing import TextIO
 from pathlib import PosixPath
 
 # tdub
