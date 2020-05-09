@@ -9,11 +9,11 @@ from pprint import pformat
 from typing import Optional, Tuple, List, Union, Dict, Any
 
 # externals
-import joblib
-import numpy as np
 import matplotlib
 
 matplotlib.use("Agg")
+import joblib
+import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import pygram11
@@ -95,12 +95,12 @@ def prepare_from_root(
 
     Returns
     -------
-    df : :obj:`pandas.DataFrame`
-       the feature matrix
-    labels : :obj:`numpy.ndarray`
-       the event labels (0 for background; 1 for signal)
-    weights : :obj:`numpy.ndarray`
-       the event weights
+    df : pandas.DataFrame
+       Event feature matrix
+    labels : numpy.ndarray
+       Event labels (0 for background; 1 for signal)
+    weights : numpy.ndarray
+       Event weights
 
     Examples
     --------
@@ -269,11 +269,11 @@ def single_training(
 
     Parameters
     ----------
-    df : :obj:`pandas.DataFrame`
+    df : pandas.DataFrame
        the feature matrix in dataframe format
-    labels : :obj:`numpy.ndarray`
+    labels : numpy.ndarray
        the event labels (``1`` for signal; ``0`` for background)
-    weights : :obj:`numpy.ndarray`
+    weights : numpy.ndarray
        the event weights
     clf_params : dict
        dictionary of parameters to pass to
@@ -574,9 +574,9 @@ def folded_training(
 
     Parameters
     ----------
-    df : :obj:`pandas.DataFrame`
+    df : pandas.DataFrame
        the feature matrix in dataframe format
-    labels : :obj:`numpy.ndarray`
+    labels : numpy.ndarray
        the event labels (``1`` for signal; ``0`` for background)
     weights : :obj:`numpy.ndarray`
        the event weights
