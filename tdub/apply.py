@@ -5,7 +5,7 @@ import json
 import logging
 import os
 from pathlib import PosixPath
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any
 
 # external
 import numpy as np
@@ -28,7 +28,7 @@ except ImportError:
 # fmt: on
 
 # tdub
-from tdub.utils import Region, FileLike
+from tdub.utils import Region
 
 
 log = logging.getLogger(__name__)
@@ -326,7 +326,7 @@ def build_array(results: List[BaseTrainSummary], df: pd.DataFrame) -> np.ndarray
     """
 
     if df.shape[0] == 0:
-        log.info(f"Saving empty array to {output_file}")
+        log.info("build_array: Returning an empty array")
         return np.array([], dtype=np.float64)
 
     colname = "_temp_col"
