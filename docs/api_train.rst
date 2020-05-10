@@ -12,13 +12,11 @@ Function Summary
 
    prepare_from_root
    folded_training
-   gp_minimize_auc
+   single_training
 
 Reference
 ^^^^^^^^^
 
 .. autofunction:: prepare_from_root
-
 .. autofunction:: folded_training
-
-.. autofunction:: gp_minimize_auc
+.. autofunction:: single_training

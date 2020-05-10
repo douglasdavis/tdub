@@ -95,11 +95,11 @@ def prepare_from_root(
 
     Returns
     -------
-    df : pandas.DataFrame
+    pandas.DataFrame
        Event feature matrix
-    labels : numpy.ndarray
+    numpy.ndarray
        Event labels (0 for background; 1 for signal)
-    weights : numpy.ndarray
+    numpy.ndarray
        Event weights
 
     Examples
@@ -575,26 +575,26 @@ def folded_training(
     Parameters
     ----------
     df : pandas.DataFrame
-       the feature matrix in dataframe format
+        Feature matrix in dataframe format
     labels : numpy.ndarray
-       the event labels (``1`` for signal; ``0`` for background)
+        Event labels (``1`` for signal; ``0`` for background)
     weights : :obj:`numpy.ndarray`
-       the event weights
+        Event weights
     params : dict(str, Any)
-       dictionary of :obj:`lightgbm.LGBMClassifier` parameters
+        Dictionary of :obj:`lightgbm.LGBMClassifier` parameters
     fit_kw : dict(str, Any)
-       dictionary of arguments forwarded to :py:func:`lightgbm.LGBMClassifier.fit`.
+        Dictionary of arguments forwarded to :py:func:`lightgbm.LGBMClassifier.fit`.
     output_dir : str or os.PathLike
-       directory to save results of training
+        Directory to save results of training
     region : str
-        string representing the region
+        String representing the region
     kfold_kw : optional dict(str, Any)
-       arguments fed to :obj:`sklearn.model_selection.KFold`
+        Arguments passed to :obj:`sklearn.model_selection.KFold`
 
     Returns
     -------
-    negative_roc_score : float
-       -1 times the mean area under the ROC curve (AUC)
+    float
+        Negative mean area under the ROC curve (AUC)
 
     Examples
     --------
@@ -860,19 +860,19 @@ def gp_minimize_auc(
     Parameters
     ----------
     data_dir : str
-       path containing ROOT files
+        Path containing ROOT files
     region : Region or str
-       the region where we're going to perform the training
+        Rregion where we're going to perform the training
     nlo_method : str
-       which tW NLO method sample ('DR' or 'DS' or 'Both')
+        Which tW NLO method sample ('DR' or 'DS' or 'Both')
     output_dir : str or os.PathLike
-       path to save optimization output
+        Path to save optimization output
     n_calls : int
-       number of times to train during the minimization procedure
+        Number of times to train during the minimization procedure
     esr : int, optional
-       early stopping rounds for fitting the model
+        Early stopping rounds for fitting the model
     random_state: int
-       random state for splitting data into training/testing
+        Random state for splitting data into training/testing
 
     Examples
     --------
