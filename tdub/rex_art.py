@@ -13,6 +13,8 @@ from typing import List, Any, Optional, Tuple, Set
 # externals
 import numpy as np
 import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import uproot
 import yaml
@@ -20,8 +22,10 @@ import yaml
 # tdub
 import tdub.utils
 import tdub.hist
-from tdub._art import draw_atlas_label, setup_style, var_to_axis_meta
+from tdub._art import draw_atlas_label, setup_tdub_style, var_to_axis_meta
 
+
+setup_tdub_style()
 log = logging.getLogger(__name__)
 
 
@@ -438,7 +442,6 @@ def run_stacks(args: Any) -> None:
     ----------
     args : argparse.Namespace
     """
-    setup_style()
     samples = _get_plot_samples()
 
     if args.out_dir is None:
@@ -595,7 +598,6 @@ def run_pulls(args: Any) -> None:
     ----------
     args : argparse.Namespace
     """
-    setup_style()
     systematics, categories = get_blank_systematics(args.config)
     fit_name = PosixPath(args.workspace).stem
     fit_result = PosixPath(f"{args.workspace}/Fits/{fit_name}.txt")

@@ -35,7 +35,7 @@ except ImportError:
 # fmt: on
 
 # tdub
-from tdub.art import setup_style
+from tdub.art import setup_tdub_style
 from tdub.frames import iterative_selection, drop_cols
 from tdub.math import ks_twosample_binned
 from tdub.hist import bin_centers
@@ -43,7 +43,7 @@ from tdub.branches import get_selection, numexpr_selection
 from tdub.utils import Region, quick_files, get_features
 
 
-setup_style()
+setup_tdub_style()
 log = logging.getLogger(__name__)
 
 _fig_adjustment_dict = dict(left=0.125, bottom=0.095, right=0.965, top=0.95)

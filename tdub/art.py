@@ -1,4 +1,4 @@
-"""Art utilities."""
+"""Art creation utilities."""
 
 # stdlib
 from typing import Any, Dict, Optional, Tuple, List
@@ -17,10 +17,14 @@ import tdub._art
 import tdub.utils
 from tdub.utils import PathLike
 
-setup_style = tdub._art.setup_style
 
 setup_logging()
 log = logging.getLogger(__name__)
+
+
+def setup_tdub_style():
+    """Modify matplotlib's rcParams."""
+    tdub._art.setup_style()
 
 
 class TRExHistogram:

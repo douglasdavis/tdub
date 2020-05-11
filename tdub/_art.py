@@ -6,11 +6,12 @@ from typing import Optional, List
 
 # external
 import matplotlib
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 
 
 def setup_style():
-    matplotlib.use("Agg")
     matplotlib.rcParams["figure.figsize"] = (6, 5.5)
     matplotlib.rcParams["axes.labelsize"] = 15
     matplotlib.rcParams["font.size"] = 13
