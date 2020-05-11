@@ -6,14 +6,19 @@ from typing import Optional, List, Tuple, Union, Sequence, Iterable, Any
 
 # external
 import numpy as np
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 import pygram11
 
 # tdub
-from tdub._art import setup_style
+from tdub.art import setup_tdub_style
 from tdub.hist import edges_and_centers
 from tdub.apply import FoldedTrainSummary
+
+setup_tdub_style()
 
 
 def draw_rocs(
@@ -60,7 +65,6 @@ def draw_rocs(
         labels = [str(fr.region) for fr in frs]
 
     if ax is None:
-        setup_style()
         fig, ax = plt.subplots()
 
     for label, fr in zip(labels, frs):
@@ -183,7 +187,6 @@ def draw_stack(
         labels.reverse()
 
     edges, centers = edges_and_centers(bins, range=range)
-    setup_style()
     fig, (ax, axr) = plt.subplots(
         2,
         1,
