@@ -214,7 +214,7 @@ def iterative_selection(
         dfs.append(idf)
         log.debug(f"finished iteration {i}")
     result = pd.concat(dfs)
-    result.selection_used = selection
+    result.selection_used = numexpr_sel
     return result
 
 
@@ -250,7 +250,12 @@ def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFram
 
     """
     numexprsel = numexpr_selection(selection)
-    return [df.query(numexprsel) for df in dfs]
+    newdfs = []
+    for df in dfs:
+        newdf = df.query(numexprsel)
+        newdf.selection_used = numexprsel
+        newdfs.append(newdf)
+    return newdfs
 
 
 def drop_cols(df: pd.DataFrame, *cols: str) -> None:

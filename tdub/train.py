@@ -39,7 +39,7 @@ from tdub.art import setup_style
 from tdub.frames import iterative_selection, drop_cols
 from tdub.math import ks_twosample_binned
 from tdub.hist import bin_centers
-from tdub.branches import get_selection
+from tdub.branches import get_selection, numexpr_selection
 from tdub.utils import Region, quick_files, get_features
 
 
@@ -126,6 +126,7 @@ def prepare_from_root(
         log.info("Overriding selection (in region %s) to %s" % (region, override_selection))
     else:
         selection = get_selection(region)
+    selection = numexpr_selection(selection)
     log.info("Total selection is: '%s'" % selection)
 
     if branches is None:
