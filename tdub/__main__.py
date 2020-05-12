@@ -281,7 +281,7 @@ def scan(
         universe="vanilla",
         getenv=True,
         notification="Error",
-        extra_lines=["email = ddavis@phy.duke.edu"],
+        extra_lines=["notify_user = ddavis@phy.duke.edu"],
         executable=shutil.which("tdub"),
         submit=str(ws / "sub"),
         error=str(ws / "err"),
@@ -296,7 +296,7 @@ def scan(
         universe="vanilla",
         getenv=True,
         notification="Error",
-        extra_lines=["email = ddavis@phy.duke.edu"],
+        extra_lines=["notify_user = ddavis@phy.duke.edu"],
         executable=shutil.which("tdub"),
         submit=str(ws / "sub"),
         error=str(ws / "err"),
@@ -519,14 +519,14 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
 @click.option(
     "-f",
     "--fold-results",
-    type=click.Path(exists=True),
+    type=click.Path(exists=True, resolve_path=True),
     multiple=True,
     help="fold output directories",
 )
 @click.option(
     "-s",
     "--single-results",
-    type=click.Path(exists=True),
+    type=click.Path(exists=True, resolve_path=True),
     multiple=True,
     help="single result dirs",
 )
@@ -540,15 +540,17 @@ def apply_all(datadir, arrname, outdir, workspace, fold_results=None, single_res
         raise ValueError("Cannot use -f and -s together with apply-single")
     results_flags = None
     if len(fold_results) > 0:
-        results_flags = "-f {}".format("-f".join(fold_results))
+        results_flags = "-f {}".format(" -f ".join(fold_results))
     elif len(single_results) > 0:
         results_flags = "-s {}".format(" -s ".join(single_results))
     else:
         raise ValueError("-f or -s required")
 
     ws = PosixPath(workspace).resolve()
+
     outpath = PosixPath(outdir)
-    outpath.mkdir(exist_ok=False)
+    outpath_empty = len(os.listdir(outpath)) == 0
+    outpath.mkdir(exist_ok=outpath_empty)
 
     datapath = PosixPath(datadir).resolve(strict=True)
     all_files = glob.glob(f"{datapath}/*.root")
@@ -560,7 +562,7 @@ def apply_all(datadir, arrname, outdir, workspace, fold_results=None, single_res
         universe="vanilla",
         getenv=True,
         notification="Error",
-        extra_lines=["email = ddavis@phy.duke.edu"],
+        extra_lines=["notify_user = ddavis@phy.duke.edu"],
         executable=shutil.which("tdub"),
         submit=str(ws / "sub"),
         error=str(ws / "err"),
