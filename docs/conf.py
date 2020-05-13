@@ -19,7 +19,7 @@ import tdub
 # -- Project information -----------------------------------------------------
 
 project = "tdub"
-copyright = "2019, Doug Davis"
+copyright = "2020, Doug Davis"
 author = "Doug Davis"
 
 version = tdub.__version__
