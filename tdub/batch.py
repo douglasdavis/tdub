@@ -5,11 +5,8 @@ import logging
 import os
 import shutil
 import subprocess
-from typing import TextIO
+from typing import TextIO, Union
 from pathlib import PosixPath
-
-# tdub
-from tdub.utils import PathLike, FileLike
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +24,9 @@ request_memory  = {memory}
 """
 
 
-def create_condor_workspace(name: PathLike, overwrite: bool = False) -> PosixPath:
+def create_condor_workspace(
+    name: Union[str, os.PathLike], overwrite: bool = False
+) -> PosixPath:
     """Create a condor workspace given a name.
 
     This will create a new directory containing `log`, `out`, and
@@ -74,8 +73,8 @@ def create_condor_workspace(name: PathLike, overwrite: bool = False) -> PosixPat
 
 
 def condor_preamble(
-    workspace: PathLike,
-    exe: FileLike,
+    workspace: Union[str, os.PathLike],
+    exe: Union[str, os.PathLike],
     universe: str = "vanilla",
     memory: str = "2GB",
     email: str = "ddavis@phy.duke.edu",
@@ -161,7 +160,7 @@ def add_condor_arguments(arguments: str, to_file: TextIO) -> None:
     to_file.write(f"Queue\n")
 
 
-def condor_submit(workspace: PathLike) -> None:
+def condor_submit(workspace: Union[str, os.PathLike]) -> None:
     """Execute condor_submit on the condor.sub file in a workspace.
 
     Parameters

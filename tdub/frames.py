@@ -12,12 +12,13 @@ import uproot
 
 # tdub
 from tdub.constants import AVOID_IN_CLF
-from tdub.utils import Region, get_avoids
-from tdub.branches import (
+from tdub.data import (
+    Region,
+    avoids_for,
     categorize_branches,
-    get_branches,
-    minimal_branches,
-    numexpr_selection,
+    branches_from,
+    selection_branches,
+    selection_as_numexpr,
 )
 
 
@@ -63,7 +64,7 @@ def raw_dataframe(
 
     Examples
     --------
-    >>> from tdub.utils import quick_files
+    >>> from tdub.data import quick_files
     >>> from tdub.frames import raw_dataframe
     >>> files = quick_files("/path/to/files")["ttbar"]
     >>> df = raw_dataframe(files)
@@ -71,7 +72,7 @@ def raw_dataframe(
     if branches is not None:
         branches = sorted(set(branches) | set([weight_name]), key=str.lower)
     else:
-        branches = get_branches(files, tree)
+        branches = branches_from(files, tree)
     if weight_name not in branches:
         raise RuntimeError(f"{weight_name} not present in {tree}")
     if drop_weight_sys:
@@ -128,7 +129,7 @@ def iterative_selection(
         :py:func:`tdub.branches.categorize_branches`). The weight branch
         is always kept.
     exclude_avoids : bool
-        Exclude branches defined by :py:data:`tdub.utils.AVOID_IN_CLF`.
+        Exclude branches defined by :py:data:`tdub.constants.AVOID_IN_CLF`.
     use_campaign_weight : bool
         Multiply the nominal weight by the campaign weight. this is
         potentially necessary if the samples were prepared without the
@@ -147,24 +148,24 @@ def iterative_selection(
     Creating a ``ttbar_df`` dataframe a single ``tW_df`` dataframe:
 
     >>> from tdub.frames import iterative_selection
-    >>> from tdub.utils import quick_files
-    >>> from tdub.utils import get_selection
+    >>> from tdub.data import quick_files
+    >>> from tdub.data import selection_for
     >>> qf = quick_files("/path/to/files")
-    >>> ttbar_dfs = iterative_selection(qf["ttbar"], get_selection("2j2b"),
+    >>> ttbar_dfs = iterative_selection(qf["ttbar"], selection_for("2j2b"),
     ...                                 entrysteps="1 GB")
-    >>> tW_df = iterative_selection(qf["tW_DR"], get_selection("2j2b"))
+    >>> tW_df = iterative_selection(qf["tW_DR"], selection_for("2j2b"))
 
     Keep only kinematic branches after selection and ignore avoided columns:
 
     >>> tW_df = iterative_selection(qf["tW_DR"],
-    ...                             get_selection("2j2b"),
+    ...                             selection_for("2j2b"),
     ...                             exclue_avoids=True,
     ...                             keep_category="kinematics")
 
     """
     # determine which branches will be used for selection only and
     # which branches we need for weights
-    selection_branches = minimal_branches(selection)
+    sel_branches = selection_branches(selection)
     weights_to_grab = set([weight_name])
     if use_campaign_weight:
         weights_to_grab.add("weight_campaign")
@@ -173,20 +174,20 @@ def iterative_selection(
         weights_to_grab.add("weight_tptrw_tool")
         log.info("applying the top pt reweighting factor")
     if branches is None:
-        branches = set(get_branches(files, tree=tree))
+        branches = set(branches_from(files, tree=tree))
     branches = set(branches)
-    sel_only_branches = selection_branches - branches
+    sel_only_branches = sel_branches - branches
 
     # determine which branches to keep after reading dataframes and
     # are necessary during reading.
     if keep_category is not None:
-        branches_cated = categorize_branches(list(branches), tree=tree)
+        branches_cated = categorize_branches(list(branches))
         keep_cat = set(branches_cated.get(keep_category))
         keep = keep_cat & branches
-        read_branches = keep | weights_to_grab | selection_branches
+        read_branches = keep | weights_to_grab | sel_branches
     else:
         keep = branches
-        read_branches = branches | weights_to_grab | selection_branches
+        read_branches = branches | weights_to_grab | sel_branches
 
     # drop avoided classifier variables
     if exclude_avoids:
@@ -200,7 +201,7 @@ def iterative_selection(
     keep.add(weight_name)
     keep = sorted(keep, key=str.lower)
 
-    numexpr_sel = numexpr_selection(selection)
+    numexpr_sel = selection_as_numexpr(selection)
 
     dfs = []
     itr = uproot.pandas.iterate(files, tree, branches=list(read_branches), **kwargs)
@@ -238,7 +239,7 @@ def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFram
 
     Examples
     --------
-    >>> from tdub.utils import quick_files
+    >>> from tdub.data import quick_files
     >>> from tdub.frames import raw_dataframe, satisfying_selection
     >>> qf = quick_files("/path/to/files")
     >>> df_tW_DR = raw_dataframe(qf["tW_DR"])
@@ -249,7 +250,7 @@ def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFram
     ... )
 
     """
-    numexprsel = numexpr_selection(selection)
+    numexprsel = selection_as_numexpr(selection)
     newdfs = []
     for df in dfs:
         newdf = df.query(numexprsel)
@@ -275,7 +276,7 @@ def drop_cols(df: pd.DataFrame, *cols: str) -> None:
     Examples
     --------
     >>> import pandas as pd
-    >>> from tdub.utils import drop_cols
+    >>> from tdub.data import drop_cols
     >>> df = pd.read_parquet("some_file.parquet")
     >>> "E_jet1" in df.columns:
     True
@@ -306,20 +307,20 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
     """Drop columns that we avoid in classifiers.
 
     Uses :py:func:`tdub.frames.drop_cols` with a predefined set of
-    columns (:py:data:`tdub.utils.AVOID_IN_CLF`). We augment
+    columns (:py:data:`tdub.constants.AVOID_IN_CLF`). We augment
     :py:class:`pandas.DataFrame` with this function.
 
     Parameters
     ----------
     df : pandas.DataFrame
         Dataframe that you want to slim.
-    region : optional, str or tdub.utils.Region
+    region : optional, str or tdub.data.Region
         Region to augment the list of dropped columns (see the region
         specific AVOID constants in the constants module).
 
     Examples
     --------
-    >>> from tdub.utils import drop_avoid
+    >>> from tdub.frames import drop_avoid
     >>> import pandas as pd
     >>> df = pd.read_parquet("some_file.parquet")
     >>> "E_jetL1" in df.columns:
@@ -331,7 +332,7 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
     """
     to_drop = AVOID_IN_CLF
     if region is not None:
-        to_drop += get_avoids(region)
+        to_drop += avoids_for(region)
     drop_cols(df, *to_drop)
 
 
@@ -350,7 +351,7 @@ def drop_jet2(df: pd.DataFrame) -> None:
 
     Examples
     --------
-    >>> from tdub.utils import drop_jet2
+    >>> from tdub.frames import drop_jet2
     >>> import pandas as pd
     >>> df = pd.read_parquet("some_file.parquet")
     >>> "pTsys_lep1lep2jet1jet2met" in df.columns:

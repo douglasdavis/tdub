@@ -89,7 +89,7 @@ def single(
     """Execute a single training round."""
     # fmt: on
     from tdub.train import single_training, prepare_from_root
-    from tdub.utils import get_avoids, quick_files
+    from tdub.data import avoids_for, quick_files
     from tdub.frames import drop_cols
 
     qf = quick_files(datadir)
@@ -106,7 +106,7 @@ def single(
         override_selection=override_sel,
         use_tptrw=use_tptrw,
     )
-    drop_cols(df, *get_avoids(region))
+    drop_cols(df, *avoids_for(region))
     if ignore_list:
         drops = PosixPath(ignore_list).read_text().strip().split()
         drop_cols(df, *drops)
@@ -405,7 +405,7 @@ def check(workspace, print_top, n_res):
 def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
     """Perform a folded training based on a hyperparameter scan result."""
     from tdub.train import folded_training, prepare_from_root
-    from tdub.utils import quick_files
+    from tdub.data import quick_files
 
     scandir = PosixPath(scandir).resolve()
     summary_file = scandir / "best" / "summary.json"
@@ -475,7 +475,7 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
         raise ValueError("Cannot use -f and -s together with apply-single")
 
     from tdub.apply import build_array, FoldedTrainSummary, SingleTrainSummary
-    from tdub.utils import SampleInfo
+    from tdub.data import SampleInfo
     from tdub.branches import minimal_branches
     from tdub.frames import raw_dataframe
     import numpy as np
@@ -599,7 +599,7 @@ def soverb(datadir, selections, use_tptrw):
 
     """
     from tdub.frames import raw_dataframe, apply_weight_tptrw, satisfying_selection
-    from tdub.utils import quick_files
+    from tdub.data import quick_files
     from tdub.branches import minimal_branches
 
     with open(selections, "r") as f:

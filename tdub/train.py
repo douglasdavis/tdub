@@ -20,15 +20,17 @@ import pygram11
 from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import auc, roc_auc_score, roc_curve, plot_roc_curve
+from sklearn.experimental import enable_hist_gradient_boosting # noqa
+from sklearn.ensemble import HistGradientBoostingClassifier
 
 # fmt: off
 try:
-    import lightgbm as lgbm
+    import lightgbm as lgbm # noqa
 except ImportError:
     class lgbm:
         LGBMClassifier = None
 try:
-    import xgboost as xgb
+    import xgboost as xgb # noqa
 except ImportError:
     class xgb:
         XGBClassifier = None
@@ -36,17 +38,16 @@ except ImportError:
 
 # tdub
 from tdub.art import setup_tdub_style
+from tdub.data import Region, features_for, quick_files, selection_for, selection_as_numexpr
 from tdub.frames import iterative_selection, drop_cols
 from tdub.math import ks_twosample_binned
 from tdub.hist import bin_centers
-from tdub.branches import get_selection, numexpr_selection
-from tdub.utils import Region, quick_files, get_features
 
 
 setup_tdub_style()
 log = logging.getLogger(__name__)
 
-_fig_adjustment_dict = dict(left=0.125, bottom=0.095, right=0.965, top=0.95)
+# _fig_adjustment_dict = dict(left=0.125, bottom=0.095, right=0.965, top=0.95)
 
 
 def prepare_from_root(
@@ -104,7 +105,7 @@ def prepare_from_root(
 
     Examples
     --------
-    >>> from tdub.utils import quick_files
+    >>> from tdub.data import quick_files
     >>> from tdub.train import prepare_from_root
     >>> qfiles = quick_files("/path/to/data")
     >>> df, labels, weights = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
@@ -125,13 +126,13 @@ def prepare_from_root(
         selection = override_selection
         log.info("Overriding selection (in region %s) to %s" % (region, override_selection))
     else:
-        selection = get_selection(region)
-    selection = numexpr_selection(selection)
+        selection = selection_for(region)
+    selection = selection_as_numexpr(selection)
     log.info("Total selection is: '%s'" % selection)
 
     if branches is None:
         log.info("Using features defined by the region")
-        branches = get_features(region)
+        branches = features_for(region)
 
     sig_df = iterative_selection(
         files=sig_files,
@@ -265,37 +266,48 @@ def single_training(
     early_stopping_rounds: Optional[int] = None,
     extra_summary_entries: Optional[Dict[str, Any]] = None,
     use_xgboost: bool = False,
+    use_sklearn: bool = False,
 ) -> SingleTrainingResult:
     """Execute a single training with some parameters.
+
+    The model and some useful information (mostly plots) are saved to
+    `output_dir`.
 
     Parameters
     ----------
     df : pandas.DataFrame
-       the feature matrix in dataframe format
+        Feature matrix in dataframe format
     labels : numpy.ndarray
-       the event labels (``1`` for signal; ``0`` for background)
+        Event labels (`1` for signal; `0` for background)
     weights : numpy.ndarray
-       the event weights
+        Event weights
     clf_params : dict
-       dictionary of parameters to pass to
-       :py:obj:`lightgbm.LGBMClassifier`.
+        Dictionary of parameters to pass to
+        :py:obj:`lightgbm.LGBMClassifier`.
     output_dir : str or os.PathLike
-       directory to save results of training
+        Directory to save results of training
     test_size : float
-       test size for splitting into training and testing sets
+        Test size for splitting into training and testing sets
     random_state : int
-       random seed for
-       :py:func:`sklearn.model_selection.train_test_split`.
+        Random seed for
+        :py:func:`sklearn.model_selection.train_test_split`.
     early_stopping_rounds : int, optional
-       number of rounds to have no improvement for stopping training
+        Number of rounds to have no improvement for stopping training.
     extra_summary_entries : dict, optional
-       extra entries to save in the JSON output summary
+        Extra entries to save in the JSON output summary.
     use_xgboost : bool
-       use XGBoost classifier
+        Use XGBoost classifier.
+    use_sklearn : bool
+        Use Scikit-learn's HistGradientBoostingClassifier.
+
+    Returns
+    -------
+    SingleTrainingResult
+        Useful information about the training
 
     Examples
     --------
-    >>> from tdub.utils import quick_files
+    >>> from tdub.data import quick_files
     >>> from tdub.train import prepare_from_root, single_round
     >>> qfiles = quick_files("/path/to/data")
     >>> df, labels, weights = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
@@ -310,10 +322,12 @@ def single_training(
     ...     params,
     ...     "training_output",
     ... )
+
     """
     starting_dir = os.getcwd()
     output_path = PosixPath(output_dir)
     output_path.mkdir(exist_ok=True, parents=True)
+    log.info("Saving training output to %s" % output_path.resolve())
     os.chdir(output_path)
 
     X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
@@ -326,7 +340,6 @@ def single_training(
     log.info("features training with:")
     for c in X_train.columns:
         log.info(" - %s" % c)
-    log.info("saving output to %s" % output_path.resolve())
 
     validation_data = [(X_test, y_test)]
     validation_w = w_test
@@ -342,6 +355,20 @@ def single_training(
             early_stopping_rounds=early_stopping_rounds,
             sample_weight_eval_set=[validation_w],
         )
+
+    elif use_sklearn:
+        model = HistGradientBoostingClassifier(
+            learning_rate=clf_params.get("learning_rate", 0.1),
+            max_depth=clf_params.get("max_depth", 5),
+            min_samples_leaf=clf_params.get("min_child_samples", 50),
+            max_leaf_nodes=clf_params.get("num_leaves", 31),
+            validation_fraction=0.33,
+            early_stopping=True,
+            n_iter_no_change=10,
+            max_iter=250,
+            verbose=1,
+        )
+        model.fit(X_train, y_train, sample_weight=w_train)
 
     else:
         model = lgbm.LGBMClassifier(boosting_type="gbdt", **clf_params)
@@ -375,9 +402,10 @@ def single_training(
         w_test,
         w_train,
         is_xgb_model=use_xgboost,
+        is_skl_model=use_sklearn,
     )
 
-    if not use_xgboost:
+    if not use_xgboost and not use_sklearn:
         lgbm.plot_importance(model, ax=ax_imp_gain, importance_type="gain")
         lgbm.plot_importance(model, ax=ax_imp_split, importance_type="split")
         ax_imp_gain.set_xlabel("Importance (gain)")
@@ -387,11 +415,11 @@ def single_training(
         fig_imp.subplots_adjust(left=0.475, top=0.975, bottom=0.09, right=0.925)
         fig_imp.savefig("imp.pdf")
 
-    fig_proba.subplots_adjust(**_fig_adjustment_dict)
+    #fig_proba.subplots_adjust(**_fig_adjustment_dict)
+    #fig_pred.subplots_adjust(**_fig_adjustment_dict)
+    #fig_roc.subplots_adjust(**_fig_adjustment_dict)
     fig_proba.savefig("proba.pdf")
-    fig_pred.subplots_adjust(**_fig_adjustment_dict)
     fig_pred.savefig("pred.pdf")
-    fig_roc.subplots_adjust(**_fig_adjustment_dict)
     fig_roc.savefig("roc.pdf")
 
     summary = {"auc": round(trainres.auc, 5)}
@@ -408,6 +436,8 @@ def single_training(
     if early_stopping_rounds is not None:
         if use_xgboost:
             summary["best_iteration"] = int(model.best_iteration)
+        elif use_sklearn:
+            summary["best_iteration"] = int(model.n_iter_)
         else:
             summary["best_iteration"] = int(model.best_iteration_)
     if extra_summary_entries is not None:
@@ -434,6 +464,7 @@ def _inspect_single_training(
     nbins_proba: int = 30,
     nbins_pred: int = 30,
     is_xgb_model: bool = False,
+    is_skl_model: bool = False,
 ) -> SingleTrainingResult:
     """Inspect a single training round and make some plots."""
     # fmt: off
@@ -449,6 +480,11 @@ def _inspect_single_training(
         test_pred = model.predict(X_test, output_margin=True)
         train_proba = model.predict_proba(X_train)[:, 1]
         train_pred = model.predict(X_train, output_margin=True)
+    elif is_skl_model:
+        test_proba = model.predict_proba(X_test)[:, 1]
+        test_pred = model.decision_function(X_test)
+        train_proba = model.predict_proba(X_train)[:, 1]
+        train_pred = model.decision_function(X_train)
     else:
         test_proba = model.predict_proba(X_test)[:, 1]
         test_pred = model.predict(X_test, raw_score=True)
@@ -599,7 +635,7 @@ def folded_training(
 
     Examples
     --------
-    >>> from tdub.utils import quick_files
+    >>> from tdub.data import quick_files
     >>> from tdub.train import prepare_from_root
     >>> from tdub.train import folded_training
     >>> qfiles = quick_files("/path/to/data")
@@ -768,9 +804,9 @@ def folded_training(
         fold_ax_pred.set_xlabel("Classifier Output")
         fold_ax_pred.legend(ncol=2, loc="upper center")
 
-        fold_fig_proba.subplots_adjust(**_fig_adjustment_dict)
+        #fold_fig_proba.subplots_adjust(**_fig_adjustment_dict)
         fold_fig_proba.savefig(f"fold{fold_number}_histograms_proba.pdf")
-        fold_fig_pred.subplots_adjust(**_fig_adjustment_dict)
+        #fold_fig_pred.subplots_adjust(**_fig_adjustment_dict)
         fold_fig_pred.savefig(f"fold{fold_number}_histograms_pred.pdf")
 
         plt.close(fold_fig_proba)
@@ -801,19 +837,19 @@ def folded_training(
     ax_proba_hists.set_xlabel("Classifier Output")
     ax_proba_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_proba_hists.set_ylim([0, 1.5 * ax_proba_hists.get_ylim()[1]])
-    fig_proba_hists.subplots_adjust(**_fig_adjustment_dict)
+    #fig_proba_hists.subplots_adjust(**_fig_adjustment_dict)
     fig_proba_hists.savefig("histograms_proba.pdf")
 
     ax_pred_hists.set_ylabel("Arb. Units")
     ax_pred_hists.set_xlabel("Classifier Output")
     ax_pred_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_pred_hists.set_ylim([0, 1.5 * ax_pred_hists.get_ylim()[1]])
-    fig_pred_hists.subplots_adjust(**_fig_adjustment_dict)
+    #fig_pred_hists.subplots_adjust(**_fig_adjustment_dict)
     fig_pred_hists.savefig("histograms_pred.pdf")
 
     ax_rocs.grid(color="black", alpha=0.15)
     ax_rocs.legend(ncol=2, loc="lower right")
-    fig_rocs.subplots_adjust(**_fig_adjustment_dict)
+    #fig_rocs.subplots_adjust(**_fig_adjustment_dict)
     fig_rocs.savefig("roc.pdf")
 
     summary: Dict[str, Any] = {}
@@ -877,17 +913,16 @@ def gp_minimize_auc(
 
     Examples
     --------
-    >>> from tdub.utils import Region
+    >>> from tdub.data import Region
     >>> from tdub.train import prepare_from_root, gp_minimize_auc
     >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DS", "opt_DS_2j1b")
     >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DR", "opt_DR_2j1b")
     """
 
-    from skopt.utils import use_named_args
-    from skopt.space import Real, Integer
-    from skopt.plots import plot_convergence
-
-    from skopt import gp_minimize
+    from skopt.utils import use_named_args    # noqa
+    from skopt.space import Real, Integer     # noqa
+    from skopt.plots import plot_convergence  # noqa
+    from skopt import gp_minimize             # noqa
 
     qfiles = quick_files(f"{data_dir}")
     if nlo_method == "DR":
@@ -1022,7 +1057,7 @@ def gp_minimize_auc(
         )
         ax.set_ylim([0, 1.5 * ax.get_ylim()[1]])
         ax.legend(ncol=2, loc="upper center")
-        fig.subplots_adjust(**_fig_adjustment_dict)
+        #fig.subplots_adjust(**_fig_adjustment_dict)
         fig.savefig("histograms.pdf")
         plt.close(fig)
 
@@ -1104,7 +1139,7 @@ def gp_minimize_auc(
 
     fig, ax = plt.subplots()
     plot_convergence(search_result, ax=ax)
-    fig.subplots_adjust(**_fig_adjustment_dict)
+    #fig.subplots_adjust(**_fig_adjustment_dict)
     fig.savefig("gpmin_convergence.pdf")
 
     os.chdir(run_from_dir)

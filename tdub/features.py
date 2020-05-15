@@ -17,8 +17,7 @@ from sklearn.model_selection import train_test_split
 
 # tdub
 from tdub.frames import iterative_selection, drop_cols
-from tdub.utils import quick_files, Region
-from tdub.branches import get_selection
+from tdub.data import quick_files, Region, selection_for
 
 log = logging.getLogger(__name__)
 
@@ -668,7 +667,7 @@ def create_parquet_files(
     Parameters
     ----------
     qf_dir : str or os.PathLike
-       directory to run :py:func:`tdub.utils.quick_files`
+       directory to run :py:func:`tdub.data.quick_files`
     out_dir : str or os.PathLike, optional
        directory to save output files
     entrysteps : any, optional
@@ -705,7 +704,7 @@ def create_parquet_files(
                 log.info(f" - {f}")
             df = iterative_selection(
                 qf[sample],
-                get_selection(r),
+                selection_for(r),
                 keep_category="kinematics",
                 concat=True,
                 entrysteps=entrysteps,
@@ -740,7 +739,7 @@ def prepare_from_parquet(
     ----------
     data_dir : str or os.PathLike
        directory where the parquet files live
-    region : str or tdub.utils.Region
+    region : str or tdub.data.Region
        the region where we're going to select features
     nlo_method : str
        the :math:`tW` sample (``DR`` or ``DS``)

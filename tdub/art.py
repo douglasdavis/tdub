@@ -4,6 +4,7 @@
 from typing import Any, Dict, Optional, Tuple, List
 from pathlib import PosixPath
 import logging
+import os
 
 # external
 import numpy as np
@@ -14,8 +15,7 @@ from uproot.rootio import ROOTDirectory
 # tdub
 from tdub import setup_logging
 import tdub._art
-import tdub.utils
-from tdub.utils import PathLike
+import tdub.hist
 
 
 setup_logging()
@@ -25,6 +25,17 @@ log = logging.getLogger(__name__)
 def setup_tdub_style():
     """Modify matplotlib's rcParams."""
     tdub._art.setup_style()
+
+
+def adjust_figure(
+    fig: plt.Figure,
+    left: float = 0.125,
+    bottom: float = 0.095,
+    right: float = 0.965,
+    top: float = 0.95,
+) -> None:
+    """Adjust a matplotlib Figure with nice defaults."""
+    NotImplementedError("This is TODO")
 
 
 class TRExHistogram:
@@ -103,7 +114,7 @@ class TRExHistogram:
     @property
     def bin_centers(self) -> np.ndarray:
         """numpy.ndarray: the bin centers"""
-        return tdub.utils.bin_centers(self.bins)
+        return tdub.hist.bin_centers(self.bins)
 
     @property
     def bin_width(self) -> np.ndarray:
@@ -148,7 +159,7 @@ class TRExRegionSources:
         the specific region to parse
     """
 
-    def __init__(self, fitdir: PathLike, region: str) -> None:
+    def __init__(self, fitdir: os.PathLike, region: str) -> None:
         log.info("start parse")
         fitdir = PosixPath(fitdir).resolve()
         fitname = fitdir.stem
@@ -189,7 +200,7 @@ class TRExRegionSources:
         return self.postfit_root_file.get("g_totErr_postFit")
 
 
-def regions_from_fitdir(fitdir: PathLike) -> List[str]:
+def regions_from_fitdir(fitdir: os.PathLike) -> List[str]:
     """get a list of regions from a TRExFitter directory.
 
     Parameters
@@ -283,7 +294,7 @@ def canvas_from_counts(
     :py:obj:`matplotlib.axes.Axes`
         the matplotlib axes for the ratio comparison
     """
-    centers = tdub.utils.bin_centers(bin_edges)
+    centers = tdub.hist.bin_centers(bin_edges)
     start, stop = bin_edges[0], bin_edges[-1]
     mc_counts = np.zeros_like(centers, dtype=np.float32)
     mc_errs = np.zeros_like(centers, dtype=np.float32)

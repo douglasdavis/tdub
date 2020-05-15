@@ -20,7 +20,6 @@ import uproot
 import yaml
 
 # tdub
-import tdub.utils
 import tdub.hist
 from tdub.art import setup_tdub_style
 from tdub._art import draw_atlas_label, var_to_axis_meta

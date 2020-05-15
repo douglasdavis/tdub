@@ -29,7 +29,7 @@ def kolmogorov_prob(z: float) -> float:
 
     Examples
     --------
-    >>> from tdub.utils import kolmogorov_prob
+    >>> from tdub.math import kolmogorov_prob
     >>> kolmogorov_prob(1.13)
     0.15549781841748692
     """
@@ -85,7 +85,7 @@ def ks_twosample_binned(
     Examples
     --------
     >>> import pygram11
-    >>> from tdub.utils import ks_twosample_binned
+    >>> from tdub.math import ks_twosample_binned
     >>> data1, data2, w1, w2 = some_function_to_get_data()
     >>> h1, err1 = pygram11.histogram(data1, weights=w1, bins=40, range=(-3, 3))
     >>> h2, err2 = pygram11.histogram(data2, weights=w2, bins=40, range=(-3, 3))

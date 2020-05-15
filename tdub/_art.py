@@ -6,6 +6,7 @@ from typing import Optional, List
 
 # external
 import matplotlib
+
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
@@ -41,6 +42,10 @@ def setup_style():
     matplotlib.rcParams["legend.handlelength"] = 1.5
     matplotlib.rcParams["axes.formatter.limits"] = [-4, 4]
     matplotlib.rcParams["axes.formatter.use_mathtext"] = True
+    matplotlib.rcParams["figure.subplot.left"] = 0.125
+    matplotlib.rcParams["figure.subplot.bottom"] = 0.095
+    matplotlib.rcParams["figure.subplot.right"] = 0.965
+    matplotlib.rcParams["figure.subplot.top"] = 0.95
 
 
 def draw_atlas_label(

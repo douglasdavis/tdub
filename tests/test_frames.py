@@ -2,7 +2,7 @@ from pathlib import PosixPath
 
 from tdub.constants import AVOID_IN_CLF
 from tdub.frames import iterative_selection, drop_avoid
-from tdub.branches import minimal_branches
+from tdub.data import selection_branches
 
 test_file_root = PosixPath(__file__).parent / "test_data"
 
@@ -54,7 +54,7 @@ def test_drop_jet2():
 def test_selection_augmented():
     files = [str(test_file_root / "testfile1.root"), str(test_file_root / "testfile3.root")]
     df = iterative_selection(files, "(OS == True) & (reg1j1b == True) & (mass_lep1jet1 < 155)")
-    sel_vars = set(minimal_branches(df.selection_used))
+    sel_vars = set(selection_branches(df.selection_used))
     manual = {"OS", "reg1j1b", "mass_lep1jet1"}
     assert sel_vars == manual
     assert df.selection_used == "(OS == True) & (reg1j1b == True) & (mass_lep1jet1 < 155)"

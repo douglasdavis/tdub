@@ -6,9 +6,9 @@ matplotlib >= 3.1
 numexpr >= 2.7.0
 pyyaml >= 5.1
 pygram11 >= 0.8
-pandas >= 1.0.0
-scikit-learn >= 0.21
+pandas >= 1.0.2
+scikit-learn >= 0.23
 uproot >= 3.11.0
-pycondor >= 0.5.0
+pycondor == 0.5.0
 lz4 >= 3.0
 xxhash >= 1.4

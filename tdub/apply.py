@@ -28,7 +28,7 @@ except ImportError:
 # fmt: on
 
 # tdub
-from tdub.utils import Region
+from tdub.data import Region
 
 
 log = logging.getLogger(__name__)

@@ -186,7 +186,7 @@ def generate_from_df(
 
     Examples
     --------
-    >>> from tdub.utils import quick_files
+    >>> from tdub.data import quick_files
     >>> from tdub.frames import raw_dataframe
     >>> from tdub.hist import generate_from_df
     >>> qf = quick_files("/path/to/data")
@@ -232,7 +232,7 @@ def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
     Examples
     --------
     >>> import numpy as np
-    >>> from tdub.utils import bin_centers
+    >>> from tdub.hist import bin_centers
     >>> bin_edges = np.linspace(25, 225, 11)
     >>> centers = bin_centers(bin_edges)
     >>> bin_edges
@@ -263,7 +263,7 @@ def to_uniform_bins(bin_edges: np.ndarray):
     Examples
     --------
     >>> import numpy as np
-    >>> from tdub.utils import to_uniform_bins
+    >>> from tdub.hist import to_uniform_bins
     >>> var_width = [0, 1, 3, 7, 15]
     >>> to_uniform_bins(var_width)
     array([0.5, 1.5, 2.5, 3.5, 4.5])
@@ -294,7 +294,7 @@ def edges_and_centers(
     --------
     from bin multiplicity and a range
 
-    >>> from tdub.utils import edges_and_centers
+    >>> from tdub.hist import edges_and_centers
     >>> edges, centers = edges_and_centers(bins=20, range=(25, 225))
 
     from pre-existing edges
