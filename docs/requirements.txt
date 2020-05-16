@@ -1,4 +1,3 @@
 sphinx>=2.4
 sphinx-click
 sphinx_rtd_theme
-pydata-sphinx-theme
