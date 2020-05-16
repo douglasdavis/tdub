@@ -14,7 +14,7 @@ from tdub.data import (
     selection_as_root,
 )
 
-from tdub.constants import (
+from tdub.config import (
     FEATURESET_1j1b,
     FEATURESET_2j1b,
     FEATURESET_2j2b,

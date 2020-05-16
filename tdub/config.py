@@ -1,4 +1,33 @@
-"""A place for constants."""
+"""Analysis configuration module.
+
+tdub is a Python library for physics analysis. Naturally some
+properties of the analysis need to be easily modifiable for various
+studies. This module houses a handful of variables that can be
+modified simply by importing the module.
+
+For example, we can call :py:func:`tdub.data.features_for` and expect
+different results without changing the API usage, just changing the
+configuration module ``FEATURESET_foo`` constants::
+
+  >>> from tdub.data import features_for
+  >>> features_for("2j2b")
+  ['mass_lep1jet1', 'mass_lep2jet1', 'pT_jet2', ...]
+  >>> import tdub.config
+  >>> tdub.config.FEATURESET_2j2b = ["pT_jet1", "met"]
+  >>> features_for("2j2b")
+  ['pT_jet1', 'met']
+
+Similarly, we can modify the selection via this module::
+
+  >>> from tdub.data import selection_for
+  >>> selection_for("2j2b")
+  '(reg2j2b == True) & (OS == True)'
+  >>> import tdub.config
+  >>> tdub.config.SELECTION_2j2b = "(reg2j2b == True) & (OS == True) & (mass_lep1jet1 < 155)"
+  >>> selection_for("2j2b")
+  '(reg2j2b == True) & (OS == True) & (mass_lep1jet1 < 155)'
+
+"""
 
 
 SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"

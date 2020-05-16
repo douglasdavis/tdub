@@ -16,7 +16,7 @@ import pygram11
 # tdub
 from tdub.art import setup_tdub_style
 from tdub.hist import edges_and_centers
-from tdub.apply import FoldedTrainSummary
+from tdub.ml_apply import FoldedTrainSummary
 
 setup_tdub_style()
 

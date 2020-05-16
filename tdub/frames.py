@@ -11,7 +11,7 @@ import pandas as pd
 import uproot
 
 # tdub
-from tdub.constants import AVOID_IN_CLF
+from tdub.config import AVOID_IN_CLF
 from tdub.data import (
     Region,
     avoids_for,
@@ -129,7 +129,7 @@ def iterative_selection(
         :py:func:`tdub.branches.categorize_branches`). The weight branch
         is always kept.
     exclude_avoids : bool
-        Exclude branches defined by :py:data:`tdub.constants.AVOID_IN_CLF`.
+        Exclude branches defined by :py:data:`tdub.config.AVOID_IN_CLF`.
     use_campaign_weight : bool
         Multiply the nominal weight by the campaign weight. this is
         potentially necessary if the samples were prepared without the
@@ -307,7 +307,7 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
     """Drop columns that we avoid in classifiers.
 
     Uses :py:func:`tdub.frames.drop_cols` with a predefined set of
-    columns (:py:data:`tdub.constants.AVOID_IN_CLF`). We augment
+    columns (:py:data:`tdub.config.AVOID_IN_CLF`). We augment
     :py:class:`pandas.DataFrame` with this function.
 
     Parameters
@@ -316,7 +316,7 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
         Dataframe that you want to slim.
     region : optional, str or tdub.data.Region
         Region to augment the list of dropped columns (see the region
-        specific AVOID constants in the constants module).
+        specific AVOID constants in the config module).
 
     Examples
     --------

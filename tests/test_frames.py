@@ -1,6 +1,6 @@
 from pathlib import PosixPath
 
-from tdub.constants import AVOID_IN_CLF
+from tdub.config import AVOID_IN_CLF
 from tdub.frames import iterative_selection, drop_avoid
 from tdub.data import selection_branches
 

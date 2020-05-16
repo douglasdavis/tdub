@@ -1,9 +1,9 @@
-tdub.train
-----------
+tdub.ml_train
+-------------
 
 A module for handling training
 
-.. currentmodule:: tdub.train
+.. currentmodule:: tdub.ml_train
 
 Function Summary
 ^^^^^^^^^^^^^^^^

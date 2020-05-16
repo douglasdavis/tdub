@@ -16,7 +16,7 @@ import uproot
 from uproot.rootio import ROOTDirectory
 
 # tdub
-import tdub.constants
+import tdub.config
 
 log = logging.getLogger(__name__)
 
@@ -175,8 +175,8 @@ class SampleInfo:
 def avoids_for(region: Union[str, Region]) -> List[str]:
     """Get the features to avoid for the given region.
 
-    See the tdub.constants module for defintion of the variables to
-    avoid.
+    See the :py:mod:`tdub.config` module for definition of the
+    variables to avoid (and how to modify them).
 
     Parameters
     ----------
@@ -195,15 +195,16 @@ def avoids_for(region: Union[str, Region]) -> List[str]:
     ['HT_jet1jet2', 'deltaR_lep1lep2_jet1jet2met', 'mass_lep2jet1', 'pT_jet2']
     >>> avoids_for("2j2b")
     ['deltaR_jet1_jet2']
+
     """
     if isinstance(region, str):
         region = Region.from_str(region)
     if region == Region.r1j1b:
-        return tdub.constants.AVOID_IN_CLF_1j1b
+        return tdub.config.AVOID_IN_CLF_1j1b
     elif region == Region.r2j1b:
-        return tdub.constants.AVOID_IN_CLF_2j1b
+        return tdub.config.AVOID_IN_CLF_2j1b
     elif region == Region.r2j2b:
-        return tdub.constants.AVOID_IN_CLF_2j2b
+        return tdub.config.AVOID_IN_CLF_2j2b
     else:
         raise ValueError(f"Incompatible region: {region}")
 
@@ -331,8 +332,8 @@ def categorize_branches(source: List[str]) -> Dict[str, List[str]]:
 def features_for(region: Union[str, Region]) -> List[str]:
     """Get the feature list for a region.
 
-    See the tdub.constants module for the defition of the feature
-    lists.
+    See the :py:mod:`tdub.config` module for the definitions of the
+    feature lists (and how to modify them).
 
     Parameters
     ----------
@@ -358,25 +359,26 @@ def features_for(region: Union[str, Region]) -> List[str]:
      'pTsys_lep1lep2jet1jet2met',
      'psuedoContTagBin_jet1',
      'psuedoContTagBin_jet2']
+
     """
     # first allow retrieval of all features
     if region == "ALL":
         return sorted(
-            set(tdub.constants.FEATURESET_1j1b)
-            | set(tdub.constants.FEATURESET_2j1b)
-            | set(tdub.constants.FEATURESET_2j2b),
+            set(tdub.config.FEATURESET_1j1b)
+            | set(tdub.config.FEATURESET_2j1b)
+            | set(tdub.config.FEATURESET_2j2b),
             key=str.lower,
         )
 
-    # if not "ALL" grab from a dict constructed from constants
+    # if not "ALL" grab from a dict constructed from config
     if isinstance(region, str):
         region = Region.from_str(region)
     if region == Region.r1j1b:
-        return tdub.constants.FEATURESET_1j1b
+        return tdub.config.FEATURESET_1j1b
     if region == Region.r2j1b:
-        return tdub.constants.FEATURESET_2j1b
+        return tdub.config.FEATURESET_2j1b
     if region == Region.r2j2b:
-        return tdub.constants.FEATURESET_2j2b
+        return tdub.config.FEATURESET_2j2b
     else:
         raise ValueError(f"Incompatible region: {region}")
 
@@ -655,7 +657,8 @@ def selection_for(region: Union[str, Region], additional: Optional[str] = None) 
 
     We have three regions with a default selection (`1j1b`, `2j1b`,
     and `2j2b`), these are the possible argument options (in str or
-    Enum form).
+    Enum form). See the :py:mod:`tdub.config` module for the
+    definitions of the selections (and how to modify them).
 
     Parameters
     ----------

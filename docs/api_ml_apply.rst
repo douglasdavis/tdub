@@ -1,9 +1,9 @@
-tdub.apply
-----------
+tdub.ml_apply
+-------------
 
 A module for applying trained models
 
-.. currentmodule:: tdub.apply
+.. currentmodule:: tdub.ml_apply
 
 Class Summary
 ^^^^^^^^^^^^^

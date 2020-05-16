@@ -1,9 +1,9 @@
-tdub.constants
+tdub.config
 --------------
 
-A module to house constants
+.. currentmodule:: tdub.config
 
-.. currentmodule:: tdub.constants
+.. automodule:: tdub.config
 
 Summary
 ^^^^^^^

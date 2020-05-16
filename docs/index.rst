@@ -30,13 +30,13 @@ originate from `ROOT <https://root.cern/>`_ files).
    :maxdepth: 1
    :caption: API Reference
 
-   api_apply.rst
    api_art.rst
    api_batch.rst
-   api_constants.rst
+   api_config.rst
    api_data.rst
    api_frames.rst
    api_features.rst
    api_hist.rst
    api_math.rst
-   api_train.rst
+   api_ml_apply.rst
+   api_ml_train.rst

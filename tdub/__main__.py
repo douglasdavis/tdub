@@ -88,7 +88,7 @@ def single(
 ):
     """Execute a single training round."""
     # fmt: on
-    from tdub.train import single_training, prepare_from_root
+    from tdub.ml_train import single_training, prepare_from_root
     from tdub.data import avoids_for, quick_files
     from tdub.frames import drop_cols
 
@@ -193,7 +193,7 @@ def scan(
         add_condor_arguments,
         condor_submit,
     )
-    from tdub.constants import DEFAULT_SCAN_PARAMETERS
+    from tdub.config import DEFAULT_SCAN_PARAMETERS
 
     if scan_params is None:
         pd = DEFAULT_SCAN_PARAMETERS
@@ -336,7 +336,7 @@ def scan(
 )
 def check(workspace, print_top, n_res):
     """Check the results of a parameter scan WORKSPACE."""
-    from tdub.train import SingleTrainingResult
+    from tdub.ml_train import SingleTrainingResult
     import shutil
 
     results = []
@@ -404,7 +404,7 @@ def check(workspace, print_top, n_res):
 )
 def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
     """Perform a folded training based on a hyperparameter scan result."""
-    from tdub.train import folded_training, prepare_from_root
+    from tdub.ml_train import folded_training, prepare_from_root
     from tdub.data import quick_files
 
     scandir = PosixPath(scandir).resolve()
@@ -474,7 +474,7 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
     if len(single_results) > 0 and len(fold_results) > 0:
         raise ValueError("Cannot use -f and -s together with apply-single")
 
-    from tdub.apply import build_array, FoldedTrainSummary, SingleTrainSummary
+    from tdub.ml_apply import build_array, FoldedTrainSummary, SingleTrainSummary
     from tdub.data import SampleInfo
     from tdub.branches import minimal_branches
     from tdub.frames import raw_dataframe
@@ -624,11 +624,11 @@ def soverb(datadir, selections, use_tptrw):
 
 
 def run_cli():
-    import tdub.constants
+    import tdub.config
 
-    tdub.constants.AVOID_IN_CLF_1j1b = []
-    tdub.constants.AVOID_IN_CLF_2j1b = []
-    tdub.constants.AVOID_IN_CLF_2j2b = []
+    tdub.config.AVOID_IN_CLF_1j1b = []
+    tdub.config.AVOID_IN_CLF_2j1b = []
+    tdub.config.AVOID_IN_CLF_2j2b = []
     cli()
 
 
