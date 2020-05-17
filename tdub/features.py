@@ -311,7 +311,7 @@ class FeatureSelector:
             for k, v in extra_clf_opts.items():
                 clf_opts[k] = v
 
-        log.info(f"Classifier is configured with parameters:")
+        log.info("Classifier is configured with parameters:")
         model = lgbm.LGBMClassifier(**clf_opts)
         self._model_params = copy.deepcopy(model.get_params())
         for k, v in model.get_params().items():
@@ -478,7 +478,7 @@ class FeatureSelector:
             for k, v in extra_clf_opts.items():
                 clf_opts[k] = v
 
-        log.info(f"Classifier is configured with parameters:")
+        log.info("Classifier is configured with parameters:")
         for k, v in clf_opts.items():
             log.info(f"{k:>20} | {v:<12}")
 
@@ -581,7 +581,7 @@ class FeatureSelector:
             for k, v in extra_clf_opts.items():
                 clf_opts[k] = v
 
-        log.info(f"Classifier is configured with parameters:")
+        log.info("Classifier is configured with parameters:")
         for k, v in clf_opts.items():
             log.info(f"{k:>20} | {v:<12}")
 

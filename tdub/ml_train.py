@@ -20,7 +20,7 @@ import pygram11
 from scipy import interp
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import auc, roc_auc_score, roc_curve, plot_roc_curve
-from sklearn.experimental import enable_hist_gradient_boosting # noqa
+from sklearn.experimental import enable_hist_gradient_boosting  # noqa
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 # fmt: off
@@ -63,7 +63,7 @@ def prepare_from_root(
     use_tptrw: bool = False,
     test_case_size: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
-    r"""Prepare the data to train in a region with signal and background ROOT files.
+    """Prepare the data to train in a region with signal and background ROOT files.
 
     Parameters
     ----------
@@ -383,7 +383,7 @@ def single_training(
             eval_sample_weight=[validation_w],
         )
 
-    joblib.dump(model, f"model.joblib.gz", compress=("gzip", 3))
+    joblib.dump(model, "model.joblib.gz", compress=("gzip", 3))
 
     fig_proba, ax_proba = plt.subplots()
     fig_pred, ax_pred = plt.subplots()
@@ -415,9 +415,9 @@ def single_training(
         fig_imp.subplots_adjust(left=0.475, top=0.975, bottom=0.09, right=0.925)
         fig_imp.savefig("imp.pdf")
 
-    #fig_proba.subplots_adjust(**_fig_adjustment_dict)
-    #fig_pred.subplots_adjust(**_fig_adjustment_dict)
-    #fig_roc.subplots_adjust(**_fig_adjustment_dict)
+    # fig_proba.subplots_adjust(**_fig_adjustment_dict)
+    # fig_pred.subplots_adjust(**_fig_adjustment_dict)
+    # fig_roc.subplots_adjust(**_fig_adjustment_dict)
     fig_proba.savefig("proba.pdf")
     fig_pred.savefig("pred.pdf")
     fig_roc.savefig("roc.pdf")
@@ -804,9 +804,9 @@ def folded_training(
         fold_ax_pred.set_xlabel("Classifier Output")
         fold_ax_pred.legend(ncol=2, loc="upper center")
 
-        #fold_fig_proba.subplots_adjust(**_fig_adjustment_dict)
+        # fold_fig_proba.subplots_adjust(**_fig_adjustment_dict)
         fold_fig_proba.savefig(f"fold{fold_number}_histograms_proba.pdf")
-        #fold_fig_pred.subplots_adjust(**_fig_adjustment_dict)
+        # fold_fig_pred.subplots_adjust(**_fig_adjustment_dict)
         fold_fig_pred.savefig(f"fold{fold_number}_histograms_pred.pdf")
 
         plt.close(fold_fig_proba)
@@ -837,19 +837,19 @@ def folded_training(
     ax_proba_hists.set_xlabel("Classifier Output")
     ax_proba_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_proba_hists.set_ylim([0, 1.5 * ax_proba_hists.get_ylim()[1]])
-    #fig_proba_hists.subplots_adjust(**_fig_adjustment_dict)
+    # fig_proba_hists.subplots_adjust(**_fig_adjustment_dict)
     fig_proba_hists.savefig("histograms_proba.pdf")
 
     ax_pred_hists.set_ylabel("Arb. Units")
     ax_pred_hists.set_xlabel("Classifier Output")
     ax_pred_hists.legend(ncol=3, loc="upper center", fontsize="small")
     ax_pred_hists.set_ylim([0, 1.5 * ax_pred_hists.get_ylim()[1]])
-    #fig_pred_hists.subplots_adjust(**_fig_adjustment_dict)
+    # fig_pred_hists.subplots_adjust(**_fig_adjustment_dict)
     fig_pred_hists.savefig("histograms_pred.pdf")
 
     ax_rocs.grid(color="black", alpha=0.15)
     ax_rocs.legend(ncol=2, loc="lower right")
-    #fig_rocs.subplots_adjust(**_fig_adjustment_dict)
+    # fig_rocs.subplots_adjust(**_fig_adjustment_dict)
     fig_rocs.savefig("roc.pdf")
 
     summary: Dict[str, Any] = {}
@@ -1057,7 +1057,7 @@ def gp_minimize_auc(
         )
         ax.set_ylim([0, 1.5 * ax.get_ylim()[1]])
         ax.legend(ncol=2, loc="upper center")
-        #fig.subplots_adjust(**_fig_adjustment_dict)
+        # fig.subplots_adjust(**_fig_adjustment_dict)
         fig.savefig("histograms.pdf")
         plt.close(fig)
 
@@ -1139,7 +1139,7 @@ def gp_minimize_auc(
 
     fig, ax = plt.subplots()
     plot_convergence(search_result, ax=ax)
-    #fig.subplots_adjust(**_fig_adjustment_dict)
+    # fig.subplots_adjust(**_fig_adjustment_dict)
     fig.savefig("gpmin_convergence.pdf")
 
     os.chdir(run_from_dir)

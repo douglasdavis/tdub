@@ -63,7 +63,7 @@ class BaseTrainSummary:
         This populates the class properties with values and the
         resulting dictionary is saved to be accessible via the summary
         property. The common class properties (which all
-        BaseTrainSummarys have by defition) besides `summary are
+        BaseTrainSummarys have by defition) besides `summary` are
         `features`, `region`, and `selecton_used`. This function will
         define those, so all BaseTrainSummary inheriting classes
         should call the super implementation of this method if a
@@ -72,7 +72,7 @@ class BaseTrainSummary:
 
         Parameters
         ----------
-        summary_file : str or os.PathLike
+        summary_file : os.PathLike
             The summary json file.
 
         """

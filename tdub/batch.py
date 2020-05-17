@@ -157,7 +157,7 @@ def add_condor_arguments(arguments: str, to_file: TextIO) -> None:
     """
     to_file.write("\n")
     to_file.write(f"Arguments = {arguments}\n")
-    to_file.write(f"Queue\n")
+    to_file.write("Queue\n")
 
 
 def condor_submit(workspace: Union[str, os.PathLike]) -> None:

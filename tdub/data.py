@@ -247,11 +247,11 @@ def branches_from(
         t = uproot.open(source[0]).get(tree)
     branches = [b.decode("utf-8") for b in t.allkeys()]
 
-    ## return here if weights are not ignored
+    # return here if weights are not ignored
     if not ignore_weights:
         return branches
 
-    ## check for weight branches
+    # check for weight branches
     weight_re = re.compile(r"(weight_\w+")
     weights = set(filter(weight_re.match, branches))
 
