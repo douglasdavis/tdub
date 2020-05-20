@@ -219,7 +219,7 @@ def branches_from(
 
     Parameters
     ----------
-    source : str, list(str), os.PathLike, list(os.PathLike)
+    source : str, list(str), os.PathLike, list(os.PathLike), or uproot.rootio.ROOTDirectory
         What to parse to get the branch information.
     tree : str
         Name of the tree to get branches from
