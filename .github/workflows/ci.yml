@@ -19,7 +19,7 @@ jobs:
         python-version: ${{matrix.python-version}}
     - name: install deps
       run: |
-        python -m pip install pip setuptools pytest -U
+        python -m pip install pip setuptools setuptools_scm[toml] pytest -U
         pip install --ignore-installed -U -q --no-cache-dir -e .
         pip list
     - name: install libomp on macOS
