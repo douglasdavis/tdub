@@ -1,3 +1,13 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel",
+    "setuptools_scm[toml]>3.4"
+]
+
+[tool.setuptools_scm]
+write_to = "src/tdub/version.py"
+
 [tool.black]
 line-length = 92
-target-version = ['py37']
+target-version = ["py37"]

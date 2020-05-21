@@ -1,8 +1,6 @@
-"""
-tW analysis tools
-"""
+"""tW analysis tools."""
 
-__version__ = "0.0.27"
+from .version import version as __version__
 
 
 def setup_logging():

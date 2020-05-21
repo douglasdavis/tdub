@@ -11,17 +11,17 @@ from typing import Optional, Tuple, List, Union, Dict, Any
 # externals
 import matplotlib
 
-matplotlib.use("Agg")
-import joblib
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import pygram11
-from scipy import interp
-from sklearn.model_selection import KFold, train_test_split
-from sklearn.metrics import auc, roc_auc_score, roc_curve, plot_roc_curve
+matplotlib.use("Agg")  # noqa
+import joblib  # noqa
+import numpy as np  # noqa
+import matplotlib.pyplot as plt  # noqa
+import pandas as pd  # noqa
+import pygram11  # noqa
+from scipy import interp  # noqa
+from sklearn.model_selection import KFold, train_test_split   # noqa
+from sklearn.metrics import auc, roc_auc_score, roc_curve, plot_roc_curve  # noqa
 from sklearn.experimental import enable_hist_gradient_boosting  # noqa
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier  # noqa
 
 # fmt: off
 try:
@@ -37,11 +37,11 @@ except ImportError:
 # fmt: on
 
 # tdub
-from tdub.art import setup_tdub_style
-from tdub.data import Region, features_for, quick_files, selection_for, selection_as_numexpr
-from tdub.frames import iterative_selection, drop_cols
-from tdub.math import ks_twosample_binned
-from tdub.hist import bin_centers
+from tdub.art import setup_tdub_style  # noqa
+from tdub.data import Region, features_for, quick_files, selection_for, selection_as_numexpr  # noqa
+from tdub.frames import iterative_selection, drop_cols  # noqa
+from tdub.math import ks_twosample_binned  # noqa
+from tdub.hist import bin_centers  # noqa
 
 
 setup_tdub_style()
