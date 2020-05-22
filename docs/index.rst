@@ -40,3 +40,4 @@ originate from `ROOT <https://root.cern/>`_ files).
    api_math.rst
    api_ml_apply.rst
    api_ml_train.rst
+   api_rex.rst
