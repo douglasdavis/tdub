@@ -46,7 +46,7 @@ def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
 def data_histogram(
     wkspace: Union[str, os.PathLike], region: str, fitname: str = "tW"
 ) -> ROOTMethods:
-    """Get a datta histogram from a file.
+    """Get the histogram for the Data in a region from a workspace.
 
     Parameters
     ----------
