@@ -12,12 +12,13 @@ Function Summary
 
    available_regions
    chisq
+   chisq_text
    data_histogram
-   prefit_errorband
+   prefit_total_and_uncertainty
    prefit_histogram
    prefit_histograms
    postfit_available
-   postfit_errorband
+   postfit_total_and_uncertainty
    postfit_histogram
    postfit_histograms
    stack_canvas
@@ -27,12 +28,13 @@ Reference
 
 .. autofunction:: available_regions
 .. autofunction:: chisq
+.. autofunction:: chisq_text
 .. autofunction:: data_histogram
-.. autofunction:: prefit_errorband
+.. autofunction:: prefit_total_and_uncertainty
 .. autofunction:: prefit_histogram
 .. autofunction:: prefit_histograms
 .. autofunction:: postfit_available
-.. autofunction:: postfit_errorband
+.. autofunction:: postfit_total_and_uncertainty
 .. autofunction:: postfit_histogram
 .. autofunction:: postfit_histograms
 .. autofunction:: stack_canvas

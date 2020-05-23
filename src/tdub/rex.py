@@ -10,18 +10,21 @@ from typing import Dict, Iterable, List, Tuple, Union
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa
-import numpy as np  # noqa
-import uproot  # noqa
-from uproot.rootio import ROOTDirectory  # noqa
-from uproot_methods.base import ROOTMethods  # noqa
-from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymmErrors  # noqa
-from uproot_methods.classes.TH1 import Methods as ROOT_TH1  # noqa
-import yaml  # noqa
+import matplotlib.pyplot as plt
+import numpy as np
+import uproot
+from uproot.rootio import ROOTDirectory
+from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymmErrors
+from uproot_methods.classes.TH1 import Methods as ROOT_TH1
+import yaml
 
 # tdub
-from .art import canvas_from_counts  # noqa
-from .art import setup_tdub_style  # noqa
+from .art import (
+    canvas_from_counts,
+    setup_tdub_style,
+    draw_atlas_label,
+    legend_last_to_first,
+)
 
 setup_tdub_style()
 
@@ -98,12 +101,39 @@ def chisq(
     return table["chi2"], table["ndof"], table["probability"]
 
 
-def prefit_histogram(rfile: ROOTDirectory, sample: str, region: str) -> ROOT_TH1:
+def chisq_text(wkspace: Union[str, os.PathLike], region: str, stage: str = "pre") -> None:
+    r"""Generate nicely formatted text for :math:`\chi^2` information.
+
+    Deploys the :py:func:`tdub.rex.chisq` for grab the info.
+
+    Parameters
+    ----------
+    wkspace : str or os.PathLike
+        Path of the TRExFitter workspace
+    region : str
+        TRExFitter region name.
+    stage : str
+        Drawing fit stage, ('pre' or 'post').
+
+    Returns
+    -------
+    str
+        Formatted string showing the :math:`\chi^2` information.
+
+    """
+    chi2, ndof, prob = chisq(wkspace, region, stage=stage)
+    return (
+        f"$\\chi^2/\\mathrm{{ndf}} = {chi2:3.2f} / {ndof}$, "
+        f"$\\chi^2_{{\\mathrm{{prob}}}} = {prob:3.2f}$"
+    )
+
+
+def prefit_histogram(root_file: ROOTDirectory, sample: str, region: str) -> ROOT_TH1:
     """Get a prefit histogram from a file.
 
     Parameters
     ----------
-    rfile : root.rootio.ROOTDirectory
+    root_file : root.rootio.ROOTDirectory
         File containing the desired prefit histogram.
     sample : str
         Physics sample name.
@@ -112,15 +142,15 @@ def prefit_histogram(rfile: ROOTDirectory, sample: str, region: str) -> ROOT_TH1
 
     Returns
     -------
-    uproot_methods.base.ROOTMethods
-        ROOT histogram (None if not found).
+    uproot_methods.classes.TH1.Methods
+        ROOT histogram.
     """
     histname = f"{region}_{sample}"
     try:
-        h = rfile.get(histname)
+        h = root_file.get(histname)
         return h
     except KeyError:
-        log.fatal("%s histogram not found in %s" % (histname, rfile))
+        log.fatal("%s histogram not found in %s" % (histname, root_file))
         exit(1)
 
 
@@ -145,25 +175,25 @@ def prefit_histograms(
 
     Returns
     -------
-    dict(str, uproot_methods.base.ROOTMethods)
+    dict(str, uproot_methods.classes.TH1.Methods)
         Prefit ROOT histograms
     """
 
     root_path = PosixPath(wkspace) / "Histograms" / f"{fitname}_{region}_histos.root"
-    rfile = uproot.open(root_path)
+    root_file = uproot.open(root_path)
     histograms = {}
     for samp in samples:
-        h = prefit_histogram(rfile, samp, region)
+        h = prefit_histogram(root_file, samp, region)
         if h is None:
             log.warn("Histogram for sample %s in region: %s not found" % (samp, region))
         histograms[samp] = h
     return histograms
 
 
-def prefit_errorband(
+def prefit_total_and_uncertainty(
     wkspace: Union[str, os.PathLike], region: str
 ) -> Tuple[ROOT_TGraphAsymmErrors, ROOT_TH1]:
-    """Get the prefit uncertainty band for a region.
+    """Get the prefit total MC prediction and uncertainty band for a region.
 
     Parameters
     ----------
@@ -174,16 +204,16 @@ def prefit_errorband(
 
     Returns
     -------
-    uproot_methods.base.ROOTMethods
-        The error TGraph.
-    uproot_methods.base.ROOTMethods
+    uproot_methods.classes.TH1.Methods
         The total MC expectation histogram.
+    uproot_methods.classes.TGraphAsymmErrors.Methods
+        The error TGraph.
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{region}_preFit.root"
-    rfile = uproot.open(root_path)
-    err = rfile.get("g_totErr")
-    tot = rfile.get("h_tot")
-    return err, tot
+    root_file = uproot.open(root_path)
+    err = root_file.get("g_totErr")
+    tot = root_file.get("h_tot")
+    return tot, err
 
 
 def postfit_available(wkspace: Union[str, os.PathLike]) -> bool:
@@ -206,27 +236,27 @@ def postfit_available(wkspace: Union[str, os.PathLike]) -> bool:
     return False
 
 
-def postfit_histogram(rfile: ROOTDirectory, sample: str) -> ROOT_TH1:
+def postfit_histogram(root_file: ROOTDirectory, sample: str) -> ROOT_TH1:
     """Get a postfit histogram from a file.
 
     Parameters
     ----------
-    rfile : root.rootio.ROOTDirectory
+    root_file : root.rootio.ROOTDirectory
         File containing the desired postfit histogram.
     sample : str
         Physics sample name.
 
     Returns
     -------
-    uproot_methods.base.ROOTMethods
-        ROOT histogram (None if not found).
+    uproot_methods.classes.TH1.Methods
+        ROOT histogram.
     """
     histname = f"h_{sample}_postFit"
     try:
-        h = rfile.get(histname)
+        h = root_file.get(histname)
         return h
     except KeyError:
-        log.fatal("%s histogram not found in %s" % (histname, rfile))
+        log.fatal("%s histogram not found in %s" % (histname, root_file))
         exit(1)
 
 
@@ -246,26 +276,26 @@ def postfit_histograms(
 
     Returns
     -------
-    dict(str, uproot_methods.base.ROOTMethods)
+    dict(str, uproot_methods.classes.TH1.Methods)
         Postfit ROOT histograms
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{region}_postFit.root"
-    rfile = uproot.open(root_path)
+    root_file = uproot.open(root_path)
     histograms = {}
     for samp in samples:
         if samp == "Data":
             continue
-        h = postfit_histogram(rfile, samp)
+        h = postfit_histogram(root_file, samp)
         if h is None:
             log.warn("Histogram for sample %s in region %s not found" % (samp, region))
         histograms[samp] = h
     return histograms
 
 
-def postfit_errorband(
+def postfit_total_and_uncertainty(
     wkspace: Union[str, os.PathLike], region: str
 ) -> Tuple[ROOT_TGraphAsymmErrors, ROOT_TH1]:
-    """Get the postfit uncertainty band for a region.
+    """Get the postfit total MC prediction and uncertainty band for a region.
 
     Parameters
     ----------
@@ -276,16 +306,35 @@ def postfit_errorband(
 
     Returns
     -------
-    uproot_methods.base.ROOTMethods
-        The error TGraph.
-    uproot_methods.base.ROOTMethods
+    uproot_methods.classes.TH1.Methods
         The total MC expectation histogram.
+    uproot_methods.classes.TGraphAsymmErrors.Methods
+        The error TGraph.
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{region}_postFit.root"
-    rfile = uproot.open(root_path)
-    err = rfile.get("g_totErr_postFit")
-    tot = rfile.get("h_tot_postFit")
-    return err, tot
+    root_file = uproot.open(root_path)
+    err = root_file.get("g_totErr_postFit")
+    tot = root_file.get("h_tot_postFit")
+    return tot, err
+
+
+# WIP
+def plot_meta_label(region: str, stage: str) -> str:
+    if stage == "pre":
+        stage = "Pre-fit"
+    elif stage == "post":
+        stage = "Post-fit"
+    else:
+        raise ValueError("stage can be 'pre' or 'post'")
+    if "1j1b" in region:
+        region = "1j1b"
+    elif "2j1b" in region:
+        region = "2j1b"
+    elif "2j2b" in region:
+        region = "2j2b"
+    else:
+        raise ValueError("region must contain '1j1b', '2j1b', or '2j2b'")
+    return f"$tW$ Dilepton, {region}, {stage}"
 
 
 # WIP
@@ -307,7 +356,7 @@ def stack_canvas(
 
     Returns
     -------
-    matplotlib.figure.Figure
+    :py:obj:`matplotlib.figure.Figure`
         Figure for housing the plot.
     matplotlib.axes.Axes
         Main axes for the histogram stack.
@@ -317,17 +366,32 @@ def stack_canvas(
     samples = ("tW", "ttbar", "Zjets", "Diboson", "MCNP")
     if stage == "pre":
         histograms = prefit_histograms(wkspace, samples, region, fitname=fitname)
-        errband, totmc = prefit_errorband(wkspace, region)
+        total_mc, uncertainty = prefit_total_and_uncertainty(wkspace, region)
     elif stage == "post":
         histograms = postfit_histograms(wkspace, samples, region)
-        errband, totmc = postfit_errorband(wkspace, region)
+        total_mc, uncertainty = postfit_total_and_uncertainty(wkspace, region)
     else:
         raise ValueError("stage must be 'pre' or 'post'")
     histograms["Data"] = data_histogram(wkspace, region)
     bin_edges = histograms["Data"].edges
     count_df = {k: v.values for k, v in histograms.items()}
     error_df = {k: np.sqrt(v.variances) for k, v in histograms.items()}
-    chi2, ndof, prob = chisq(wkspace, region, stage=stage)
-    return canvas_from_counts(
-        count_df, error_df, bin_edges, errorband=errband, totalmc=totmc
+    fig, ax0, ax1 = canvas_from_counts(
+        count_df, error_df, bin_edges, uncertainty=uncertainty, total_mc=total_mc
     )
+
+    # stack axes cosmetics
+    draw_atlas_label(ax0, extra_lines=[plot_meta_label(region, stage)])
+    legend_last_to_first(ax0, ncol=1, loc="upper right")
+
+    # ratio axes cosmetics
+    if stage == "post":
+        ax1.set_ylim([0.9, 1.1])
+        ax1.set_yticks([0.9, 0.95, 1.0, 1.05])
+    ax1.text(
+        0.02, 0.8, chisq_text(wkspace, region, stage), transform=ax1.transAxes, size=10
+    )
+    ax1.legend(loc="lower left", fontsize=10)
+
+    # return objects
+    return fig, ax0, ax1

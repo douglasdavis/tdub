@@ -1,21 +1,24 @@
 """Art creation utilities."""
 
 # stdlib
-from typing import Dict, Tuple, Optional  # noqa
-import logging  # noqa
+from typing import Dict, Tuple, Optional, List
+import logging
 
 # external
-import matplotlib  # noqa
+import matplotlib
 
-matplotlib.use("Agg")  # noqa
-import matplotlib.pyplot as plt  # noqa
-import numpy as np  # noqa
-from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymmErrors  # noqa
-from uproot_methods.classes.TH1 import Methods as ROOT_TH1  # noqa
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+from uproot_methods.classes.TGraphAsymmErrors import (
+    Methods as ROOT_TGraphAsymmErrors,
+)
+from uproot_methods.classes.TH1 import Methods as ROOT_TH1
+
 # tdub
-from tdub import setup_logging  # noqa
-import tdub._art  # noqa
-import tdub.hist  # noqa
+from tdub import setup_logging
+import tdub._art
+import tdub.hist
 
 
 setup_logging()
@@ -39,22 +42,68 @@ def adjust_figure(
 
 
 # WIP
-def draw_ratio_errorband(
-    errorband: ROOT_TGraphAsymmErrors,
+def legend_last_to_first(ax, **kwargs):
+    ax.legend()
+    handles, labels = ax.get_legend_handles_labels()
+    handles.insert(0, handles.pop())
+    labels.insert(0, labels.pop())
+    ax.legend(handles, labels, **kwargs)
+
+
+# WIP
+def draw_atlas_label(
+    ax: plt.Axes,
+    internal: bool = True,
+    extra_lines: Optional[List[str]] = None,
+    x: float = 0.050,
+    y: float = 0.905,
+    s1: int = 14,
+    s2: int = 12,
+) -> None:
+    """draw the ATLAS label on the plot, with extra lines if desired."""
+    ax.text(
+        x,
+        y,
+        "ATLAS",
+        fontstyle="italic",
+        fontweight="bold",
+        transform=ax.transAxes,
+        size=s1,
+    )
+    if internal:
+        ax.text(x + 0.15, y, r"Internal", transform=ax.transAxes, size=s1)
+    exlines = [r"$\sqrt{s}$ = 13 TeV, $L = 139$ fb$^{-1}$"]
+    if extra_lines is not None:
+        exlines += extra_lines
+    for i, exline in enumerate(exlines):
+        ax.text(x, y - (i + 1) * 0.06, exline, transform=ax.transAxes, size=s2)
+
+
+# WIP
+def draw_uncertainty_bands(
+    uncertainty: ROOT_TGraphAsymmErrors,
     total_mc: ROOT_TH1,
     ax: plt.Axes,
     axr: plt.Axes,
-    label="Total Unc.",
+    label: str = "Total Unc.",
 ) -> None:
-    """Draw ratio bands on axes.
+    """Draw uncertainty bands on both axes in stack plot with a ratio.
 
     Parameters
     ----------
-    errorband : uproot_methods.classes.TGraphAsymmErrors.Methods
-
+    uncertainty : uproot_methods.classes.TGraphAsymmErrors.Methods
+        ROOT TGraphAsymmErrors from uproot with full systematic uncertainty.
+    total_mc : uproot_methods.classes.TH1.Methods
+        ROOT TH1 from uproot providing the full Monte Carlo prediction.
+    ax : matplotlib.axes.Axes
+        Main axis (where histogram stack is painted)
+    axr : matplotlib.axes.Axes
+        Ratio axis
+    label : str
+        Legend label for the uncertainty.
     """
-    lo = np.hstack([errorband.yerrorslow, errorband.yerrorslow[-1]])
-    hi = np.hstack([errorband.yerrorshigh, errorband.yerrorshigh[-1]])
+    lo = np.hstack([uncertainty.yerrorslow, uncertainty.yerrorslow[-1]])
+    hi = np.hstack([uncertainty.yerrorshigh, uncertainty.yerrorshigh[-1]])
     mc = np.hstack([total_mc.values, total_mc.values[-1]])
     ax.fill_between(
         x=total_mc.edges,
@@ -84,8 +133,8 @@ def canvas_from_counts(
     counts: Dict[str, np.ndarray],
     errors: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
-    errorband: Optional[ROOT_TGraphAsymmErrors] = None,
-    totalmc: Optional[ROOT_TH1] = None,
+    uncertainty: Optional[ROOT_TGraphAsymmErrors] = None,
+    total_mc: Optional[ROOT_TH1] = None,
     logy: bool = False,
     **subplots_kw,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
@@ -104,26 +153,26 @@ def canvas_from_counts(
     Parameters
     ----------
     counts : dict(str, np.ndarray)
-        a dictionary pairing samples to bin counts
+        a dictionary pairing samples to bin counts.
     errors : dict(str, np.ndarray)
-        a dictionray pairing samples to bin count errors
-    bin_edges : np.ndarray
-        the histogram bin edges
-    errorband : uproot_methods.base.ROOTMethods, optional
-        Errorband (TGraphAsym)
-    totalmc : uproot_methods.base.ROOTMethods, optional
-        Total MC histogram (TH1D)
+        a dictionray pairing samples to bin count errors.
+    bin_edges : array_like
+        the histogram bin edges.
+    uncertainty : uproot_methods.base.classes.TGraphAsymmErrors.Methods, optional
+        Uncertainty (TGraphAsym).
+    total_mc : uproot_methods.base.classes.TH1.Methods, optional
+        Total MC histogram (TH1D).
     subplots_kw : dict
-        remaining keyword arguments passed to :py:func:`matplotlib.pyplot.subplots`
+        remaining keyword arguments passed to :py:func:`matplotlib.pyplot.subplots`.
 
     Returns
     -------
     :py:obj:`matplotlib.figure.Figure`
-        the matplotlib figure
+        Matplotlib figure.
     :py:obj:`matplotlib.axes.Axes`
-        the matplotlib axes for the histogram stack
+        Matplotlib axes for the histogram stack.
     :py:obj:`matplotlib.axes.Axes`
-        the matplotlib axes for the ratio comparison
+        Matplotlib axes for the ratio comparison.
     """
     tW_name = "tW_DR"
     if tW_name not in counts.keys():
@@ -138,8 +187,9 @@ def canvas_from_counts(
             mc_errs += errors[key] ** 2
     mc_errs = np.sqrt(mc_errs)
     ratio = counts["Data"] / mc_counts
-    ratio_err = np.sqrt(counts["Data"] / (mc_counts ** 2) + np.power(
-        counts["Data"] * mc_errs / (mc_counts ** 2), 2)
+    ratio_err = np.sqrt(
+        counts["Data"] / (mc_counts ** 2)
+        + np.power(counts["Data"] * mc_errs / (mc_counts ** 2), 2)
     )
     fig, (ax, axr) = plt.subplots(
         2,
@@ -147,6 +197,9 @@ def canvas_from_counts(
         sharex=True,
         gridspec_kw=dict(height_ratios=[3.25, 1], hspace=0.025),
         **subplots_kw,
+    )
+    ax.errorbar(
+        centers, counts["Data"], yerr=errors["Data"], label="Data", fmt="ko", zorder=999
     )
     ax.hist(
         [centers for _ in range(5)],
@@ -160,19 +213,16 @@ def canvas_from_counts(
         ],
         histtype="stepfilled",
         stacked=True,
-        label=["MCNP", "Diboson", "$Z$+jets", "$t\\bar{t}$", "$tW$"],
-        color=["#9467bd",  "#2ca02c", "#ff7f0e", "#d62728", "#1f77b4"],
-    )
-    ax.errorbar(
-        centers, counts["Data"], yerr=errors["Data"], label="Data", fmt="ko", zorder=999
+        label=["Non-prompt", "Diboson", "$Z$+jets", "$t\\bar{t}$", "$tW$"],
+        color=["#9467bd", "#2ca02c", "#ff7f0e", "#d62728", "#1f77b4"],
     )
     axr.plot([start, stop], [1.0, 1.0], color="gray", linestyle="solid", marker=None)
     axr.errorbar(centers, ratio, yerr=ratio_err, fmt="ko", zorder=999)
     axr.set_ylim([0.8, 1.2])
     axr.set_yticks([0.8, 0.9, 1.0, 1.1])
 
-    if errorband is not None and totalmc is not None:
-        draw_ratio_errorband(errorband, totalmc, ax, axr)
+    if uncertainty is not None and total_mc is not None:
+        draw_uncertainty_bands(uncertainty, total_mc, ax, axr)
 
     axr.set_xlim([bin_edges[0], bin_edges[-1]])
     if logy:
