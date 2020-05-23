@@ -315,15 +315,17 @@ def stack_canvas(
     samples = ("tW", "ttbar", "Zjets", "Diboson", "MCNP")
     if stage == "pre":
         histograms = prefit_histograms(wkspace, samples, region, fitname=fitname)
-        errband = prefit_errorband(wkspace, region)
+        errband, totmc = prefit_errorband(wkspace, region)
     elif stage == "post":
         histograms = postfit_histograms(wkspace, samples, region)
-        errband = postfit_errorband(wkspace, region)
+        errband, totmc = postfit_errorband(wkspace, region)
     else:
         raise ValueError("stage must be 'pre' or 'post'")
     histograms["Data"] = data_histogram(wkspace, region)
     bin_edges = histograms["Data"].edges
     count_df = {k: v.values for k, v in histograms.items()}
     error_df = {k: np.sqrt(v.variances) for k, v in histograms.items()}
-    chi2 = chisq(wkspace, region, stage=stage)
-    return canvas_from_counts(count_df, error_df, bin_edges)
+    chi2, ndof, prob = chisq(wkspace, region, stage=stage)
+    return canvas_from_counts(
+        count_df, error_df, bin_edges, errorband=errband, totalmc=totmc
+    )
