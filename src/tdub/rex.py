@@ -15,6 +15,8 @@ import numpy as np  # noqa
 import uproot  # noqa
 from uproot.rootio import ROOTDirectory  # noqa
 from uproot_methods.base import ROOTMethods  # noqa
+from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymmErrors  # noqa
+from uproot_methods.classes.TH1 import Methods as ROOT_TH1  # noqa
 import yaml  # noqa
 
 # tdub
@@ -45,7 +47,7 @@ def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
 
 def data_histogram(
     wkspace: Union[str, os.PathLike], region: str, fitname: str = "tW"
-) -> ROOTMethods:
+) -> ROOT_TH1:
     """Get the histogram for the Data in a region from a workspace.
 
     Parameters
@@ -96,7 +98,7 @@ def chisq(
     return table["chi2"], table["ndof"], table["probability"]
 
 
-def prefit_histogram(rfile: ROOTDirectory, sample: str, region: str) -> ROOTMethods:
+def prefit_histogram(rfile: ROOTDirectory, sample: str, region: str) -> ROOT_TH1:
     """Get a prefit histogram from a file.
 
     Parameters
@@ -127,7 +129,7 @@ def prefit_histograms(
     samples: Iterable[str],
     region: str,
     fitname: str = "tW",
-) -> Dict[str, ROOTMethods]:
+) -> Dict[str, ROOT_TH1]:
     """Retrieve sample prefit histograms for a region.
 
     Parameters
@@ -160,7 +162,7 @@ def prefit_histograms(
 
 def prefit_errorband(
     wkspace: Union[str, os.PathLike], region: str
-) -> Tuple[ROOTMethods, ROOTMethods]:
+) -> Tuple[ROOT_TGraphAsymmErrors, ROOT_TH1]:
     """Get the prefit uncertainty band for a region.
 
     Parameters
@@ -204,7 +206,7 @@ def postfit_available(wkspace: Union[str, os.PathLike]) -> bool:
     return False
 
 
-def postfit_histogram(rfile: ROOTDirectory, sample: str) -> ROOTMethods:
+def postfit_histogram(rfile: ROOTDirectory, sample: str) -> ROOT_TH1:
     """Get a postfit histogram from a file.
 
     Parameters
@@ -230,7 +232,7 @@ def postfit_histogram(rfile: ROOTDirectory, sample: str) -> ROOTMethods:
 
 def postfit_histograms(
     wkspace: Union[str, os.PathLike], samples: Iterable[str], region: str
-) -> Dict[str, ROOTMethods]:
+) -> Dict[str, ROOT_TH1]:
     """Retrieve sample postfit histograms for a region.
 
     Parameters
@@ -262,7 +264,7 @@ def postfit_histograms(
 
 def postfit_errorband(
     wkspace: Union[str, os.PathLike], region: str
-) -> Tuple[ROOTMethods, ROOTMethods]:
+) -> Tuple[ROOT_TGraphAsymmErrors, ROOT_TH1]:
     """Get the postfit uncertainty band for a region.
 
     Parameters

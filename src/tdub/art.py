@@ -1,7 +1,7 @@
 """Art creation utilities."""
 
 # stdlib
-from typing import Any, Dict, Optional, Tuple  # noqa
+from typing import Dict, Tuple, Optional  # noqa
 import logging  # noqa
 
 # external
@@ -10,8 +10,8 @@ import matplotlib  # noqa
 matplotlib.use("Agg")  # noqa
 import matplotlib.pyplot as plt  # noqa
 import numpy as np  # noqa
-from uproot_methods.base import ROOTMethods  # noqa
-
+from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymmErrors  # noqa
+from uproot_methods.classes.TH1 import Methods as ROOT_TH1  # noqa
 # tdub
 from tdub import setup_logging  # noqa
 import tdub._art  # noqa
@@ -35,17 +35,24 @@ def adjust_figure(
     top: float = 0.95,
 ) -> None:
     """Adjust a matplotlib Figure with nice defaults."""
-    NotImplementedError("This is TODO")
+    NotImplementedError("TODO")
 
 
 # WIP
 def draw_ratio_errorband(
-    errorband: ROOTMethods,
-    total_mc: ROOTMethods,
+    errorband: ROOT_TGraphAsymmErrors,
+    total_mc: ROOT_TH1,
     ax: plt.Axes,
     axr: plt.Axes,
     label="Total Unc.",
 ) -> None:
+    """Draw ratio bands on axes.
+
+    Parameters
+    ----------
+    errorband : uproot_methods.classes.TGraphAsymmErrors.Methods
+
+    """
     lo = np.hstack([errorband.yerrorslow, errorband.yerrorslow[-1]])
     hi = np.hstack([errorband.yerrorshigh, errorband.yerrorshigh[-1]])
     mc = np.hstack([total_mc.values, total_mc.values[-1]])
@@ -77,8 +84,8 @@ def canvas_from_counts(
     counts: Dict[str, np.ndarray],
     errors: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
-    errorband: ROOTMethods = None,
-    totalmc: ROOTMethods = None,
+    errorband: Optional[ROOT_TGraphAsymmErrors] = None,
+    totalmc: Optional[ROOT_TH1] = None,
     logy: bool = False,
     **subplots_kw,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
