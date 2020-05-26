@@ -187,12 +187,13 @@ def scan(
 
     """
 
-    from tdub.batch import (
-        create_condor_workspace,
-        condor_preamble,
-        add_condor_arguments,
-        condor_submit,
-    )
+    # from tdub.batch import (
+    #     create_condor_workspace,
+    #     condor_preamble,
+    #     add_condor_arguments,
+    #     condor_submit,
+    # )
+    from tdub.batch import create_condor_workspace
     from tdub.config import DEFAULT_SCAN_PARAMETERS
 
     if scan_params is None:
@@ -441,7 +442,7 @@ def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
         {"verbose": 10},
         str(outdir),
         summary["region"],
-        kfold_kw={"n_splits": n_splits, "shuffle": True, "random_state": random_seed,},
+        kfold_kw={"n_splits": n_splits, "shuffle": True, "random_state": random_seed},
     )
     return 0
 
@@ -531,9 +532,18 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
     help="single result dirs",
 )
 @click.option("--and-submit", is_flag=True, help="submit the condor jobs")
-def apply_all(datadir, arrname, outdir, workspace, fold_results=None, single_results=None, and_submit=False):
+def apply_all(
+    datadir,
+    arrname,
+    outdir,
+    workspace,
+    fold_results=None,
+    single_results=None,
+    and_submit=False,
+):
     """Generate BDT response arrays for all ROOT files in DATAIR"""
-    import glob, shutil
+    import glob
+    import shutil
     import pycondor
 
     if len(single_results) > 0 and len(fold_results) > 0:
@@ -621,6 +631,31 @@ def soverb(datadir, selections, use_tptrw):
     for sel, query in selections.items():
         s_df, b_df = satisfying_selection(sig_df, bkg_df, selection=query)
         print(sel, s_df["weight_nominal"].sum() / b_df["weight_nominal"].sum())
+
+
+@cli.command("rex-plot", context_settings=dict(max_content_width=92))
+@click.argument("workspace", type=click.Path(exists=True))
+@click.argument("metadata", type=click.Path(exists=True))
+@click.option("-o", "outdir", type=str, default="auto")
+def rex_plot(workspace, metadata, outdir):
+    """Generate plots from TRExFitter WORKSPACE using METADATA."""
+
+    import re
+    import yaml
+    import tdub.rex as tr
+    import tdub.config as tc
+
+    if outdir == "auto":
+        outdir = PosixPath(workspace) / "matplotlib"
+    else:
+        outdir = PosixPath(outdir)
+
+    outdir.mkdir(exist_ok=True)
+
+    with open(metadata, "r") as f:
+        tc.PLOTTING_META_TABLE = yaml.full_load(f)
+    tc.PLOTTING_LOGY = [re.compile(r"genericMT2$")]
+    tr.plot_all_regions(workspace, outdir)
 
 
 def run_cli():
