@@ -244,5 +244,5 @@ dict, optional: Plotting metadata table.
 
 PLOTTING_LOGY = []
 """
-list, optional: Which plots to use log scale
+list(str): Plots (defined as TRExFitter Regions) to use log scale.
 """

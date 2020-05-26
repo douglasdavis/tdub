@@ -14,9 +14,12 @@ Summary
    AVOID_IN_CLF_1j1b
    AVOID_IN_CLF_2j1b
    AVOID_IN_CLF_2j2b
+   DEFAULT_SCAN_PARAMETERS
    FEATURESET_1j1b
    FEATURESET_2j1b
    FEATURESET_2j2b
+   PLOTTING_LOGY
+   PLOTTING_META_TABLE
    SELECTION_1j1b
    SELECTION_2j1b
    SELECTION_2j2b
@@ -37,6 +40,10 @@ Reference
 .. autodata:: FEATURESET_2j1b
    :annotation:
 .. autodata:: FEATURESET_2j2b
+   :annotation:
+.. autodata:: PLOTTING_LOGY
+   :annotation:
+.. autodata:: PLOTTING_META_TABLE
    :annotation:
 .. autodata:: SELECTION_1j1b
    :annotation:
