@@ -10,9 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from uproot_methods.classes.TGraphAsymmErrors import (
-    Methods as ROOT_TGraphAsymmErrors,
-)
+from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymmErrors
 from uproot_methods.classes.TH1 import Methods as ROOT_TH1
 
 # tdub
@@ -85,7 +83,7 @@ def draw_uncertainty_bands(
     total_mc: ROOT_TH1,
     ax: plt.Axes,
     axr: plt.Axes,
-    label: str = "Total Unc.",
+    label: str = "Uncertainty",
 ) -> None:
     """Draw uncertainty bands on both axes in stack plot with a ratio.
 
@@ -226,7 +224,8 @@ def canvas_from_counts(
 
     axr.set_xlim([bin_edges[0], bin_edges[-1]])
     if logy:
-        ax.set_ylim([1, ax.get_ylim()[1] * 100])
+        ax.set_yscale("log")
+        ax.set_ylim([5, ax.get_ylim()[1] * 100])
     else:
         ax.set_ylim([0, ax.get_ylim()[1] * 1.375])
 

@@ -13,6 +13,12 @@ import matplotlib.pyplot as plt
 
 
 def setup_style():
+    matplotlib.rcParams["font.sans-serif"] = [
+        "Helvetica",
+        "helvetica",
+        "Nimbus Sans L",
+        "FreeSans",
+    ]
     matplotlib.rcParams["figure.figsize"] = (6, 5.5)
     matplotlib.rcParams["axes.labelsize"] = 15
     matplotlib.rcParams["font.size"] = 13
@@ -28,14 +34,14 @@ def setup_style():
     matplotlib.rcParams["xtick.minor.width"] = 0.8
     matplotlib.rcParams["xtick.major.size"] = 7.0
     matplotlib.rcParams["xtick.minor.size"] = 4.0
-    matplotlib.rcParams["xtick.major.pad"] = 1.5
-    matplotlib.rcParams["xtick.minor.pad"] = 1.4
+    matplotlib.rcParams["xtick.major.pad"] = 3.5
+    matplotlib.rcParams["xtick.minor.pad"] = 3.4
     matplotlib.rcParams["ytick.major.width"] = 0.8
     matplotlib.rcParams["ytick.minor.width"] = 0.8
     matplotlib.rcParams["ytick.major.size"] = 7.0
     matplotlib.rcParams["ytick.minor.size"] = 4.0
-    matplotlib.rcParams["ytick.major.pad"] = 1.5
-    matplotlib.rcParams["ytick.minor.pad"] = 1.4
+    matplotlib.rcParams["ytick.major.pad"] = 3.5
+    matplotlib.rcParams["ytick.minor.pad"] = 3.4
     matplotlib.rcParams["legend.frameon"] = False
     matplotlib.rcParams["legend.numpoints"] = 1
     matplotlib.rcParams["legend.fontsize"] = 11
