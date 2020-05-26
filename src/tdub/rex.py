@@ -358,9 +358,9 @@ def stack_canvas(
     -------
     :py:obj:`matplotlib.figure.Figure`
         Figure for housing the plot.
-    matplotlib.axes.Axes
+    :py:obj:`matplotlib.axes.Axes`
         Main axes for the histogram stack.
-    matplotlib.axes.Axes
+    :py:obj:`matplotlib.axes.Axes`
         Ratio axes to show Data/MC.
     """
     samples = ("tW", "ttbar", "Zjets", "Diboson", "MCNP")
