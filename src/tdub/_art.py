@@ -19,9 +19,21 @@ def setup_style():
         "Nimbus Sans L",
         "FreeSans",
     ]
-    matplotlib.rcParams["figure.figsize"] = (6, 5.5)
+    matplotlib.rcParams["axes.formatter.limits"] = [-4, 4]
+    matplotlib.rcParams["axes.formatter.use_mathtext"] = True
     matplotlib.rcParams["axes.labelsize"] = 15
+    matplotlib.rcParams["figure.figsize"] = (6, 5.5)
+    matplotlib.rcParams["figure.facecolor"] = "white"
+    matplotlib.rcParams["figure.subplot.left"] = 0.125
+    matplotlib.rcParams["figure.subplot.bottom"] = 0.095
+    matplotlib.rcParams["figure.subplot.right"] = 0.965
+    matplotlib.rcParams["figure.subplot.top"] = 0.95
     matplotlib.rcParams["font.size"] = 13
+    matplotlib.rcParams["legend.frameon"] = False
+    matplotlib.rcParams["legend.numpoints"] = 1
+    matplotlib.rcParams["legend.fontsize"] = 11
+    matplotlib.rcParams["legend.handlelength"] = 1.5
+    matplotlib.rcParams["lines.linewidth"] = 1
     matplotlib.rcParams["xtick.top"] = True
     matplotlib.rcParams["ytick.right"] = True
     matplotlib.rcParams["xtick.direction"] = "in"
@@ -42,16 +54,6 @@ def setup_style():
     matplotlib.rcParams["ytick.minor.size"] = 4.0
     matplotlib.rcParams["ytick.major.pad"] = 3.5
     matplotlib.rcParams["ytick.minor.pad"] = 3.4
-    matplotlib.rcParams["legend.frameon"] = False
-    matplotlib.rcParams["legend.numpoints"] = 1
-    matplotlib.rcParams["legend.fontsize"] = 11
-    matplotlib.rcParams["legend.handlelength"] = 1.5
-    matplotlib.rcParams["axes.formatter.limits"] = [-4, 4]
-    matplotlib.rcParams["axes.formatter.use_mathtext"] = True
-    matplotlib.rcParams["figure.subplot.left"] = 0.125
-    matplotlib.rcParams["figure.subplot.bottom"] = 0.095
-    matplotlib.rcParams["figure.subplot.right"] = 0.965
-    matplotlib.rcParams["figure.subplot.top"] = 0.95
 
 
 def draw_atlas_label(
