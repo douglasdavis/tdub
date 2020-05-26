@@ -25,6 +25,7 @@ from .art import (
     draw_atlas_label,
     legend_last_to_first,
 )
+import tdub.config
 
 setup_tdub_style()
 
@@ -338,6 +339,20 @@ def meta_text(region: str, stage: str) -> str:
 
 
 # WIP
+def meta_axis_label(region: str) -> str:
+    if tdub.config.PLOTTING_META_TABLE is None:
+        raise ValueError("tdub.config.PLOTTING_META_TABLE must be defined")
+    if "VRP" in region:
+        region = region[12:]
+    main_label = tdub.config.PLOTTING_META_TABLE["titles"][region]["mpl"]
+    unit_label = tdub.config.PLOTTING_META_TABLE["titles"][region]["unit"]
+    if not unit_label:
+        return main_label
+    else:
+        return f"{main_label} [{unit_label}]"
+
+
+# WIP
 def stack_canvas(
     wkspace: Union[str, os.PathLike], region: str, stage: str = "pre", fitname: str = "tW",
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
@@ -374,17 +389,26 @@ def stack_canvas(
         raise ValueError("stage must be 'pre' or 'post'")
     histograms["Data"] = data_histogram(wkspace, region)
     bin_edges = histograms["Data"].edges
-    count_df = {k: v.values for k, v in histograms.items()}
-    error_df = {k: np.sqrt(v.variances) for k, v in histograms.items()}
+    counts = {k: v.values for k, v in histograms.items()}
+    errors = {k: np.sqrt(v.variances) for k, v in histograms.items()}
+
+    logy = False
+    for pat in tdub.config.PLOTTING_LOGY:
+        if pat.search(region) is not None:
+            logy = True
+
     fig, ax0, ax1 = canvas_from_counts(
-        count_df, error_df, bin_edges, uncertainty=uncertainty, total_mc=total_mc
+        counts, errors, bin_edges, uncertainty=uncertainty, total_mc=total_mc, logy=logy,
     )
 
     # stack axes cosmetics
+    ax0.set_ylabel("Events", horizontalalignment="right", y=1.0)
     draw_atlas_label(ax0, extra_lines=[meta_text(region, stage)])
     legend_last_to_first(ax0, ncol=1, loc="upper right")
 
     # ratio axes cosmetics
+    ax1.set_xlabel(meta_axis_label(region), horizontalalignment="right", x=1.0)
+    ax1.set_ylabel("Data/MC")
     if stage == "post":
         ax1.set_ylim([0.9, 1.1])
         ax1.set_yticks([0.9, 0.95, 1.0, 1.05])
