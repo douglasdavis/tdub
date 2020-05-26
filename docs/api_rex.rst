@@ -14,6 +14,7 @@ Function Summary
    chisq
    chisq_text
    data_histogram
+   plot_all_regions
    prefit_total_and_uncertainty
    prefit_histogram
    prefit_histograms
@@ -30,6 +31,7 @@ Reference
 .. autofunction:: chisq
 .. autofunction:: chisq_text
 .. autofunction:: data_histogram
+.. autofunction:: plot_all_regions
 .. autofunction:: prefit_total_and_uncertainty
 .. autofunction:: prefit_histogram
 .. autofunction:: prefit_histograms

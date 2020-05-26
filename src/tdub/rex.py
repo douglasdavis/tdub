@@ -319,7 +319,7 @@ def postfit_total_and_uncertainty(
 
 
 # WIP
-def plot_meta_label(region: str, stage: str) -> str:
+def meta_text(region: str, stage: str) -> str:
     if stage == "pre":
         stage = "Pre-fit"
     elif stage == "post":
@@ -381,7 +381,7 @@ def stack_canvas(
     )
 
     # stack axes cosmetics
-    draw_atlas_label(ax0, extra_lines=[plot_meta_label(region, stage)])
+    draw_atlas_label(ax0, extra_lines=[meta_text(region, stage)])
     legend_last_to_first(ax0, ncol=1, loc="upper right")
 
     # ratio axes cosmetics
@@ -395,3 +395,43 @@ def stack_canvas(
 
     # return objects
     return fig, ax0, ax1
+
+
+def plot_all_regions(
+    wkspace: Union[str, os.PathLike],
+    outdir: Union[str, os.PathLike],
+    stage: str = "both",
+    fitname: str = "tW",
+) -> None:
+    """Plot all regions discovered in a workspace.
+
+    Parameters
+    ----------
+    wkspace : str or os.PathLike
+        Path of the TRExFitter workspace
+    outdir : str or os.PathLike
+        Path to save resulting files to
+    stage : str
+        Fitting stage (`"pre"`, `"post"`, or `"both"`)
+    fitname : str
+        Name of the Fit
+    """
+    PosixPath(outdir).mkdir(parents=True, exist_ok=True)
+    regions = available_regions(wkspace)
+
+    def plot_stage(stage):
+        for region in regions:
+            fig, ax0, ax1 = stack_canvas(wkspace, region, stage=stage)
+            fig.savefig(f"{outdir}/{region}_{stage}Fit.pdf")
+            plt.close(fig)
+            del fig, ax0, ax1
+
+    if stage == "both":
+        plot_stage("pre")
+        plot_stage("post")
+    elif stage == "pre":
+        plot_stage("pre")
+    elif stage == "post":
+        plot_stage("post")
+    else:
+        raise ValueError("stage can be 'both', 'pre', or 'post'")
