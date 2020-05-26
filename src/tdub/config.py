@@ -235,3 +235,14 @@ DEFAULT_SCAN_PARAMETERS = {
 """
 dict(str, list): The default grid to perform a parameter scan.
 """
+
+
+PLOTTING_META_TABLE = None
+"""
+dict, optional: Plotting metadata table.
+"""
+
+PLOTTING_LOGY = []
+"""
+list, optional: Which plots to use log scale
+"""
