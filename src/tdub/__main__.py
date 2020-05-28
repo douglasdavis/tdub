@@ -477,7 +477,7 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
 
     from tdub.ml_apply import build_array, FoldedTrainSummary, SingleTrainSummary
     from tdub.data import SampleInfo
-    from tdub.branches import minimal_branches
+    from tdub.data import selection_branches
     from tdub.frames import raw_dataframe
     import numpy as np
 
@@ -495,7 +495,7 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
     necessary_branches = ["OS", "elmu", "reg2j1b", "reg2j2b", "reg1j1b"]
     for res in trs:
         necessary_branches += res.features
-        necessary_branches += minimal_branches(res.selection_used)
+        necessary_branches += selection_branches(res.selection_used)
     necessary_branches = sorted(set(necessary_branches), key=str.lower)
 
     log.info("Loading necessary branches:")
@@ -610,14 +610,14 @@ def soverb(datadir, selections, use_tptrw):
     """
     from tdub.frames import raw_dataframe, apply_weight_tptrw, satisfying_selection
     from tdub.data import quick_files
-    from tdub.branches import minimal_branches
+    from tdub.branches import selection_branches
 
     with open(selections, "r") as f:
         selections = json.load(f)
 
     necessary_branches = set()
     for selection, query in selections.items():
-        necessary_branches |= minimal_branches(query)
+        necessary_branches |= selection_branches(query)
     necessary_branches = list(necessary_branches) + ["weight_tptrw_tool"]
 
     qf = quick_files(datadir)
