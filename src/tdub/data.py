@@ -446,6 +446,7 @@ def quick_files(
     - `ttbar` (410472 full sim)
     - `ttbar_AFII` (410472 fast sim)
     - `ttbar_PS` (410558 fast sim)
+    - `ttbar_PS713` (411234 fast sim)
     - `ttbar_hdamp` (410482 fast sim)
     - `ttbar_inc` (410470 full sim)
     - `ttbar_inc_AFII` (410470 fast sim)
@@ -505,6 +506,7 @@ def quick_files(
     ttbar_files = sorted(glob(f"{path}/ttbar_410472_FS{camp}*nominal.root"))
     ttbar_AFII_files = sorted(glob(f"{path}/ttbar_410472_AFII{camp}*nominal.root"))
     ttbar_PS_files = sorted(glob(f"{path}/ttbar_410558*AFII{camp}*nominal.root"))
+    ttbar_PS713_files = sorted(glob(f"{path}/ttbar_411234*AFII{camp}*nominal.root"))
     ttbar_hdamp_files = sorted(glob(f"{path}/ttbar_410482_AFII{camp}*nominal.root"))
     ttbar_inc_files = sorted(glob(f"{path}/ttbar_410470_FS{camp}*nominal.root"))
     ttbar_inc_AFII_files = sorted(glob(f"{path}/ttbar_410470_AFII{camp}*nominal.root"))
@@ -559,6 +561,7 @@ def quick_files(
         "ttbar": ttbar_files,
         "ttbar_AFII": ttbar_AFII_files,
         "ttbar_PS": ttbar_PS_files,
+        "ttbar_PS713": ttbar_PS713_files,
         "ttbar_hdamp": ttbar_hdamp_files,
         "ttbar_inc": ttbar_inc_files,
         "ttbar_inc_AFII": ttbar_inc_AFII_files,
