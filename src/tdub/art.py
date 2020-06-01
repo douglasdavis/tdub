@@ -1,7 +1,7 @@
 """Art creation utilities."""
 
 # stdlib
-from typing import Dict, Tuple, Optional, List
+from typing import Dict, Tuple, Optional, List, Union
 import logging
 
 # external
@@ -41,6 +41,15 @@ def adjust_figure(
 
 # WIP
 def legend_last_to_first(ax, **kwargs):
+    """Move the last element of the legend to first
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Matplotlib axes to create a legend on.
+    kwargs : dict
+        Arguments passed to :py:obj:`matplotlib.axes.Axes.legend`.
+    """
     ax.legend()
     handles, labels = ax.get_legend_handles_labels()
     handles.insert(0, handles.pop())
@@ -53,12 +62,37 @@ def draw_atlas_label(
     ax: plt.Axes,
     internal: bool = True,
     extra_lines: Optional[List[str]] = None,
+    cme: Union[int, float] = 13,
+    lumi: float = 139,
     x: float = 0.050,
     y: float = 0.905,
     s1: int = 14,
     s2: int = 12,
 ) -> None:
-    """draw the ATLAS label on the plot, with extra lines if desired."""
+    """Draw the ATLAS label text, with extra lines if desired.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Axes to draw the text on.
+    internal : bool
+        Flag the text as ATLAS internal.
+    extra_lines : list(str), optional
+        Set of extra lines to draw below ATLAS label.
+    cme : int or float
+        Center-of-mass energy.
+    lumi : int or float
+        Integrated luminosity of the data.
+    x : float
+        `x`-location of the text.
+    y : float
+        `y`-location of the text.
+    s1 : int
+        Size of the main label.
+    s2 : int
+        Size of the extra text
+
+"""
     ax.text(
         x,
         y,
@@ -70,7 +104,7 @@ def draw_atlas_label(
     )
     if internal:
         ax.text(x + 0.15, y, r"Internal", transform=ax.transAxes, size=s1)
-    exlines = [r"$\sqrt{s}$ = 13 TeV, $L = 139$ fb$^{-1}$"]
+    exlines = [f"$\\sqrt{{s}}$ = {cme} TeV, $L = {lumi}$ fb$^{{-1}}$"]
     if extra_lines is not None:
         exlines += extra_lines
     for i, exline in enumerate(exlines):
