@@ -39,7 +39,6 @@ def adjust_figure(
     NotImplementedError("TODO")
 
 
-# WIP
 def legend_last_to_first(ax, **kwargs):
     """Move the last element of the legend to first
 
@@ -57,7 +56,6 @@ def legend_last_to_first(ax, **kwargs):
     ax.legend(handles, labels, **kwargs)
 
 
-# WIP
 def draw_atlas_label(
     ax: plt.Axes,
     internal: bool = True,
@@ -111,7 +109,6 @@ def draw_atlas_label(
         ax.text(x, y - (i + 1) * 0.06, exline, transform=ax.transAxes, size=s2)
 
 
-# WIP
 def draw_uncertainty_bands(
     uncertainty: ROOT_TGraphAsymmErrors,
     total_mc: ROOT_TH1,

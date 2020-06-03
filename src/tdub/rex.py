@@ -319,8 +319,21 @@ def postfit_total_and_uncertainty(
     return tot, err
 
 
-# WIP
 def meta_text(region: str, stage: str) -> str:
+    """Construct a piece of text based on the region and fit stage.
+
+    Parameters
+    ----------
+    region : str
+        TRExFitter Region to use.
+    stage : str
+        Fitting stage (`"pre"` or `"post"`).
+
+    Returns
+    -------
+    str
+        Resulting metadata text
+    """
     if stage == "pre":
         stage = "Pre-fit"
     elif stage == "post":
@@ -338,8 +351,19 @@ def meta_text(region: str, stage: str) -> str:
     return f"$tW$ Dilepton, {region}, {stage}"
 
 
-# WIP
 def meta_axis_label(region: str) -> str:
+    """Construct an axis label from metadata table.
+
+    Parameters
+    ----------
+    region : str
+        TRExFitter region to use.
+
+    Returns
+    -------
+    str
+        Axis label for the region.
+    """
     if tdub.config.PLOTTING_META_TABLE is None:
         raise ValueError("tdub.config.PLOTTING_META_TABLE must be defined")
     if "VRP" in region:
@@ -352,7 +376,6 @@ def meta_axis_label(region: str) -> str:
         return f"{main_label} [{unit_label}]"
 
 
-# WIP
 def stack_canvas(
     wkspace: Union[str, os.PathLike], region: str, stage: str = "pre", fitname: str = "tW",
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:

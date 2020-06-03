@@ -14,6 +14,8 @@ Function Summary
    chisq
    chisq_text
    data_histogram
+   meta_axis_label
+   meta_text
    plot_all_regions
    prefit_total_and_uncertainty
    prefit_histogram
@@ -32,6 +34,8 @@ Reference
 .. autofunction:: chisq_text
 .. autofunction:: data_histogram
 .. autofunction:: plot_all_regions
+.. autofunction:: meta_axis_label
+.. autofunction:: meta_text
 .. autofunction:: prefit_total_and_uncertainty
 .. autofunction:: prefit_histogram
 .. autofunction:: prefit_histograms
