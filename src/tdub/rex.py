@@ -466,19 +466,21 @@ def plot_all_regions(
     PosixPath(outdir).mkdir(parents=True, exist_ok=True)
     regions = available_regions(wkspace)
 
-    def plot_stage(stage):
+    def plot_region_stage(stage):
         for region in regions:
             fig, ax0, ax1 = stack_canvas(wkspace, region, stage=stage)
-            fig.savefig(f"{outdir}/{region}_{stage}Fit.pdf")
+            output_file = f"{outdir}/{region}_{stage}Fit.pdf"
+            fig.savefig(output_file)
             plt.close(fig)
             del fig, ax0, ax1
+            log.info("Created %s" % output_file)
 
     if stage == "both":
-        plot_stage("pre")
-        plot_stage("post")
+        plot_region_stage("pre")
+        plot_region_stage("post")
     elif stage == "pre":
-        plot_stage("pre")
+        plot_region_stage("pre")
     elif stage == "post":
-        plot_stage("post")
+        plot_region_stage("post")
     else:
         raise ValueError("stage can be 'both', 'pre', or 'post'")
