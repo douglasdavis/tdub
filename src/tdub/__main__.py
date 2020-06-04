@@ -635,27 +635,24 @@ def soverb(datadir, selections, use_tptrw):
 
 @cli.command("rex-plot", context_settings=dict(max_content_width=92))
 @click.argument("workspace", type=click.Path(exists=True))
-@click.argument("metadata", type=click.Path(exists=True))
 @click.option("-o", "outdir", type=str, default="auto")
-def rex_plot(workspace, metadata, outdir):
+def rex_plot(workspace, outdir):
     """Generate plots from TRExFitter WORKSPACE using METADATA."""
 
+    import requests
     import re
     import yaml
-    import tdub.rex as tr
-    import tdub.config as tc
+    import tdub.rex
+    import tdub.config
 
     if outdir == "auto":
         outdir = PosixPath(workspace) / "matplotlib"
     else:
         outdir = PosixPath(outdir)
-
     outdir.mkdir(exist_ok=True)
-
-    with open(metadata, "r") as f:
-        tc.PLOTTING_META_TABLE = yaml.full_load(f)
-    tc.PLOTTING_LOGY = [re.compile(r"genericMT2$")]
-    tr.plot_all_regions(workspace, outdir)
+    tdub.config.download_meta_table()
+    tdub.config.set_default_logy()
+    tdub.rex.plot_all_regions(workspace, outdir)
 
 
 def run_cli():

@@ -27,6 +27,11 @@ Similarly, we can modify the selection via this module::
   >>> selection_for("2j2b")
   '(reg2j2b == True) & (OS == True) & (mass_lep1jet1 < 155)'
 
+This module also contains some convenience functions for helping to
+automate the process of providing some sensible defaults for some
+configuration options, but not at import time (i.e. if the default
+requires importing a module or parsing some data from the web).
+
 """
 
 
@@ -236,13 +241,33 @@ DEFAULT_SCAN_PARAMETERS = {
 dict(str, list): The default grid to perform a parameter scan.
 """
 
+META_TABLE_URL = "https://cern.ch/ddavis/tdub_data/meta.yml"
 
 PLOTTING_META_TABLE = None
 """
 dict, optional: Plotting metadata table.
 """
 
+
+def download_meta_table():
+    """Load metadata from network to define PLOTTING_META_TABLE."""
+    global PLOTTING_META_TABLE
+    global META_TABLE_URL
+    import requests, yaml # noqa
+    table_content = requests.get(META_TABLE_URL).content
+    PLOTTING_META_TABLE = yaml.full_load(table_content)
+
+
 PLOTTING_LOGY = []
 """
 list(str): Plots (defined as TRExFitter Regions) to use log scale.
 """
+
+
+def set_default_logy():
+    """Set a `sensible default` PLOTTING_LOGY value."""
+    global PLOTTING_LOGY
+    import re # noqa
+    PLOTTING_LOGY = [
+        re.compile(r"genericMT2$"),
+    ]

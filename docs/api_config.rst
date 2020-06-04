@@ -5,8 +5,8 @@ tdub.config
 
 .. automodule:: tdub.config
 
-Summary
-^^^^^^^
+Constant Summary
+^^^^^^^^^^^^^^^^
 
 .. autosummary::
 
@@ -24,8 +24,16 @@ Summary
    SELECTION_2j1b
    SELECTION_2j2b
 
-Reference
-^^^^^^^^^
+Function Summary
+^^^^^^^^^^^^^^^^
+
+.. autosummary::
+
+   download_meta_table
+   set_default_logy
+
+Constant Reference
+^^^^^^^^^^^^^^^^^^
 
 .. autodata:: AVOID_IN_CLF
    :annotation:
@@ -51,3 +59,10 @@ Reference
    :annotation:
 .. autodata:: SELECTION_2j2b
    :annotation:
+
+
+Function Reference
+^^^^^^^^^^^^^^^^^^
+
+.. autofunction:: download_meta_table
+.. autofunction:: set_default_logy
