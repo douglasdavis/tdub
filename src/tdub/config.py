@@ -231,11 +231,11 @@ list(str): List of features to avoid specifically in 2j2b classifiers.
 
 
 DEFAULT_SCAN_PARAMETERS = {
-    "max_depth": [4, 5, 6, 7, 8],
+    "max_depth": [4, 5, 6, 7],
     "num_leaves": [20, 31, 64],
     "learning_rate": [0.07, 0.1, 0.2],
     "min_child_samples": [50, 60, 80, 120, 180],
-    "n_estimators": [250],
+    "reg_lambda": [0, 1000, 2000, 4000],
 }
 """
 dict(str, list): The default grid to perform a parameter scan.

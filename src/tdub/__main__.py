@@ -45,7 +45,7 @@ def cli():
     "-s",
     "--test-size",
     type=float,
-    default=0.5,
+    default=0.33,
     help="training test size",
     show_default=True,
 )
@@ -58,6 +58,7 @@ def cli():
     show_default=True,
 )
 @click.option("-u", "--use-dilep", is_flag=True, help="train with dilepton samples")
+@click.option("-k", "--use-sklearn", is_flag=True, help="use sklearn instead of lgbm")
 @click.option(
     "--learning-rate", type=float, required=True, help="learning_rate model parameter"
 )
@@ -66,9 +67,7 @@ def cli():
     "--min-child-samples", type=int, required=True, help="min_child_samples model parameter"
 )
 @click.option("--max-depth", type=int, required=True, help="max_depth model parameter")
-@click.option(
-    "--n-estimators", type=int, required=True, help="n_estimators model parameter"
-)
+@click.option("--reg-lambda", type=float, required=True, help="lambda (L2) regularization")
 def single(
     datadir,
     region,
@@ -80,11 +79,12 @@ def single(
     test_size,
     early_stop,
     use_dilep,
+    use_sklearn,
     learning_rate,
     num_leaves,
     min_child_samples,
     max_depth,
-    n_estimators,
+    reg_lambda,
 ):
     """Execute a single training round."""
     # fmt: on
@@ -110,23 +110,24 @@ def single(
     if ignore_list:
         drops = PosixPath(ignore_list).read_text().strip().split()
         drop_cols(df, *drops)
-    params = dict(
+    train_axes = dict(
         learning_rate=learning_rate,
         num_leaves=num_leaves,
         min_child_samples=min_child_samples,
         max_depth=max_depth,
-        n_estimators=n_estimators,
+        reg_lambda=reg_lambda,
     )
     extra_sum = {"region": region, "nlo_method": nlo_method}
     single_training(
         df,
         y,
         w,
-        params,
+        train_axes,
         outdir,
         test_size=test_size,
         early_stopping_rounds=early_stop,
         extra_summary_entries=extra_sum,
+        use_sklearn=use_sklearn,
     )
     return 0
 
@@ -229,12 +230,12 @@ def scan(
         pd.get("num_leaves"),
         pd.get("learning_rate"),
         pd.get("min_child_samples"),
-        pd.get("n_estimators"),
+        pd.get("reg_lambda"),
     )
 
-    for (max_depth, num_leaves, learning_rate, min_child_samples, n_estimators) in itr:
+    for (max_depth, num_leaves, learning_rate, min_child_samples, reg_lambda) in itr:
         suffix = "{}-{}-{}-{}-{}".format(
-            max_depth, num_leaves, learning_rate, min_child_samples, n_estimators,
+            max_depth, num_leaves, learning_rate, min_child_samples, reg_lambda,
         )
         outdir = ws / "res" / f"{i:04d}_{suffix}"
         arglist = (
@@ -243,7 +244,7 @@ def scan(
             "--num-leaves {} "
             "--min-child-samples {} "
             "--max-depth {} "
-            "--n-estimators {} "
+            "--reg-lambda {} "
             "--early-stop {} "
             "{}"
             "{}"
@@ -258,7 +259,7 @@ def scan(
             num_leaves,
             min_child_samples,
             max_depth,
-            n_estimators,
+            reg_lambda,
             early_stop,
             "-t " if use_tptrw else "",
             "-u " if use_dilep else "",
@@ -337,7 +338,7 @@ def scan(
 )
 def check(workspace, print_top, n_res):
     """Check the results of a parameter scan WORKSPACE."""
-    from tdub.ml_train import SingleTrainingResult
+    from tdub.ml_train import SingleTrainingSummary
     import shutil
 
     results = []
@@ -353,7 +354,7 @@ def check(workspace, print_top, n_res):
             summary = json.load(f)
             if summary["bad_ks"]:
                 continue
-            res = SingleTrainingResult(**summary)
+            res = SingleTrainingSummary(**summary)
             res.workspace = resdir
             res.summary = summary
             results.append(res)

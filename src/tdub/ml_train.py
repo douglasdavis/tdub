@@ -16,38 +16,272 @@ import joblib
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import pygram11
+from pygram11 import histogram
 from scipy import interp
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.metrics import auc, roc_auc_score, roc_curve, plot_roc_curve
 from sklearn.experimental import enable_hist_gradient_boosting  # noqa
 from sklearn.ensemble import HistGradientBoostingClassifier
 
-# fmt: off
-try:
-    import lightgbm as lgbm # noqa
-except ImportError:
-    class lgbm:
-        LGBMClassifier = None
-try:
-    import xgboost as xgb # noqa
-except ImportError:
-    class xgb:
-        XGBClassifier = None
-# fmt: on
-
 # tdub
 from tdub.art import setup_tdub_style
 from tdub.data import Region, features_for, quick_files, selection_for, selection_as_numexpr
 from tdub.frames import iterative_selection, drop_cols
-from tdub.math import ks_twosample_binned
 from tdub.hist import bin_centers
-
+from tdub.math import ks_twosample_binned
 
 setup_tdub_style()
 log = logging.getLogger(__name__)
 
-# _fig_adjustment_dict = dict(left=0.125, bottom=0.095, right=0.965, top=0.95)
+
+class SingleTrainingSummary:
+    """Describes some properties of a single training.
+
+    Parameters
+    ----------
+    auc : float
+        the AUC value for the model
+    ks_test_sig : float
+        the binned KS test value for signal
+    ks_pvalue_sig : float
+        the binned KS test p-value for signal
+    ks_test_bkg : float
+        the binned KS test value for background
+    ks_pvalue_bkg : float
+        the binned KS test p-value for background
+    kwargs : dict
+        currently unused
+
+    Attributes
+    ----------
+    auc : float
+        the AUC value for the model
+    ks_test_sig : float
+        the binned KS test value for signal
+    ks_pvalue_sig : float
+        the binned KS test p-value for signal
+    ks_test_bkg : float
+        the binned KS test value for background
+    ks_pvalue_bkg : float
+        the binned KS test p-value for background
+    """
+
+    def __init__(
+        self,
+        *,
+        auc: float = -1.0,
+        ks_test_sig: float = -1.0,
+        ks_pvalue_sig: float = -1.0,
+        ks_test_bkg: float = -1.0,
+        ks_pvalue_bkg: float = -1.0,
+        **kwargs,
+    ) -> None:
+        """Class init."""
+        self.auc = auc
+        self.ks_test_sig = ks_test_sig
+        self.ks_pvalue_sig = ks_pvalue_sig
+        self.ks_test_bkg = ks_test_bkg
+        self.ks_pvalue_bkg = ks_pvalue_bkg
+        self.bad_ks = self.ks_pvalue_sig < 0.2 or self.ks_pvalue_bkg < 0.2
+
+    def __repr__(self) -> str:
+        """Clean representation of the result."""
+        p1 = f"auc={self.auc:0.3}"
+        p2 = f"ks_test_sig={self.ks_test_sig:0.5}"
+        p3 = f"ks_pvalue_sig={self.ks_pvalue_sig:0.5}"
+        p4 = f"ks_test_bkg={self.ks_test_bkg:0.5}"
+        p5 = f"ks_pvalue_bkg={self.ks_pvalue_bkg:0.5}"
+        return f"SingleTrainingSummary({p1}, {p2}, {p3}, {p4}, {p5})"
+
+
+class ResponseHistograms:
+    """Create and use histogrammed model response information.
+
+    Parameters
+    ----------
+    response_type : str
+        Models provide different types of response, like a raw
+        prediction or a probability of signal. This class supports
+        - `"predict"` (for LGBM),
+        - `"decision_function"` (for Scikit-learn)
+        - `"proba"` (for either).
+    model : BaseEstimator
+        The trained model.
+    X_train : array_like
+        Training data feature matrix.
+    X_test : array_like
+        Testing data feature matrix.
+    y_train : array_like
+        Training data labels.
+    y_test : array_like
+        Testing data labels.
+    w_train : array_like
+        Training data event weights
+    w_test : array_like
+        Testing data event weights
+    nbins : int
+        Number of bins to use.
+
+    """
+
+    def __init__(
+        self,
+        response_type,
+        model,
+        X_train,
+        X_test,
+        y_train,
+        y_test,
+        w_train,
+        w_test,
+        nbins: int = 30,
+    ):
+        self.response_type = response_type
+        r_train, r_test = self._eval_model(model, X_train, X_test)
+        self._calculate(r_train, r_test, y_train, y_test, w_train, w_test, nbins)
+
+    def _eval_model(self, model, X_train, X_test):
+        if self.response_type == "predict":
+            r_test = model.predict(X_test, raw_score=True)
+            r_train = model.predict(X_train, raw_score=True)
+        elif self.response_type == "decision_function":
+            r_test = model.decision_function(X_test)
+            r_train = model.decision_function(X_train)
+        elif self.response_type == "proba":
+            r_test = model.predict_proba(X_test)[:, 1]
+            r_train = model.predict_proba(X_train)[:, 1]
+        else:
+            raise ValueError("response_type must be 'predict' or 'proba'")
+        return r_train, r_test
+
+    def _calculate(self, r_train, r_test, y_train, y_test, w_train, w_test, nbins):
+        sig_test_p = y_test == 1
+        sig_train_p = y_train == 1
+        bkg_test_p = np.invert(sig_test_p)
+        bkg_train_p = np.invert(sig_train_p)
+        sig_train = r_train[sig_train_p]
+        sig_test = r_test[sig_test_p]
+        bkg_train = r_train[bkg_train_p]
+        bkg_test = r_test[bkg_test_p]
+        xmin = min(bkg_train.min(), bkg_test.min())
+        xmax = max(sig_train.max(), sig_test.max())
+        self.bins = np.linspace(xmin, xmax, nbins + 1)
+        # fmt: off
+        sig_test_h = histogram(sig_test, bins=self.bins, density=True, weights=w_test[sig_test_p])
+        bkg_test_h = histogram(bkg_test, bins=self.bins, density=True, weights=w_test[bkg_test_p])
+        sig_train_h = histogram(sig_train, bins=self.bins, density=True, weights=w_train[sig_train_p])
+        bkg_train_h = histogram(bkg_train, bins=self.bins, density=True, weights=w_train[bkg_train_p])
+        # fmt: on
+        self.train_sig_h = sig_train_h[0]
+        self.train_sig_e = sig_train_h[1]
+        self.train_bkg_h = bkg_train_h[0]
+        self.train_bkg_e = bkg_train_h[1]
+        self.test_sig_h = sig_test_h[0]
+        self.test_sig_e = sig_test_h[1]
+        self.test_bkg_h = bkg_test_h[0]
+        self.test_bkg_e = bkg_test_h[1]
+        self.ks_sig = ks_twosample_binned(self.train_sig_h, self.test_sig_h, self.train_sig_e, self.test_sig_e)
+        self.ks_bkg = ks_twosample_binned(self.train_bkg_h, self.test_bkg_h, self.train_bkg_e, self.test_bkg_e)
+
+    @property
+    def ks_sig_test(self) -> float:
+        """Two sample binned KS test for signal."""
+        return round(float(self.ks_sig[0]), 5)
+
+    @property
+    def ks_sig_pval(self) -> float:
+        """Two sample binned KS p-value for signal."""
+        return round(float(self.ks_sig[1]), 5)
+
+    @property
+    def ks_bkg_test(self) -> float:
+        """Two sample binned KS test for background."""
+        return round(float(self.ks_bkg[0]), 5)
+
+    @property
+    def ks_bkg_pval(self) -> float:
+        """Two sample binned KS p-value for background."""
+        return round(float(self.ks_bkg[1]), 5)
+
+    def draw(
+        self, ax: Optional[plt.Axes] = None, xlabel: Optional[str] = None,
+    ) -> Tuple[plt.Figure, plt.Axes]:
+        """Draw the response histograms.
+
+        Parameters
+        ----------
+        ax : plt.Axes, optional
+            Predefined matplotlib axes to use
+        xlabel : str, optional
+            Override the automated xlabel definition.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The matplotlib figure object.
+        matplotlib.axes.Axes
+            The matplotlib axes object.
+
+        """
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(4.5, 4))
+        else:
+            fig = ax.get_figure()
+        bc = bin_centers(self.bins)
+        ax.hist(
+            bc,
+            bins=self.bins,
+            weights=self.train_sig_h,
+            label=r"$tW$ (train)",
+            histtype="stepfilled",
+            alpha=0.5,
+            edgecolor="C0",
+            color="C0",
+        )
+        ax.hist(
+            bc,
+            bins=self.bins,
+            weights=self.train_bkg_h,
+            label=r"$t\bar{t}$ (train)",
+            histtype="stepfilled",
+            alpha=0.4,
+            edgecolor="C3",
+            color="C3",
+        )
+        ax.errorbar(
+            bc,
+            self.test_sig_h,
+            yerr=self.test_sig_e,
+            label=r"$tW$ (test)",
+            color="C0",
+            fmt="o",
+            markersize=4,
+        )
+        ax.errorbar(
+            bc,
+            self.test_bkg_h,
+            yerr=self.test_bkg_e,
+            label=r"$t\bar{t}$ (test)",
+            color="C3",
+            fmt="o",
+            markersize=4,
+        )
+        if self.response_type == "proba":
+            ax.set_xlim([0, 1])
+        else:
+            ax.set_xlim([self.bins[0], self.bins[-1]])
+        ax.set_ylim([0, 1.35 * ax.get_ylim()[1]])
+        ax.legend(loc="upper right", ncol=2, frameon=False, numpoints=1)
+        ax.set_ylabel("Arbitrary Units")
+        if xlabel is None:
+            if self.response_type == "proba":
+                ax.set_xlabel("Classifier Signal Probability")
+            else:
+                ax.set_xlabel("Classifier Response")
+        else:
+            ax.set_xlabel(xlabel)
+        return fig, ax
 
 
 def prepare_from_root(
@@ -195,79 +429,232 @@ def prepare_from_root(
     return df, y, w
 
 
-class SingleTrainingResult:
-    """Describes the properties of a single training.
+def tdub_train_axes(
+    learning_rate: float = 0.1,
+    max_depth: int = 5,
+    min_child_samples: int = 50,
+    num_leaves: int = 31,
+    reg_lambda: float = 0.0,
+    **kwargs,
+) -> Dict[str, Any]:
+    """Construct a dictionary of default tdub training tune.
+
+    Extra keyword arguments are swallowed but never used.
 
     Parameters
     ----------
-    auc : float
-        the AUC value for the model
-    ks_test_sig : float
-        the binned KS test value for signal
-    ks_pvalue_sig : float
-        the binned KS test p-value for signal
-    ks_test_bkg : float
-        the binned KS test value for background
-    ks_pvalue_bkg : float
-        the binned KS test p-value for background
-    kwargs : dict
-        currently unused
+    learning_rate : float
+        Learning rate for a classifier.
+    max_depth : int
+        Max depth for a classifier.
+    min_child_samples : int
+        Min child samples for a classifier.
+    num_leaves : int
+        Num leaves for a classifier.
+    reg_lambda : float
+        Lambda regularation (L2 regularation).
 
-    Attributes
-    ----------
-    auc : float
-        the AUC value for the model
-    ks_test_sig : float
-        the binned KS test value for signal
-    ks_pvalue_sig : float
-        the binned KS test p-value for signal
-    ks_test_bkg : float
-        the binned KS test value for background
-    ks_pvalue_bkg : float
-        the binned KS test p-value for background
+    Returns
+    -------
+    dict(str, Any)
+        The argument names and values
     """
+    return dict(
+        learning_rate=learning_rate,
+        max_depth=max_depth,
+        min_child_samples=min_child_samples,
+        num_leaves=num_leaves,
+        reg_lambda=reg_lambda,
+    )
 
-    def __init__(
-        self,
-        *,
-        auc: float = -1.0,
-        ks_test_sig: float = -1.0,
-        ks_pvalue_sig: float = -1.0,
-        ks_test_bkg: float = -1.0,
-        ks_pvalue_bkg: float = -1.0,
-        **kwargs,
-    ) -> None:
-        """Class init."""
-        self.auc = auc
-        self.ks_test_sig = ks_test_sig
-        self.ks_pvalue_sig = ks_pvalue_sig
-        self.ks_test_bkg = ks_test_bkg
-        self.ks_pvalue_bkg = ks_pvalue_bkg
-        self.bad_ks = self.ks_pvalue_sig < 0.2 or self.ks_pvalue_bkg < 0.2
 
-    def __repr__(self) -> str:
-        """Clean representation of the result."""
-        p1 = f"auc={self.auc:0.3}"
-        p2 = f"ks_test_sig={self.ks_test_sig:0.5}"
-        p3 = f"ks_pvalue_sig={self.ks_pvalue_sig:0.5}"
-        p4 = f"ks_test_bkg={self.ks_test_bkg:0.5}"
-        p5 = f"ks_pvalue_bkg={self.ks_pvalue_bkg:0.5}"
-        return f"SingleTrainingResult({p1}, {p2}, {p3}, {p4}, {p5})"
+def sklearn_gen_classifier(
+    early_stopping_rounds: int = 10,
+    validation_fraction: float = 0.25,
+    train_axes: Optional[Dict[str, Any]] = None,
+    **clf_params,
+) -> BaseEstimator:
+    """Create a classifier using scikit-learn.
+
+    This uses Scikit-learn's
+    :py:obj:`sklearn.ensemble.HistGradientBoostingClassifier`.
+
+    The constructor to define early stopping rounds. Extra keyword
+    arguments passed to the classifier initialization
+
+    Parameters
+    ----------
+    early_stopping_rounds : int
+        Passed as the `n_iter_no_change` argument to scikit-learn's
+        HistGradientBoostingClassifier.
+    validation_fraction : float
+        Passed to the `validation_fraction` argument in scikit-learn's
+        HistGradientBoostingClassifier.
+    train_axes : dict[str, Any]
+        Values of required tdub training parameters.
+    clf_params : kwargs
+        Extra arguments passed to the constructor.
+
+    Returns
+    -------
+    sklearn.ensemble.HistGradientBoostingClassifier
+        The classifier.
+    """
+    if train_axes is None:
+        train_axes = tdub_train_axes()
+
+    params = dict(
+        loss="binary_crossentropy",
+        early_stopping=True,
+        verbose=1,
+        n_iter_no_change=early_stopping_rounds,
+        validation_fraction=validation_fraction,
+        max_iter=500,
+        learning_rate=train_axes.get("learning_rate"),
+        max_depth=train_axes.get("max_depth"),
+        min_samples_leaf=train_axes.get("min_child_samples"),
+        max_leaf_nodes=train_axes.get("num_leaves"),
+        l2_regularization=train_axes.get("reg_lambda"),
+    )
+    for k, v in clf_params.items():
+        if k not in params.keys():
+            params[k] = v
+    clf = HistGradientBoostingClassifier(**params)
+    log.info("Prepared sklearn classifier with parameters:")
+    for k, v in clf.get_params().items():
+        log.info(f"{k:>20} = {v}")
+    return clf
+
+
+def sklearn_train_classifier(
+    clf: BaseEstimator, X_train: Any, y_train: Any, w_train: Any, **fit_params,
+) -> BaseEstimator:
+    """Train a Scikit-learn classifier.
+
+    Parameters
+    ----------
+    clf : sklearn.ensemble.HistGradientBoostingClassifier
+        The classifier
+    X_train : array_like
+        Training events matrix
+    y_train : array_like
+        Training event labels
+    w_train : array_like
+        Training event weights
+    fit_params : kwargs
+        Extra keyword arguments passed to the classifier.
+
+    Returns
+    -------
+    sklearn.ensemble.HistGradientBoostingClassifier
+        The same classifier object passed to the function.
+
+    """
+    params = {}
+    for k, v in fit_params.items():
+        if k not in params.keys():
+            params[k] = v
+    return clf.fit(X_train, y_train, sample_weight=w_train)
+
+
+def lgbm_gen_classifier(train_axes: Dict[str, Any] = None, **clf_params) -> BaseEstimator:
+    """Create a classifier using LightGBM.
+
+    Parameters
+    ----------
+    train_axes : dict[str, Any]
+        Values of required tdub training parameters.
+    clf_params : kwargs
+        Extra arguments passed to the constructor.
+
+    Returns
+    -------
+    lightgbm.LGBMClassifier
+        The classifier.
+    """
+    import lightgbm as lgbm
+
+    if train_axes is None:
+        train_axes = tdub_train_axes()
+
+    params = dict(
+        learning_rate=train_axes.get("learning_rate", 0.1),
+        max_depth=train_axes.get("max_depth", 5),
+        min_child_samples=train_axes.get("min_child_samples", 50),
+        num_leaves=train_axes.get("num_leaves", 50),
+        reg_lambda=train_axes.get("reg_lambda", 0.0),
+    )
+    for k, v in clf_params.items():
+        if k not in params.keys():
+            params[k] = v
+    clf = lgbm.LGBMClassifier(boosting_type="gbdt", n_estimators=500, **params)
+    for k, v in clf.get_params().items():
+        log.info(f"{k:>20} = {v}")
+    return clf
+
+
+def lgbm_train_classifier(
+    clf: BaseEstimator,
+    X_train: Any,
+    y_train: Any,
+    w_train: Any,
+    validation_fraction: float = 0.25,
+    early_stopping_rounds: int = 10,
+    **fit_params,
+) -> BaseEstimator:
+    """Train a LGBMClassifier.
+
+    clf : lightgbm.LGBMClassifier
+        The classifier
+    X_train : array_like
+        Training events matrix
+    y_train : array_like
+        Training event labels
+    w_train : array_like
+        Training event weights
+    validation_fraction : float
+        Fraction of training events to use in validation set.
+    early_stopping_rounds : int
+        Number of early stopping rounds to use in training.
+    fit_params : keyword arguments
+        Extra keyword arguments passed to the classifier.
+
+    Returns
+    -------
+    lightgbm.LGBMClassifier
+        The same classifier object passed to the function
+    """
+    X_t, X_v, y_t, y_v, w_t, w_v = train_test_split(
+        X_train,
+        y_train,
+        w_train,
+        test_size=validation_fraction,
+        random_state=414,
+        shuffle=True,
+    )
+    return clf.fit(
+        X_t,
+        y_t,
+        sample_weight=w_t,
+        eval_set=[(X_v, y_v)],
+        eval_metric="auc",
+        eval_sample_weight=[w_v],
+        early_stopping_rounds=early_stopping_rounds,
+    )
 
 
 def single_training(
     df: pd.DataFrame,
     labels: np.ndarray,
     weights: np.ndarray,
-    clf_params: Dict[str, Any],
+    train_axes: Dict[str, Any],
     output_dir: Union[str, os.PathLike],
     test_size: float = 0.33,
     random_state: int = 414,
     early_stopping_rounds: Optional[int] = None,
     extra_summary_entries: Optional[Dict[str, Any]] = None,
-    use_xgboost: bool = False,
     use_sklearn: bool = False,
-) -> SingleTrainingResult:
+) -> None:
     """Execute a single training with some parameters.
 
     The model and some useful information (mostly plots) are saved to
@@ -281,9 +668,8 @@ def single_training(
         Event labels (`1` for signal; `0` for background)
     weights : numpy.ndarray
         Event weights
-    clf_params : dict
-        Dictionary of parameters to pass to
-        :py:obj:`lightgbm.LGBMClassifier`.
+    train_axes : dict(str, Any)
+        Dictionary of parameters defining the tdub train axes.
     output_dir : str or os.PathLike
         Directory to save results of training
     test_size : float
@@ -295,23 +681,21 @@ def single_training(
         Number of rounds to have no improvement for stopping training.
     extra_summary_entries : dict, optional
         Extra entries to save in the JSON output summary.
-    use_xgboost : bool
-        Use XGBoost classifier.
     use_sklearn : bool
         Use Scikit-learn's HistGradientBoostingClassifier.
 
     Returns
     -------
-    SingleTrainingResult
+    SingleTrainingSummary
         Useful information about the training
 
     Examples
     --------
     >>> from tdub.data import quick_files
-    >>> from tdub.train import prepare_from_root, single_round
+    >>> from tdub.train import prepare_from_root, single_round, tdub_train_axes
     >>> qfiles = quick_files("/path/to/data")
     >>> df, labels, weights = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
-    >>> params = dict(
+    >>> train_axes = tdub_train_axes()
     ...     learning_rate=0.05
     ...     max_depth=5,
     ... )
@@ -319,11 +703,13 @@ def single_training(
     ...     df,
     ...     labels,
     ...     weights,
-    ...     params,
+    ...     tdub_train_axes,
     ...     "training_output",
     ... )
 
     """
+    import lightgbm as lgbm
+
     starting_dir = os.getcwd()
     output_path = PosixPath(output_dir)
     output_path.mkdir(exist_ok=True, parents=True)
@@ -341,73 +727,40 @@ def single_training(
     for c in X_train.columns:
         log.info(" - %s" % c)
 
-    validation_data = [(X_test, y_test)]
-    validation_w = w_test
-
-    if use_xgboost:
-        model = xgb.XGBClassifier(booster="gbtree", verbosity=1, **clf_params)
-        model.fit(
-            X_train,
-            y_train,
-            sample_weight=w_train,
-            eval_set=validation_data,
-            eval_metric="auc",
+    # Create and train model
+    train_axes = tdub_train_axes(**train_axes)
+    if use_sklearn:
+        model = sklearn_gen_classifier(
             early_stopping_rounds=early_stopping_rounds,
-            sample_weight_eval_set=[validation_w],
-        )
-
-    elif use_sklearn:
-        model = HistGradientBoostingClassifier(
-            learning_rate=clf_params.get("learning_rate", 0.1),
-            max_depth=clf_params.get("max_depth", 5),
-            min_samples_leaf=clf_params.get("min_child_samples", 50),
-            max_leaf_nodes=clf_params.get("num_leaves", 31),
             validation_fraction=0.33,
-            early_stopping=True,
-            n_iter_no_change=10,
-            max_iter=250,
-            verbose=1,
+            train_axes=train_axes,
         )
-        model.fit(X_train, y_train, sample_weight=w_train)
+        sklearn_train_classifier(model, X_train, y_train, w_train)
 
     else:
-        model = lgbm.LGBMClassifier(boosting_type="gbdt", **clf_params)
-        model.fit(
-            X_train,
-            y_train,
-            sample_weight=w_train,
-            eval_set=validation_data,
-            eval_metric="auc",
-            verbose=20,
-            early_stopping_rounds=early_stopping_rounds,
-            eval_sample_weight=[validation_w],
+        model = lgbm_gen_classifier(train_axes=train_axes)
+        lgbm_train_classifier(
+            model, X_train, y_train, w_train, early_stopping_rounds=early_stopping_rounds
         )
 
+    # Save the model
     joblib.dump(model, "model.joblib.gz", compress=("gzip", 3))
 
-    fig_proba, ax_proba = plt.subplots()
-    fig_pred, ax_pred = plt.subplots()
-    fig_roc, ax_roc = plt.subplots()
-    fig_imp, (ax_imp_gain, ax_imp_split) = plt.subplots(2, 1)
+    # ROC curve
+    fig_roc, ax_roc = plt.subplots(figsize=(4.5, 4))
+    rcd = plot_roc_curve(model, X_test, y_test, sample_weight=w_test, ax=ax_roc, lw=2)
+    ax_roc.set_ylabel("True postive rate")
+    ax_roc.set_xlabel("False positive rate")
+    ax_roc.grid(color="black", alpha=0.125)
+    ax_roc.legend(loc="lower right")
+    fig_roc.subplots_adjust(bottom=0.125, left=0.15)
+    fig_roc.savefig("roc.pdf")
 
-    trainres = _inspect_single_training(
-        ax_proba,
-        ax_pred,
-        ax_roc,
-        model,
-        X_test,
-        X_train,
-        y_test,
-        y_train,
-        w_test,
-        w_train,
-        is_xgb_model=use_xgboost,
-        is_skl_model=use_sklearn,
-    )
-
-    if not use_xgboost and not use_sklearn:
-        lgbm.plot_importance(model, ax=ax_imp_gain, importance_type="gain")
-        lgbm.plot_importance(model, ax=ax_imp_split, importance_type="split")
+    # Plot Importances
+    if not use_sklearn:
+        fig_imp, (ax_imp_gain, ax_imp_split) = plt.subplots(2, 1)
+        lgbm.plot_importance(model, ax=ax_imp_gain, importance_type="gain", precision=2)
+        lgbm.plot_importance(model, ax=ax_imp_split, importance_type="split", precision=2)
         ax_imp_gain.set_xlabel("Importance (gain)")
         ax_imp_split.set_xlabel("Importance (split)")
         ax_imp_gain.set_title("")
@@ -415,28 +768,40 @@ def single_training(
         fig_imp.subplots_adjust(left=0.475, top=0.975, bottom=0.09, right=0.925)
         fig_imp.savefig("imp.pdf")
 
-    # fig_proba.subplots_adjust(**_fig_adjustment_dict)
-    # fig_pred.subplots_adjust(**_fig_adjustment_dict)
-    # fig_roc.subplots_adjust(**_fig_adjustment_dict)
-    fig_proba.savefig("proba.pdf")
+    # Histograms: plot and extract information from them
+    proba_histograms = ResponseHistograms("proba", model, X_train, X_test, y_train, y_test, w_train, w_test)
+    if not use_sklearn:
+        pred_histograms = ResponseHistograms("predict", model, X_train, X_test, y_train, y_test, w_train, w_test)
+    else:
+        pred_histograms = ResponseHistograms("decision_function", model, X_train, X_test, y_train, y_test, w_train, w_test)
+    fig_pred, ax_pred = pred_histograms.draw()
+    fig_proba, ax_proba = proba_histograms.draw()
+    fig_pred.subplots_adjust(bottom=0.125, left=0.15)
     fig_pred.savefig("pred.pdf")
-    fig_roc.savefig("roc.pdf")
+    fig_proba.subplots_adjust(bottom=0.125, left=0.15)
+    fig_proba.savefig("proba.pdf")
+    sts = SingleTrainingSummary(
+        auc=float(rcd.roc_auc),
+        ks_test_sig=proba_histograms.ks_sig_test,
+        ks_pvalue_sig=proba_histograms.ks_sig_pval,
+        ks_test_bkg=proba_histograms.ks_bkg_test,
+        ks_pvalue_bkg=proba_histograms.ks_bkg_pval,
+    )
 
-    summary = {"auc": round(trainres.auc, 5)}
+    # JSON Summary
+    summary = {"auc": round(rcd.roc_auc, 5)}
     summary["selection_used"] = df.selection_used
-    summary["bad_ks"] = trainres.bad_ks
-    summary["ks_test_sig"] = trainres.ks_test_sig
-    summary["ks_test_bkg"] = trainres.ks_test_bkg
-    summary["ks_pvalue_sig"] = trainres.ks_pvalue_sig
-    summary["ks_pvalue_bkg"] = trainres.ks_pvalue_bkg
+    summary["bad_ks"] = sts.bad_ks
+    summary["ks_test_sig"] = sts.ks_test_sig
+    summary["ks_test_bkg"] = sts.ks_test_bkg
+    summary["ks_pvalue_sig"] = sts.ks_pvalue_sig
+    summary["ks_pvalue_bkg"] = sts.ks_pvalue_bkg
     summary["features"] = [c for c in df.columns]
-    summary["set_params"] = clf_params
+    summary["set_params"] = train_axes
     summary["all_params"] = model.get_params()
     summary["best_iteration"] = -1
     if early_stopping_rounds is not None:
-        if use_xgboost:
-            summary["best_iteration"] = int(model.best_iteration)
-        elif use_sklearn:
+        if use_sklearn:
             summary["best_iteration"] = int(model.n_iter_)
         else:
             summary["best_iteration"] = int(model.best_iteration_)
@@ -445,144 +810,9 @@ def single_training(
             summary[k] = v
     with open("summary.json", "w") as f:
         json.dump(summary, f, indent=4)
+
+    # Finish by going back to starting directory
     os.chdir(starting_dir)
-
-    return trainres
-
-
-def _inspect_single_training(
-    ax_proba: plt.Axes,
-    ax_pred: plt.Axes,
-    ax_roc: plt.Axes,
-    model: Any,
-    X_test: pd.DataFrame,
-    X_train: np.ndarray,
-    y_test: np.ndarray,
-    y_train: np.ndarray,
-    w_test: np.ndarray,
-    w_train: np.ndarray,
-    nbins_proba: int = 30,
-    nbins_pred: int = 30,
-    is_xgb_model: bool = False,
-    is_skl_model: bool = False,
-) -> SingleTrainingResult:
-    """Inspect a single training round and make some plots."""
-    # fmt: off
-    # get the selection arrays
-    test_is_sig = y_test == 1
-    test_is_bkg = np.invert(test_is_sig)
-    train_is_sig = y_train == 1
-    train_is_bkg = np.invert(train_is_sig)
-
-    # test and train output
-    if is_xgb_model:
-        test_proba = model.predict_proba(X_test)[:, 1]
-        test_pred = model.predict(X_test, output_margin=True)
-        train_proba = model.predict_proba(X_train)[:, 1]
-        train_pred = model.predict(X_train, output_margin=True)
-    elif is_skl_model:
-        test_proba = model.predict_proba(X_test)[:, 1]
-        test_pred = model.decision_function(X_test)
-        train_proba = model.predict_proba(X_train)[:, 1]
-        train_pred = model.decision_function(X_train)
-    else:
-        test_proba = model.predict_proba(X_test)[:, 1]
-        test_pred = model.predict(X_test, raw_score=True)
-        train_proba = model.predict_proba(X_train)[:, 1]
-        train_pred = model.predict(X_train, raw_score=True)
-
-    # test and train weights
-    test_w_sig = w_test[test_is_sig]
-    test_w_bkg = w_test[test_is_bkg]
-    train_w_sig = w_train[train_is_sig]
-    train_w_bkg = w_train[train_is_bkg]
-
-    # test and train signal and background proba arrays
-    test_proba_sig = test_proba[test_is_sig]
-    test_proba_bkg = test_proba[test_is_bkg]
-    train_proba_sig = train_proba[train_is_sig]
-    train_proba_bkg = train_proba[train_is_bkg]
-
-    # test and train signal and background pred arrays
-    test_pred_sig = test_pred[test_is_sig]
-    test_pred_bkg = test_pred[test_is_bkg]
-    train_pred_sig = train_pred[train_is_sig]
-    train_pred_bkg = train_pred[train_is_bkg]
-
-    # bins for proba and for pred
-    proba_bins = np.linspace(0, 1, nbins_proba + 1)
-    proba_bc = bin_centers(proba_bins)
-    pred_xmin = min(test_pred_bkg.min(), train_pred_bkg.min())
-    pred_xmax = max(test_pred_sig.max(), train_pred_sig.max())
-    pred_bins = np.linspace(pred_xmin, pred_xmax, nbins_pred + 1)
-    pred_bc = bin_centers(pred_bins)
-
-    # calculate the proba histograms
-    test_h_proba_sig = pygram11.histogram(test_proba_sig, bins=proba_bins, density=True, weights=test_w_sig)
-    test_h_proba_bkg = pygram11.histogram(test_proba_bkg, bins=proba_bins, density=True, weights=test_w_bkg)
-    train_h_proba_sig = pygram11.histogram(train_proba_sig, bins=proba_bins, density=True, weights=train_w_sig)
-    train_h_proba_bkg = pygram11.histogram(train_proba_bkg, bins=proba_bins, density=True, weights=train_w_bkg)
-
-    # calculate the pred histograms
-    test_h_pred_sig = pygram11.histogram(test_pred_sig, bins=pred_bins, density=True, weights=test_w_sig)
-    test_h_pred_bkg = pygram11.histogram(test_pred_bkg, bins=pred_bins, density=True, weights=test_w_bkg)
-    train_h_pred_sig = pygram11.histogram(train_pred_sig, bins=pred_bins, density=True, weights=train_w_sig)
-    train_h_pred_bkg = pygram11.histogram(train_pred_bkg, bins=pred_bins, density=True, weights=train_w_bkg)
-
-    # plot the proba distributions
-    ax_proba.hist(proba_bc, bins=proba_bins, weights=train_h_proba_sig[0],
-                  label="Sig (train)", histtype="stepfilled", alpha=0.5, edgecolor="C0", color="C0")
-    ax_proba.hist(proba_bc, bins=proba_bins, weights=train_h_proba_bkg[0],
-                  label="Bkg (train)", histtype="stepfilled", alpha=0.4, edgecolor="C3", color="C3")
-    ax_proba.errorbar(proba_bc, test_h_proba_sig[0], yerr=test_h_proba_sig[1],
-                      label="Sig (test)", color="C0", fmt="o", markersize=4)
-    ax_proba.errorbar(proba_bc, test_h_proba_bkg[0], yerr=test_h_proba_bkg[1],
-                      label="Bkg (test)", color="C3", fmt="o", markersize=4)
-    ax_proba.set_ylim([0, 1.4 * ax_proba.get_ylim()[1]])
-    ax_proba.legend(loc="upper right", ncol=2, frameon=False, numpoints=1)
-    ax_proba.set_ylabel("Arbitrary Units")
-    ax_proba.set_xlabel("Classifier Response")
-
-    # plot the pred distributions
-    ax_pred.hist(pred_bc, bins=pred_bins, weights=train_h_pred_sig[0],
-                 label="Sig (train)", histtype="stepfilled", alpha=0.5, edgecolor="C0", color="C0")
-    ax_pred.hist(pred_bc, bins=pred_bins, weights=train_h_pred_bkg[0],
-                 label="Bkg (train)", histtype="stepfilled", alpha=0.4, edgecolor="C3", color="C3")
-    ax_pred.errorbar(pred_bc, test_h_pred_sig[0], yerr=test_h_pred_sig[1],
-                     label="Sig (test)", color="C0", fmt="o", markersize=4)
-    ax_pred.errorbar(pred_bc, test_h_pred_bkg[0], yerr=test_h_pred_bkg[1],
-                     label="Bkg (test)", color="C3", fmt="o", markersize=4)
-    ax_pred.set_ylim([0, 1.4 * ax_pred.get_ylim()[1]])
-    ax_pred.legend(loc="upper right", ncol=2, frameon=False, numpoints=1)
-    ax_pred.set_ylabel("Arbitrary Units")
-    ax_pred.set_xlabel("Classifier Response")
-
-    # plot the auc
-    # use the new sklearn plot_roc_curve API
-    rcd = plot_roc_curve(model, X_test, y_test, sample_weight=w_test, ax=ax_roc, lw=2)
-    # fpr, tpr, thresholds = roc_curve(y_test, test_proba, sample_weight=w_test)
-    # roc_auc = auc(fpr, tpr)
-    # ax_roc.plot(fpr, tpr, lw=1, label=f"AUC = {roc_auc:0.3}")
-    ax_roc.set_ylabel("True postive rate")
-    ax_roc.set_xlabel("False positive rate")
-    ax_roc.grid(color="black", alpha=0.125)
-    ax_roc.legend(loc="lower right")
-    # fmt: on
-
-    ks_stat_sig, ks_p_sig = ks_twosample_binned(
-        test_h_proba_sig[0], train_h_proba_sig[0], test_h_proba_sig[1], train_h_proba_sig[1]
-    )
-    ks_stat_bkg, ks_p_bkg = ks_twosample_binned(
-        test_h_proba_bkg[0], train_h_proba_bkg[0], test_h_proba_bkg[1], train_h_proba_bkg[1]
-    )
-
-    return SingleTrainingResult(
-        auc=float(rcd.roc_auc),
-        ks_test_sig=float(ks_stat_sig),
-        ks_pvalue_sig=float(ks_p_sig),
-        ks_test_bkg=float(ks_stat_bkg),
-        ks_pvalue_bkg=float(ks_p_bkg),
-    )
 
 
 def folded_training(
@@ -659,6 +889,8 @@ def folded_training(
     ...     kfold_kw={"n_splits": 5, "shuffle": True, "random_state": 17}
     ... )
     """
+    import lightgbm as lgbm
+
     starting_dir = os.getcwd()
     output_path = PosixPath(output_dir)
     output_path.mkdir(exist_ok=True, parents=True)
@@ -760,8 +992,8 @@ def folded_training(
         fold_ax_proba.hist(proba_bkg_train, bins=proba_bins, label=f"F{fold_number} Bkg. (train)", density=True,
                            weights=w_bkg_train, histtype="stepfilled", color="C3", edgecolor="C3", alpha=0.4, linewidth=1)
 
-        train_h_sig = pygram11.histogram(proba_sig_test, bins=proba_bins, weights=w_sig_test, flow=False, density=True)
-        train_h_bkg = pygram11.histogram(proba_bkg_test, bins=proba_bins, weights=w_bkg_test, flow=False, density=True)
+        train_h_sig = histogram(proba_sig_test, bins=proba_bins, weights=w_sig_test, flow=False, density=True)
+        train_h_bkg = histogram(proba_bkg_test, bins=proba_bins, weights=w_bkg_test, flow=False, density=True)
 
         fold_ax_proba.errorbar(proba_bc, train_h_sig[0], yerr=train_h_sig[1], markersize=4,
                                color="C0", fmt="o", label=f"F{fold_number} Sig. (test)")
@@ -923,6 +1155,7 @@ def gp_minimize_auc(
     from skopt.space import Real, Integer
     from skopt.plots import plot_convergence
     from skopt import gp_minimize
+    import lightgbm as lgbm
 
     qfiles = quick_files(f"{data_dir}")
     if nlo_method == "DR":
@@ -1064,17 +1297,17 @@ def gp_minimize_auc(
         binning_sig = np.linspace(0, 1, 31)
         binning_bkg = np.linspace(0, 1, 31)
 
-        h_sig_test, err_sig_test = pygram11.histogram(
+        h_sig_test, err_sig_test = histogram(
             pred[y_test == 1], bins=binning_sig, weights=w_test[y_test == 1]
         )
-        h_sig_train, err_sig_train = pygram11.histogram(
+        h_sig_train, err_sig_train = histogram(
             train_pred[y_train == 1], bins=binning_sig, weights=w_train[y_train == 1]
         )
 
-        h_bkg_test, err_bkg_test = pygram11.histogram(
+        h_bkg_test, err_bkg_test = histogram(
             pred[y_test == 0], bins=binning_bkg, weights=w_test[y_test == 0]
         )
-        h_bkg_train, err_bkg_train = pygram11.histogram(
+        h_bkg_train, err_bkg_train = histogram(
             train_pred[y_train == 0], bins=binning_bkg, weights=w_train[y_train == 0]
         )
 
