@@ -235,7 +235,7 @@ DEFAULT_SCAN_PARAMETERS = {
     "num_leaves": [20, 31, 64],
     "learning_rate": [0.07, 0.1, 0.2],
     "min_child_samples": [50, 60, 80, 120, 180],
-    "reg_lambda": [0, 1000, 2000, 4000],
+    "reg_lambda": [0, 1000, 2000, 4000, 6000],
 }
 """
 dict(str, list): The default grid to perform a parameter scan.
