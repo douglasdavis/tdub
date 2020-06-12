@@ -56,19 +56,6 @@ class NuisPar:
     title: str = "none"
 
 
-def _get_plot_samples() -> List[Sample]:
-    plot_samples = [
-        Sample(name="tW", signature="tW", color="#1f77b4", tex="$tW$"),
-        Sample(name="ttbar", signature="ttbar", color="#d62728", tex="$t\\bar{t}$"),
-        Sample(name="Diboson", signature="Diboson", color="#2ca02c", tex="Diboson"),
-        Sample(name="Zjets", signature="Zjets", color="#ff7f0e", tex="$Z+$jets"),
-        Sample(name="MCNP", signature="MCNP", color="#9467bd", tex="MCNP"),
-    ]
-    plot_samples.reverse()
-    return plot_samples
-
-
-
 def get_blank_systematics(config_file: str) -> Tuple[List[NuisPar], Set[str]]:
     """Get list of NPs and categories from TRExFitter config file.
 
