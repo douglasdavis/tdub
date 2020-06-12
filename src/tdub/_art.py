@@ -56,32 +56,6 @@ def setup_style():
     matplotlib.rcParams["ytick.minor.pad"] = 3.4
 
 
-def draw_atlas_label(
-    ax: plt.Axes,
-    internal: bool = True,
-    extra_lines: Optional[List[str]] = None,
-    x: float = 0.050,
-    y: float = 0.905,
-    s1: int = 14,
-    s2: int = 12,
-) -> None:
-    """draw the ATLAS label on the plot, with extra lines if desired."""
-    ax.text(
-        x,
-        y,
-        "ATLAS",
-        fontstyle="italic",
-        fontweight="bold",
-        transform=ax.transAxes,
-        size=s1,
-    )
-    if internal:
-        ax.text(x + 0.15, y, r"Internal", transform=ax.transAxes, size=s1)
-    if extra_lines is not None:
-        for i, exline in enumerate(extra_lines):
-            ax.text(x, y - (i + 1) * 0.06, exline, transform=ax.transAxes, size=s2)
-
-
 @dataclass
 class AxisMeta:
     title: str = ""

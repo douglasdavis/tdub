@@ -59,11 +59,13 @@ def legend_last_to_first(ax, **kwargs):
 def draw_atlas_label(
     ax: plt.Axes,
     internal: bool = True,
+    cme_and_lumi: bool = True,
     extra_lines: Optional[List[str]] = None,
     cme: Union[int, float] = 13,
     lumi: float = 139,
     x: float = 0.050,
     y: float = 0.905,
+    internal_shift: float = 0.15,
     s1: int = 14,
     s2: int = 12,
 ) -> None:
@@ -85,12 +87,14 @@ def draw_atlas_label(
         `x`-location of the text.
     y : float
         `y`-location of the text.
+    internal_shift : float
+        `x`-shift of the `Internal` ATLAS label.
     s1 : int
         Size of the main label.
     s2 : int
         Size of the extra text
 
-"""
+    """
     ax.text(
         x,
         y,
@@ -101,8 +105,11 @@ def draw_atlas_label(
         size=s1,
     )
     if internal:
-        ax.text(x + 0.15, y, r"Internal", transform=ax.transAxes, size=s1)
-    exlines = [f"$\\sqrt{{s}}$ = {cme} TeV, $L = {lumi}$ fb$^{{-1}}$"]
+        ax.text(x + internal_shift, y, r"Internal", transform=ax.transAxes, size=s1)
+    if cme_and_lumi:
+        exlines = [f"$\\sqrt{{s}}$ = {cme} TeV, $L = {lumi}$ fb$^{{-1}}$"]
+    else:
+        exlines = []
     if extra_lines is not None:
         exlines += extra_lines
     for i, exline in enumerate(exlines):

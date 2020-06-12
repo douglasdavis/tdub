@@ -25,7 +25,7 @@ from sklearn.experimental import enable_hist_gradient_boosting  # noqa
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 # tdub
-from tdub.art import setup_tdub_style
+from tdub.art import setup_tdub_style, draw_atlas_label
 from tdub.data import Region, features_for, quick_files, selection_for, selection_as_numexpr
 from tdub.frames import iterative_selection, drop_cols
 from tdub.hist import bin_centers
@@ -181,8 +181,12 @@ class ResponseHistograms:
         self.test_sig_e = sig_test_h[1]
         self.test_bkg_h = bkg_test_h[0]
         self.test_bkg_e = bkg_test_h[1]
-        self.ks_sig = ks_twosample_binned(self.train_sig_h, self.test_sig_h, self.train_sig_e, self.test_sig_e)
-        self.ks_bkg = ks_twosample_binned(self.train_bkg_h, self.test_bkg_h, self.train_bkg_e, self.test_bkg_e)
+        self.ks_sig = ks_twosample_binned(
+            self.train_sig_h, self.test_sig_h, self.train_sig_e, self.test_sig_e
+        )
+        self.ks_bkg = ks_twosample_binned(
+            self.train_bkg_h, self.test_bkg_h, self.train_bkg_e, self.test_bkg_e
+        )
 
     @property
     def ks_sig_test(self) -> float:
@@ -239,6 +243,15 @@ class ResponseHistograms:
             edgecolor="C0",
             color="C0",
         )
+        ax.errorbar(
+            bc,
+            self.test_sig_h,
+            yerr=self.test_sig_e,
+            label=r"$tW$ (test)",
+            color="C0",
+            fmt="o",
+            markersize=4,
+        )
         ax.hist(
             bc,
             bins=self.bins,
@@ -248,15 +261,6 @@ class ResponseHistograms:
             alpha=0.4,
             edgecolor="C3",
             color="C3",
-        )
-        ax.errorbar(
-            bc,
-            self.test_sig_h,
-            yerr=self.test_sig_e,
-            label=r"$tW$ (test)",
-            color="C0",
-            fmt="o",
-            markersize=4,
         )
         ax.errorbar(
             bc,
@@ -272,8 +276,15 @@ class ResponseHistograms:
         else:
             ax.set_xlim([self.bins[0], self.bins[-1]])
         ax.set_ylim([0, 1.35 * ax.get_ylim()[1]])
-        ax.legend(loc="upper right", ncol=2, frameon=False, numpoints=1)
+        ax.legend(loc="upper right", ncol=1, frameon=False, numpoints=1)
+        handles, labels = ax.get_legend_handles_labels()
+        handles = [handles[0], handles[2], handles[1], handles[3]]
+        labels = [labels[0], labels[2], labels[1], labels[3]]
+        ax.legend(handles, labels, loc="upper right", ncol=1, frameon=False, numpoints=1)
         ax.set_ylabel("Arbitrary Units")
+        draw_atlas_label(
+            ax, internal_shift=0.19, cme_and_lumi=False, extra_lines=["$tW$ BDT Training"]
+        )
         if xlabel is None:
             if self.response_type == "proba":
                 ax.set_xlabel("Classifier Signal Probability")
@@ -302,40 +313,39 @@ def prepare_from_root(
     Parameters
     ----------
     sig_files : list(str)
-        list of signal ROOT files
+        List of signal ROOT files.
     bkg_files : list(str)
-        list of background ROOT files
+        List of background ROOT files.
     region : Region or str
-        the region where we're going to perform the training
+        Region where we're going to perform the training.
     branches : list(str), optional
-        if not None, we override the list of features defined by the region
+        Override the list of features (usually defined by the region).
     override_selection : str, optional
-        a manual selection string to apply to the dataset (this will override
-        the region defined selection).
+        Manual selection string to apply to the dataset (this will
+        override the region defined selection).
     weight_mean : float, optional
-        scale all weights such that the mean weight is this value. Cannot be
+        Scale all weights such that the mean weight is this value. Cannot be
         used with `weight_scale`.
     weight_scale : float, optional
-        value to scale all weights by, cannot be used with `weight_mean`.
+        Value to scale all weights by, cannot be used with `weight_mean`.
     scale_sum_weights : bool
-        scale sum of weights of signal to be sum of weights of background
+        Scale sum of weights of signal to be sum of weights of background.
     use_campaign_weight : bool
-        see the parameter description for
-        :py:func:`tdub.frames.iterative_selection`
+        See the parameter description for :py:func:`tdub.frames.iterative_selection`.
     use_tptrw : bool
-        apply the top pt reweighing factor.
+        Apply the top pt reweighing factor.
     test_case_size : int, optional
-        if defined, prepare a small test case dataset using this many background
-        and training samples
+        Prepare a small test case dataset using this many training and
+        testing samples.
 
     Returns
     -------
     pandas.DataFrame
-       Event feature matrix
+       Event feature matrix.
     numpy.ndarray
-       Event labels (0 for background; 1 for signal)
+       Event labels (0 for background; 1 for signal).
     numpy.ndarray
-       Event weights
+       Event weights.
 
     Examples
     --------
@@ -769,11 +779,17 @@ def single_training(
         fig_imp.savefig("imp.pdf")
 
     # Histograms: plot and extract information from them
-    proba_histograms = ResponseHistograms("proba", model, X_train, X_test, y_train, y_test, w_train, w_test)
+    proba_histograms = ResponseHistograms(
+        "proba", model, X_train, X_test, y_train, y_test, w_train, w_test
+    )
     if not use_sklearn:
-        pred_histograms = ResponseHistograms("predict", model, X_train, X_test, y_train, y_test, w_train, w_test)
+        pred_histograms = ResponseHistograms(
+            "predict", model, X_train, X_test, y_train, y_test, w_train, w_test
+        )
     else:
-        pred_histograms = ResponseHistograms("decision_function", model, X_train, X_test, y_train, y_test, w_train, w_test)
+        pred_histograms = ResponseHistograms(
+            "decision_function", model, X_train, X_test, y_train, y_test, w_train, w_test
+        )
     fig_pred, ax_pred = pred_histograms.draw()
     fig_proba, ax_proba = proba_histograms.draw()
     fig_pred.subplots_adjust(bottom=0.125, left=0.15)
