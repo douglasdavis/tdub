@@ -10,8 +10,8 @@ Class Summary
 
 .. autosummary::
 
-   SingleTrainingSummary
    ResponseHistograms
+   SingleTrainingSummary
 
 Function Summary
 ^^^^^^^^^^^^^^^^
@@ -30,6 +30,12 @@ Function Summary
 
 Reference
 ^^^^^^^^^
+
+.. autoclass:: ResponseHistograms
+   :members:
+
+.. autoclass:: SingleTrainingSummary
+   :members:
 
 .. autofunction:: prepare_from_root
 .. autofunction:: folded_training

@@ -102,7 +102,8 @@ class ResponseHistograms:
     ----------
     response_type : str
         Models provide different types of response, like a raw
-        prediction or a probability of signal. This class supports
+        prediction or a probability of signal. This class supports:
+
         - `"predict"` (for LGBM),
         - `"decision_function"` (for Scikit-learn)
         - `"proba"` (for either).
@@ -190,22 +191,46 @@ class ResponseHistograms:
 
     @property
     def ks_sig_test(self) -> float:
-        """Two sample binned KS test for signal."""
+        """Two sample binned KS test for signal.
+
+        Returns
+        -------
+        float
+            The signal KS-test test value.
+        """
         return round(float(self.ks_sig[0]), 5)
 
     @property
     def ks_sig_pval(self) -> float:
-        """Two sample binned KS p-value for signal."""
+        """Two sample binned KS p-value for signal.
+
+        Returns
+        -------
+        float
+            The signal KS-test p-value.
+        """
         return round(float(self.ks_sig[1]), 5)
 
     @property
     def ks_bkg_test(self) -> float:
-        """Two sample binned KS test for background."""
+        """Two sample binned KS test for background.
+
+        Returns
+        -------
+        float
+            The background KS-test test value.
+        """
         return round(float(self.ks_bkg[0]), 5)
 
     @property
     def ks_bkg_pval(self) -> float:
-        """Two sample binned KS p-value for background."""
+        """Two sample binned KS p-value for background.
+
+        Returns
+        -------
+        float
+            The background KS-test p-value.
+        """
         return round(float(self.ks_bkg[1]), 5)
 
     def draw(
@@ -215,8 +240,8 @@ class ResponseHistograms:
 
         Parameters
         ----------
-        ax : plt.Axes, optional
-            Predefined matplotlib axes to use
+        ax : matplotlib.axes.Axes, optional
+            Predefined matplotlib axes to use.
         xlabel : str, optional
             Override the automated xlabel definition.
 
