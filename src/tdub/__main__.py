@@ -29,6 +29,12 @@ def cli():
 @click.argument("region", type=str)
 @click.argument("outdir", type=click.Path())
 @click.option(
+    "-p",
+    "--pre-exec",
+    type=click.Path(resolve_path=True),
+    help="Python code to pre-execute",
+)
+@click.option(
     "-n",
     "--nlo-method",
     type=str,
@@ -45,7 +51,7 @@ def cli():
     "-s",
     "--test-size",
     type=float,
-    default=0.33,
+    default=0.40,
     help="training test size",
     show_default=True,
 )
@@ -57,7 +63,7 @@ def cli():
     help="number of early stopping rounds",
     show_default=True,
 )
-@click.option("-u", "--use-dilep", is_flag=True, help="train with dilepton samples")
+@click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
 @click.option("-k", "--use-sklearn", is_flag=True, help="use sklearn instead of lgbm")
 @click.option(
     "--learning-rate", type=float, required=True, help="learning_rate model parameter"
@@ -72,6 +78,7 @@ def single(
     datadir,
     region,
     outdir,
+    pre_exec,
     nlo_method,
     override_selection,
     use_tptrw,
@@ -87,7 +94,9 @@ def single(
     reg_lambda,
 ):
     """Execute a single training round."""
-    # fmt: on
+    if pre_exec is not None:
+        exec(PosixPath(pre_exec).read_text())
+
     from tdub.ml_train import single_training, prepare_from_root
     from tdub.data import avoids_for, quick_files
     from tdub.frames import drop_cols
@@ -137,6 +146,12 @@ def single(
 @click.argument("region", type=str)
 @click.argument("workspace", type=click.Path(exists=False))
 @click.option(
+    "-p",
+    "--pre-exec",
+    type=click.Path(resolve_path=True),
+    help="Python code to pre-execute",
+)
+@click.option(
     "-n",
     "--nlo-method",
     type=str,
@@ -157,7 +172,15 @@ def single(
 )
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
-@click.option("-u", "--use-dilep", is_flag=True, help="train with dilepton samples")
+@click.option(
+    "-s",
+    "--test-size",
+    type=float,
+    default=0.40,
+    help="training test size",
+    show_default=True,
+)
+@click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
 @click.option("--overwrite", is_flag=True, help="overwrite existing workspace")
 @click.option("--and-submit", is_flag=True, help="submit the condor jobs")
 @click.option(
@@ -169,11 +192,13 @@ def scan(
     datadir,
     region,
     workspace,
+    pre_exec,
     nlo_method,
     early_stop,
     override_selection,
     use_tptrw,
     ignore_list,
+    test_size,
     use_dilep,
     overwrite,
     and_submit,
@@ -222,6 +247,10 @@ def scan(
         ignore_list = "_NONE"
     else:
         ignore_list = str(PosixPath(ignore_list).resolve())
+    if pre_exec is None:
+        pre_exec = "_NONE"
+    else:
+        pre_exec = str(PosixPath(pre_exec).resolve())
 
     import itertools
 
@@ -239,7 +268,7 @@ def scan(
         )
         outdir = ws / "res" / f"{i:04d}_{suffix}"
         arglist = (
-            "{} {} {} -n {} -x {} -i {} "
+            "{} {} {} -s {} -n {} -x {} -i {} -p {} "
             "--learning-rate {} "
             "--num-leaves {} "
             "--min-child-samples {} "
@@ -252,9 +281,11 @@ def scan(
             datadir,
             region,
             outdir,
+            test_size,
             nlo_method,
             override_sel,
             ignore_list,
+            pre_exec,
             learning_rate,
             num_leaves,
             min_child_samples,
@@ -262,10 +293,11 @@ def scan(
             reg_lambda,
             early_stop,
             "-t " if use_tptrw else "",
-            "-u " if use_dilep else "",
+            "-d " if use_dilep else "",
         )
         arglist = arglist.replace("-x _NONE ", "")
         arglist = arglist.replace("-i _NONE ", "")
+        arglist = arglist.replace("-p _NONE ", "")
         runs.append(arglist)
         i += 1
 

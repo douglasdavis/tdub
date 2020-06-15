@@ -505,7 +505,7 @@ def tdub_train_axes(
 
 def sklearn_gen_classifier(
     early_stopping_rounds: int = 10,
-    validation_fraction: float = 0.25,
+    validation_fraction: float = 0.33,
     train_axes: Optional[Dict[str, Any]] = None,
     **clf_params,
 ) -> BaseEstimator:
@@ -633,7 +633,7 @@ def lgbm_train_classifier(
     X_train: Any,
     y_train: Any,
     w_train: Any,
-    validation_fraction: float = 0.25,
+    validation_fraction: float = 0.33,
     early_stopping_rounds: int = 10,
     **fit_params,
 ) -> BaseEstimator:
@@ -684,7 +684,7 @@ def single_training(
     weights: np.ndarray,
     train_axes: Dict[str, Any],
     output_dir: Union[str, os.PathLike],
-    test_size: float = 0.33,
+    test_size: float = 0.40,
     random_state: int = 414,
     early_stopping_rounds: Optional[int] = None,
     extra_summary_entries: Optional[Dict[str, Any]] = None,
