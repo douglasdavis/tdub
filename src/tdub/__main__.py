@@ -591,9 +591,8 @@ def apply_all(
 
     ws = PosixPath(workspace).resolve()
 
-    outpath = PosixPath(outdir)
-    outpath_empty = len(os.listdir(outpath)) == 0
-    outpath.mkdir(exist_ok=outpath_empty)
+    outpath = PosixPath(outdir).resolve()
+    outpath.mkdir(exist_ok=True)
 
     datapath = PosixPath(datadir).resolve(strict=True)
     all_files = glob.glob(f"{datapath}/*.root")
