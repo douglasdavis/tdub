@@ -671,10 +671,6 @@ def soverb(datadir, selections, use_tptrw):
 @click.option("-o", "outdir", type=str, default="auto")
 def rex_plot(workspace, outdir):
     """Generate plots from TRExFitter WORKSPACE using METADATA."""
-
-    import requests
-    import re
-    import yaml
     import tdub.rex
     import tdub.config
 
