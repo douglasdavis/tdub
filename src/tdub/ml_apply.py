@@ -14,19 +14,6 @@ import pandas as pd
 from sklearn.model_selection import KFold
 from sklearn.base import BaseEstimator
 
-# fmt: off
-try:
-    import lightgbm as lgbm
-except ImportError:
-    class lgbm:
-        LGBMClassifier = None
-try:
-    import xgboost as xgb
-except ImportError:
-    class xgb:
-        XGBClassifier = None
-# fmt: on
-
 # tdub
 from tdub.data import Region
 
