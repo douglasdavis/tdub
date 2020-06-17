@@ -137,7 +137,6 @@ def scan(
     use_dilep,
     overwrite,
     and_submit,
-    scan_params,
 ):
     """Perform a parameter scan via condor jobs.
 
@@ -195,6 +194,13 @@ def scan(
         pd.get("min_child_samples"),
         pd.get("reg_lambda"),
     )
+
+    log.info("Scan grid:")
+    log.info(" - max_depth: {}".format(pd.get("max_depth")))
+    log.info(" - num_leaves: {}".format(pd.get("num_leaves")))
+    log.info(" - learning_rate: {}".format(pd.get("learning_rate")))
+    log.info(" - min_child_samples: {}".format(pd.get("min_child_samples")))
+    log.info(" - reg_lambda: {}".format(pd.get("reg_lambda")))
 
     for (max_depth, num_leaves, learning_rate, min_child_samples, reg_lambda) in itr:
         suffix = "{}-{}-{}-{}-{}".format(
