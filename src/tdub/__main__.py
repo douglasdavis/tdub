@@ -28,52 +28,20 @@ def cli():
 @click.argument("datadir", type=click.Path(exists=True))
 @click.argument("region", type=str)
 @click.argument("outdir", type=click.Path())
-@click.option(
-    "-p",
-    "--pre-exec",
-    type=click.Path(resolve_path=True),
-    help="Python code to pre-execute",
-)
-@click.option(
-    "-n",
-    "--nlo-method",
-    type=str,
-    default="DR",
-    help="tW simluation NLO method",
-    show_default=True,
-)
-@click.option(
-    "-x", "--override-selection", type=str, help="override selection with contents of file"
-)
+@click.option("-p", "--pre-exec", type=click.Path(resolve_path=True), help="Python code to pre-execute")
+@click.option("-n", "--nlo-method", type=str, default="DR", help="tW simluation NLO method", show_default=True)
+@click.option("-x", "--override-selection", type=str, help="override selection with contents of file")
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
-@click.option(
-    "-s",
-    "--test-size",
-    type=float,
-    default=0.40,
-    help="training test size",
-    show_default=True,
-)
-@click.option(
-    "-e",
-    "--early-stop",
-    type=int,
-    default=10,
-    help="number of early stopping rounds",
-    show_default=True,
-)
+@click.option("-s", "--test-size", type=float, default=0.40, help="training test size", show_default=True)
+@click.option("-e", "--early-stop", type=int, default=10, help="number of early stopping rounds", show_default=True)
 @click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
 @click.option("-k", "--use-sklearn", is_flag=True, help="use sklearn instead of lgbm")
-@click.option(
-    "--learning-rate", type=float, required=True, help="learning_rate model parameter"
-)
-@click.option("--num-leaves", type=int, required=True, help="num_leaves model parameter")
-@click.option(
-    "--min-child-samples", type=int, required=True, help="min_child_samples model parameter"
-)
-@click.option("--max-depth", type=int, required=True, help="max_depth model parameter")
-@click.option("--reg-lambda", type=float, required=True, help="lambda (L2) regularization")
+@click.option("--learning-rate", type=float, default=0.1, help="learning_rate model parameter", show_default=True)
+@click.option("--num-leaves", type=int, default=31, help="num_leaves model parameter", show_default=True)
+@click.option("--min-child-samples", type=int, default=50, help="min_child_samples model parameter", show_default=True)
+@click.option("--max-depth", type=int, default=5, help="max_depth model parameter", show_default=True)
+@click.option("--reg-lambda", type=float, default=0, help="lambda (L2) regularization", show_default=True)
 def single(
     datadir,
     region,
@@ -145,49 +113,16 @@ def single(
 @click.argument("datadir", type=click.Path(exists=True, resolve_path=True))
 @click.argument("region", type=str)
 @click.argument("workspace", type=click.Path(exists=False))
-@click.option(
-    "-p",
-    "--pre-exec",
-    type=click.Path(resolve_path=True),
-    help="Python code to pre-execute",
-)
-@click.option(
-    "-n",
-    "--nlo-method",
-    type=str,
-    default="DR",
-    help="tW simluation NLO method",
-    show_default=True,
-)
-@click.option(
-    "-e",
-    "--early-stop",
-    type=int,
-    default=10,
-    help="number of early stopping rounds",
-    show_default=True,
-)
-@click.option(
-    "-x", "--override-selection", type=str, help="override selection with contents of file"
-)
+@click.option("-p", "--pre-exec", type=click.Path(resolve_path=True), help="Python code to pre-execute")
+@click.option("-n", "--nlo-method", type=str, default="DR", help="tW simluation NLO method", show_default=True)
+@click.option("-e", "--early-stop", type=int, default=10, help="number of early stopping rounds", show_default=True)
+@click.option("-x", "--override-selection", type=str, help="override selection with contents of file")
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
-@click.option(
-    "-s",
-    "--test-size",
-    type=float,
-    default=0.40,
-    help="training test size",
-    show_default=True,
-)
+@click.option("-s", "--test-size", type=float, default=0.40, help="training test size", show_default=True)
 @click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
 @click.option("--overwrite", is_flag=True, help="overwrite existing workspace")
 @click.option("--and-submit", is_flag=True, help="submit the condor jobs")
-@click.option(
-    "--scan-params",
-    type=click.Path(exists=True),
-    help="override default scan parameters with json file",
-)
 def scan(
     datadir,
     region,
@@ -213,24 +148,24 @@ def scan(
 
     """
 
+    if pre_exec is not None:
+        exec(PosixPath(pre_exec).read_text())
+
     # from tdub.batch import (
     #     create_condor_workspace,
     #     condor_preamble,
     #     add_condor_arguments,
     #     condor_submit,
     # )
-    from tdub.batch import create_condor_workspace
-    from tdub.config import DEFAULT_SCAN_PARAMETERS
 
-    if scan_params is None:
-        pd = DEFAULT_SCAN_PARAMETERS
-    else:
-        pd = json.loads(PosixPath(scan_params).read_text())
+    from tdub.batch import create_condor_workspace
+    import tdub.config
+    import itertools
 
     ws = create_condor_workspace(workspace, overwrite=overwrite)
     (ws / "res").mkdir()
 
-    log.info(f"Preparing a scan in {workspace}")
+    log.info(f"Preparing a scan; results saved to {workspace}")
     log.info(f"  - region: {region}")
     log.info(f"  - NLO method: {nlo_method}")
     log.info("  - Using {} samples".format("dilepton" if use_dilep else "inclusive"))
@@ -252,8 +187,7 @@ def scan(
     else:
         pre_exec = str(PosixPath(pre_exec).resolve())
 
-    import itertools
-
+    pd = tdub.config.DEFAULT_SCAN_PARAMETERS
     itr = itertools.product(
         pd.get("max_depth"),
         pd.get("num_leaves"),
@@ -360,14 +294,7 @@ def scan(
 @cli.command("train-check", context_settings=dict(max_content_width=92))
 @click.argument("workspace", type=click.Path(exists=True))
 @click.option("-p", "--print-top", is_flag=True, help="Print the top results")
-@click.option(
-    "-n",
-    "--n-res",
-    type=int,
-    default=10,
-    help="Number of top results to print",
-    show_default=True,
-)
+@click.option("-n", "--n-res", type=int, default=10, help="Number of top results to print", show_default=True)
 def check(workspace, print_top, n_res):
     """Check the results of a parameter scan WORKSPACE."""
     from tdub.ml_train import SingleTrainingSummary
@@ -420,22 +347,8 @@ def check(workspace, print_top, n_res):
 @click.argument("scandir", type=click.Path(exists=True))
 @click.argument("datadir", type=click.Path(exists=True))
 @click.option("-t", "--use-tptrw", is_flag=True, help="use top pt reweighting")
-@click.option(
-    "-r",
-    "--random-seed",
-    type=int,
-    default=414,
-    help="random seed for folding",
-    show_default=True,
-)
-@click.option(
-    "-n",
-    "--n-splits",
-    type=int,
-    default=3,
-    help="number of splits for folding",
-    show_default=True,
-)
+@click.option("-r", "--random-seed", type=int, default=414, help="random seed for folding", show_default=True)
+@click.option("-n", "--n-splits", type=int, default=3, help="number of splits for folding", show_default=True)
 def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
     """Perform a folded training based on a hyperparameter scan result."""
     from tdub.ml_train import folded_training, prepare_from_root
@@ -484,20 +397,8 @@ def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
 @click.argument("infile", type=click.Path(exists=True))
 @click.argument("arrname", type=str)
 @click.argument("outdir", type=click.Path())
-@click.option(
-    "-f",
-    "--fold-results",
-    type=click.Path(exists=True),
-    multiple=True,
-    help="fold output directories",
-)
-@click.option(
-    "-s",
-    "--single-results",
-    type=click.Path(exists=True),
-    multiple=True,
-    help="single result dirs",
-)
+@click.option("-f", "--fold-results", type=click.Path(exists=True), multiple=True, help="fold output directories")
+@click.option("-s", "--single-results", type=click.Path(exists=True), multiple=True, help="single result dirs")
 def apply_single(infile, arrname, outdir, fold_results=None, single_results=None):
     """Generate BDT response array for INFILE and save to .npy file.
 
@@ -550,20 +451,8 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
 @click.argument("arrname", type=str)
 @click.argument("outdir", type=click.Path(resolve_path=True))
 @click.argument("workspace", type=click.Path())
-@click.option(
-    "-f",
-    "--fold-results",
-    type=click.Path(exists=True, resolve_path=True),
-    multiple=True,
-    help="fold output directories",
-)
-@click.option(
-    "-s",
-    "--single-results",
-    type=click.Path(exists=True, resolve_path=True),
-    multiple=True,
-    help="single result dirs",
-)
+@click.option("-f", "--fold-results", type=click.Path(exists=True, resolve_path=True), multiple=True, help="fold output directories")
+@click.option("-s", "--single-results", type=click.Path(exists=True, resolve_path=True), multiple=True, help="single result dirs")
 @click.option("--and-submit", is_flag=True, help="submit the condor jobs")
 def apply_all(
     datadir,
