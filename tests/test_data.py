@@ -1,4 +1,5 @@
 import pytest
+import uproot
 
 from tdub.data import (
     SampleInfo,
@@ -140,6 +141,17 @@ def test_avoids_for():
     assert avoids_for("r2j2b") == AVOID_IN_CLF_2j2b
     assert avoids_for("2j2b") == AVOID_IN_CLF_2j2b
     assert avoids_for(Region.r2j2b) == AVOID_IN_CLF_2j2b
+
+
+def test_branches_from():
+    f1 = uproot.open("tests/test_data/testfile1.root")
+    f2 = "tests/test_data/testfile1.root"
+    f3 = ["tests/test_data/testfile1.root"]
+    b1 = sorted(branches_from(f1))
+    b2 = sorted(branches_from(f2))
+    b3 = sorted(branches_from(f3))
+    assert b1 == b2
+    assert b2 == b3
 
 
 def test_categorize_branches():
