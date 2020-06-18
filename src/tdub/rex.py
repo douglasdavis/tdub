@@ -191,6 +191,26 @@ def prefit_histograms(
     return histograms
 
 
+def hepdata(
+    wkspace: Union[str, os.PathLike],
+    region: str,
+    stage: str = "pre",
+):
+    """Parse HEPData information.
+
+    Parameters
+    ----------
+    wkspace : str or os.PathLike
+        Path of the TRExFitter workspace
+    region : str
+        Region to get histograms for
+    stage : str
+        Fitting stage (`"pre"` or `"post"`).
+    """
+    yaml_path = PosixPath(wkspace) / "Plots" / f"{region}_{stage}fit.yaml"
+    return yaml.full_load(yaml_path.read_text())
+
+
 def prefit_total_and_uncertainty(
     wkspace: Union[str, os.PathLike], region: str
 ) -> Tuple[ROOT_TGraphAsymmErrors, ROOT_TH1]:
