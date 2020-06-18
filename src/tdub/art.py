@@ -179,12 +179,12 @@ def canvas_from_counts(
     The ``counts`` and ``errors`` dictionaries are expected to have
     the following keys:
 
-    - ``"Data"``
-    - ``"tW_DR"`` or ``"tW"``
-    - ``"ttbar"``
-    - ``"Zjets"``
-    - ``"Diboson"``
-    - ``"MCNP"``
+    - `"Data"`
+    - `"tW_DR"` or `"tW"`
+    - `"ttbar"`
+    - `"Zjets"`
+    - `"Diboson"`
+    - `"MCNP"`
 
     Parameters
     ----------
