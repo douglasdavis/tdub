@@ -174,7 +174,7 @@ def canvas_from_counts(
     logy: bool = False,
     **subplots_kw,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
-    """create a plot canvas given a dictionary of counts and bin edges.
+    """Create a plot canvas given a dictionary of counts and bin edges.
 
     The ``counts`` and ``errors`` dictionaries are expected to have
     the following keys:
