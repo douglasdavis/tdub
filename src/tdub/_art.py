@@ -25,7 +25,7 @@ def setup_style():
     matplotlib.rcParams["figure.figsize"] = (5.8, 5.2)
     matplotlib.rcParams["figure.facecolor"] = "white"
     matplotlib.rcParams["figure.subplot.left"] = 0.125
-    matplotlib.rcParams["figure.subplot.bottom"] = 0.095
+    matplotlib.rcParams["figure.subplot.bottom"] = 0.1075
     matplotlib.rcParams["figure.subplot.right"] = 0.965
     matplotlib.rcParams["figure.subplot.top"] = 0.95
     matplotlib.rcParams["font.size"] = 13
