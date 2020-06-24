@@ -447,7 +447,7 @@ def stack_canvas(
     # stack axes cosmetics
     ax0.set_ylabel("Events", horizontalalignment="right", y=1.0)
     draw_atlas_label(ax0, extra_lines=[meta_text(region, stage)])
-    legend_last_to_first(ax0, ncol=1, loc="upper right")
+    legend_last_to_first(ax0, ncol=2, loc="upper right")
 
     # ratio axes cosmetics
     ax1.set_xlabel(meta_axis_label(region), horizontalalignment="right", x=1.0)

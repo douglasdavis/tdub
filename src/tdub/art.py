@@ -1,7 +1,7 @@
 """Art creation utilities."""
 
 # stdlib
-from typing import Dict, Tuple, Optional, List, Union
+from typing import Any, Dict, Tuple, Optional, List, Union
 import logging
 
 # external
@@ -122,6 +122,8 @@ def draw_uncertainty_bands(
     ax: plt.Axes,
     axr: plt.Axes,
     label: str = "Uncertainty",
+    edgecolor: Any = "mediumblue",
+    zero_threshold: float = 0.25,
 ) -> None:
     """Draw uncertainty bands on both axes in stack plot with a ratio.
 
@@ -137,10 +139,20 @@ def draw_uncertainty_bands(
         Ratio axis
     label : str
         Legend label for the uncertainty.
+    zero_threshold : float
+        When total MC events are below threshold, zero contents and error.
     """
     lo = np.hstack([uncertainty.yerrorslow, uncertainty.yerrorslow[-1]])
     hi = np.hstack([uncertainty.yerrorshigh, uncertainty.yerrorshigh[-1]])
     mc = np.hstack([total_mc.values, total_mc.values[-1]])
+    ratio_y1 = 1 - (lo / mc)
+    ratio_y2 = 1 + (hi / mc)
+    set_to_zero = mc < zero_threshold
+    lo[set_to_zero] = 0.0
+    hi[set_to_zero] = 0.0
+    mc[set_to_zero] = 0.0
+    ratio_y1[set_to_zero] = 0.0
+    ratio_y2[set_to_zero] = 0.0
     ax.fill_between(
         x=total_mc.edges,
         y1=(mc - lo),
@@ -148,15 +160,15 @@ def draw_uncertainty_bands(
         step="post",
         facecolor="none",
         hatch="////",
-        edgecolor="cornflowerblue",
+        edgecolor=edgecolor,
         linewidth=0.0,
         label=label,
         zorder=50,
     )
     axr.fill_between(
         x=total_mc.edges,
-        y1=(1 - lo / mc),
-        y2=(1 + hi / mc),
+        y1=ratio_y1,
+        y2=ratio_y2,
         step="post",
         facecolor=(0, 0, 0, 0.33),
         linewidth=0.0,

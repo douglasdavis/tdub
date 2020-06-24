@@ -22,7 +22,7 @@ def setup_style():
     matplotlib.rcParams["axes.formatter.limits"] = [-4, 4]
     matplotlib.rcParams["axes.formatter.use_mathtext"] = True
     matplotlib.rcParams["axes.labelsize"] = 15
-    matplotlib.rcParams["figure.figsize"] = (6, 5.5)
+    matplotlib.rcParams["figure.figsize"] = (5.8, 5.2)
     matplotlib.rcParams["figure.facecolor"] = "white"
     matplotlib.rcParams["figure.subplot.left"] = 0.125
     matplotlib.rcParams["figure.subplot.bottom"] = 0.095
