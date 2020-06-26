@@ -241,10 +241,10 @@ def scan(
         runs.append(arglist)
         i += 1
 
-    with (ws / "run.sh").open("w") as f:
-        print("#!/bin/bash\n\n", file=f)
+    with (ws / "run.sh").open("w") as outscript:
+        print("#!/bin/bash\n\n", file=outscript)
         for run in runs:
-            print(f"tdub train-single {run}\n", file=f)
+            print(f"tdub train-single {run}\n", file=outscript)
     os.chmod(ws / "run.sh", 0o755)
 
     import pycondor
@@ -537,7 +537,7 @@ def soverb(datadir, selections, use_tptrw):
     """
     from tdub.frames import raw_dataframe, apply_weight_tptrw, satisfying_selection
     from tdub.data import quick_files
-    from tdub.branches import selection_branches
+    from tdub.data import selection_branches
 
     with open(selections, "r") as f:
         selections = json.load(f)
