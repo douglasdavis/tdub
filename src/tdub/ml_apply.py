@@ -150,9 +150,9 @@ class FoldedTrainSummary(BaseTrainSummary):
         column_name : str
             Name to give the BDT response variable.
         do_query : bool
-            Perform a query on the dataframe to select events belonging to
-            the region associated with ``fr`` necessary if the dataframe
-            hasn't been pre-filtered.
+            Perform a query on the dataframe to select events
+            belonging to the region associated with training result;
+            necessary if the dataframe hasn't been pre-filtered.
 
         Examples
         --------
@@ -161,6 +161,7 @@ class FoldedTrainSummary(BaseTrainSummary):
         >>> df = raw_dataframe("/path/to/file.root")
         >>> fr_1j1b = FoldedTrainSummary("/path/to/folded_training_1j1b")
         >>> fr_1j1b.apply_to_dataframe(df, do_query=True)
+
         """
         if df.shape[0] == 0:
             log.info("Dataframe is empty, doing nothing")
@@ -235,9 +236,9 @@ class SingleTrainSummary(BaseTrainSummary):
         column_name : str
             Name to give the BDT response variable.
         do_query : bool
-            Perform a query on the dataframe to select events belonging to
-            the region associated with ``fr`` necessary if the dataframe
-            hasn't been pre-filtered.
+            Perform a query on the dataframe to select events
+            belonging to the region associated with training result;
+            necessary if the dataframe hasn't been pre-filtered.
 
         Examples
         --------
