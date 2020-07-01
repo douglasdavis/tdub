@@ -275,24 +275,24 @@ class SingleTrainSummary(BaseTrainSummary):
             df[column_name] = yhat
 
 
-def build_array(results: List[BaseTrainSummary], df: pd.DataFrame) -> np.ndarray:
+def build_array(summaries: List[BaseTrainSummary], df: pd.DataFrame) -> np.ndarray:
     """Get a NumPy array which is the response for all events in `df`
 
-    This will use the :py:func:`~BaseTrainSummary.apply_to_dataframe` function
-    from the list of results. We query the input dataframe to ensure
-    that we apply to the correct events. If the input dataframe is
-    empty then an empty array is written to disk.
+    This will use the :py:func:`~BaseTrainSummary.apply_to_dataframe`
+    function from the list of summaries. We query the input dataframe
+    to ensure that we apply to the correct events. If the input
+    dataframe is empty then an empty array is written to disk.
 
     Parameters
     ----------
-    results : list(BaseTrainSummary)
-        Sequence of training results to use.
+    summaries : list(BaseTrainSummary)
+        Sequence of training summaries to use.
     df : pandas.DataFrame
         Dataframe of events to use to calculate the response.
 
     Examples
     --------
-    Using folded results:
+    Using folded summaries:
 
     >>> from tdub.apply import FoldedTrainSummary, build_array
     >>> from tdub.frames import raw_dataframe
@@ -302,7 +302,7 @@ def build_array(results: List[BaseTrainSummary], df: pd.DataFrame) -> np.ndarray
     >>> fr_2j2b = FoldedTrainSummary("/path/to/folded_training_2j2b")
     >>> res = build_array([fr_1j1b, fr_2j1b, fr_2j2b], df)
 
-    Using single results:
+    Using single summaries:
 
     >>> from tdub.apply import SingleTrainSummary, build_array
     >>> from tdub.frames import raw_dataframe
@@ -312,13 +312,12 @@ def build_array(results: List[BaseTrainSummary], df: pd.DataFrame) -> np.ndarray
     >>> sr_2j2b = SingleTrainSummary("/path/to/single_training_2j2b")
     >>> res = build_array([sr_1j1b, sr_2j1b, sr_2j2b], df)
     """
-
     if df.shape[0] == 0:
         log.info("build_array: Returning an empty array")
         return np.array([], dtype=np.float64)
 
     colname = "_temp_col"
     log.info(f"The {colname} column will be deleted at the end of this function")
-    for tr in results:
-        tr.apply_to_dataframe(df, column_name=colname, do_query=True)
+    for trsum in summaries:
+        trsum.apply_to_dataframe(df, column_name=colname, do_query=True)
     return df.pop(colname).to_numpy()
