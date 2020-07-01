@@ -21,6 +21,7 @@ Output          = {workspace}/out/$(cluster).$(process)
 Error           = {workspace}/err/$(cluster).$(process)
 Log             = {workspace}/log/$(cluster).$(process)
 request_memory  = {memory}
+GetEnv          = {getenv}
 """
 
 
@@ -79,6 +80,7 @@ def condor_preamble(
     memory: str = "2GB",
     email: str = "ddavis@phy.duke.edu",
     notification: str = "Error",
+    getenv: str = "True",
     to_file: TextIO = None,
     **kwargs,
 ) -> str:
@@ -125,6 +127,7 @@ def condor_preamble(
         memory=memory,
         email=email,
         notification=notification,
+        getenv=getenv,
     )
     for k, v in kwargs.items():
         res += f"{k:<15} = {v}\n"
