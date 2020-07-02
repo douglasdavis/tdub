@@ -249,6 +249,11 @@ def canvas_from_counts(
     ax.errorbar(
         centers, counts["Data"], yerr=errors["Data"], label="Data", fmt="ko", zorder=999
     )
+
+    # colors = ["#9467bd", "#2ca02c", "#ff7f0e", "#d62728", "#1f77b4"]
+    colors = ["#9467bd", "#2ca02c", "#ff7f0e", "#9d0000", "#1f77b4"]
+    labels = ["Non-prompt", "Diboson", "$Z$+jets", "$t\\bar{t}$", "$tW$"]
+
     ax.hist(
         [centers for _ in range(5)],
         bins=bin_edges,
@@ -261,8 +266,8 @@ def canvas_from_counts(
         ],
         histtype="stepfilled",
         stacked=True,
-        label=["Non-prompt", "Diboson", "$Z$+jets", "$t\\bar{t}$", "$tW$"],
-        color=["#9467bd", "#2ca02c", "#ff7f0e", "#d62728", "#1f77b4"],
+        label=labels,
+        color=colors,
     )
     axr.plot([start, stop], [1.0, 1.0], color="gray", linestyle="solid", marker=None)
     axr.errorbar(centers, ratio, yerr=ratio_err, fmt="ko", zorder=999)
