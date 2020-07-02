@@ -563,7 +563,8 @@ def soverb(datadir, selections, use_tptrw):
 @cli.command("rex-plot", context_settings=dict(max_content_width=92))
 @click.argument("workspace", type=click.Path(exists=True))
 @click.option("-o", "outdir", type=str, default="auto")
-def rex_plot(workspace, outdir):
+@click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")
+def rex_plot(workspace, outdir, chisq):
     """Generate plots from TRExFitter WORKSPACE using METADATA."""
     import tdub.rex
     import tdub.config
@@ -575,7 +576,7 @@ def rex_plot(workspace, outdir):
     outdir.mkdir(exist_ok=True)
     tdub.config.download_meta_table()
     tdub.config.set_default_logy()
-    tdub.rex.plot_all_regions(workspace, outdir)
+    tdub.rex.plot_all_regions(workspace, outdir, show_chisq=chisq)
 
 
 def run_cli():

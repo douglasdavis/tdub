@@ -192,9 +192,7 @@ def prefit_histograms(
 
 
 def hepdata(
-    wkspace: Union[str, os.PathLike],
-    region: str,
-    stage: str = "pre",
+    wkspace: Union[str, os.PathLike], region: str, stage: str = "pre",
 ):
     """Parse HEPData information.
 
@@ -397,9 +395,13 @@ def meta_axis_label(region: str) -> str:
 
 
 def stack_canvas(
-    wkspace: Union[str, os.PathLike], region: str, stage: str = "pre", fitname: str = "tW",
+    wkspace: Union[str, os.PathLike],
+    region: str,
+    stage: str = "pre",
+    fitname: str = "tW",
+    show_chisq: bool = True,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
-    """Create a pre- or post-fit plot canvas for a TRExFitter region.
+    r"""Create a pre- or post-fit plot canvas for a TRExFitter region.
 
     Parameters
     ---------
@@ -411,6 +413,8 @@ def stack_canvas(
         Drawing fit stage, ('pre' or 'post').
     fitname : str
         Name of the Fit
+    show_chisq : bool
+        Print :math:`\chi^2` information on ratio canvas.
 
     Returns
     -------
@@ -455,9 +459,10 @@ def stack_canvas(
     if stage == "post":
         ax1.set_ylim([0.9, 1.1])
         ax1.set_yticks([0.9, 0.95, 1.0, 1.05])
-    ax1.text(
-        0.02, 0.8, chisq_text(wkspace, region, stage), transform=ax1.transAxes, size=10
-    )
+    if show_chisq:
+        ax1.text(
+            0.02, 0.8, chisq_text(wkspace, region, stage), transform=ax1.transAxes, size=10
+        )
     ax1.legend(loc="lower left", fontsize=10)
 
     # return objects
@@ -469,8 +474,9 @@ def plot_all_regions(
     outdir: Union[str, os.PathLike],
     stage: str = "both",
     fitname: str = "tW",
+    show_chisq: bool = True,
 ) -> None:
-    """Plot all regions discovered in a workspace.
+    r"""Plot all regions discovered in a workspace.
 
     Parameters
     ----------
@@ -482,13 +488,17 @@ def plot_all_regions(
         Fitting stage (`"pre"`, `"post"`, or `"both"`)
     fitname : str
         Name of the Fit
+    show_chisq : bool
+        Print :math:`\chi^2` information on ratio canvas.
     """
     PosixPath(outdir).mkdir(parents=True, exist_ok=True)
     regions = available_regions(wkspace)
 
     def plot_region_stage(stage):
         for region in regions:
-            fig, ax0, ax1 = stack_canvas(wkspace, region, stage=stage)
+            fig, ax0, ax1 = stack_canvas(
+                wkspace, region, stage=stage, show_chisq=show_chisq
+            )
             output_file = f"{outdir}/{region}_{stage}Fit.pdf"
             fig.savefig(output_file)
             plt.close(fig)
