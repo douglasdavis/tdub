@@ -1,7 +1,7 @@
 tdub.rex
 --------
 
-A module for handling TRExFitter workspaces
+A module for parsing TRExFitter results.
 
 .. currentmodule:: tdub.rex
 
@@ -17,6 +17,7 @@ Function Summary
    meta_axis_label
    meta_text
    plot_all_regions
+   plot_region_stage_ff
    prefit_total_and_uncertainty
    prefit_histogram
    prefit_histograms
@@ -34,6 +35,7 @@ Reference
 .. autofunction:: chisq_text
 .. autofunction:: data_histogram
 .. autofunction:: plot_all_regions
+.. autofunction:: plot_region_stage_ff
 .. autofunction:: meta_axis_label
 .. autofunction:: meta_text
 .. autofunction:: prefit_total_and_uncertainty

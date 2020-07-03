@@ -2,9 +2,10 @@
 
 # stdlib
 import logging
+import multiprocessing
 import os
 from pathlib import PosixPath
-from typing import Dict, Iterable, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 # external
 import matplotlib
@@ -369,25 +370,34 @@ def meta_text(region: str, stage: str) -> str:
     return f"$tW$ Dilepton, {region}, {stage}"
 
 
-def meta_axis_label(region: str) -> str:
+def meta_axis_label(region: str, meta_table: Optional[Dict[str, Any]] = None) -> str:
     """Construct an axis label from metadata table.
 
     Parameters
     ----------
     region : str
         TRExFitter region to use.
+    meta_table : dict, optional
+        Table of metadata for labeling plotting axes. If ``None``
+        (default), the definition stored in the variable
+        ``tdub.config.PLOTTING_META_TABLE`` is used.
 
     Returns
     -------
     str
         Axis label for the region.
     """
-    if tdub.config.PLOTTING_META_TABLE is None:
-        raise ValueError("tdub.config.PLOTTING_META_TABLE must be defined")
     if "VRP" in region:
         region = region[12:]
-    main_label = tdub.config.PLOTTING_META_TABLE["titles"][region]["mpl"]
-    unit_label = tdub.config.PLOTTING_META_TABLE["titles"][region]["unit"]
+    if meta_table is None:
+        if tdub.config.PLOTTING_META_TABLE is None:
+            raise ValueError("tdub.config.PLOTTING_META_TABLE must be defined")
+        else:
+            meta_region = tdub.config.PLOTTING_META_TABLE["titles"][region]
+    else:
+        meta_region = meta_table["titles"][region]
+    main_label = meta_region["mpl"]
+    unit_label = meta_region["unit"]
     if not unit_label:
         return main_label
     else:
@@ -400,6 +410,8 @@ def stack_canvas(
     stage: str = "pre",
     fitname: str = "tW",
     show_chisq: bool = True,
+    meta_table: Optional[Dict[str, Any]] = None,
+    log_patterns: Optional[List[Any]] = None,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
     r"""Create a pre- or post-fit plot canvas for a TRExFitter region.
 
@@ -410,11 +422,15 @@ def stack_canvas(
     region : str
         Region to get error band for.
     stage : str
-        Drawing fit stage, ('pre' or 'post').
+        Drawing fit stage, (`"pre"` or `"post"`).
     fitname : str
         Name of the Fit
     show_chisq : bool
         Print :math:`\chi^2` information on ratio canvas.
+    meta_table : dict, optional
+        Table of metadata for labeling plotting axes.
+    log_patterns : list, optional
+        List of region patterns to use a log scale on y-axis.
 
     Returns
     -------
@@ -439,8 +455,10 @@ def stack_canvas(
     counts = {k: v.values for k, v in histograms.items()}
     errors = {k: np.sqrt(v.variances) for k, v in histograms.items()}
 
+    if log_patterns is None:
+        log_patterns = tdub.config.PLOTTING_LOGY
     logy = False
-    for pat in tdub.config.PLOTTING_LOGY:
+    for pat in log_patterns:
         if pat.search(region) is not None:
             logy = True
 
@@ -454,7 +472,7 @@ def stack_canvas(
     legend_last_to_first(ax0, ncol=2, loc="upper right")
 
     # ratio axes cosmetics
-    ax1.set_xlabel(meta_axis_label(region), horizontalalignment="right", x=1.0)
+    ax1.set_xlabel(meta_axis_label(region, meta_table), horizontalalignment="right", x=1.0)
     ax1.set_ylabel("Data/MC")
     if stage == "post":
         ax1.set_ylim([0.9, 1.1])
@@ -469,10 +487,37 @@ def stack_canvas(
     return fig, ax0, ax1
 
 
+def plot_region_stage_ff(args):
+    """A free (multiprocessing compatible) function to plot a region + stage.
+
+    This function is designed to be used internally by
+    :py:func:`plot_all_regions`, where it is sent to a multiprocessing
+    pool. Not meant for generic usage.
+
+    Parameters
+    ----------
+    args: list(Any)
+        Arguments passed to :py:func:`stack_canvas`.
+    """
+    fig, ax0, ax1 = stack_canvas(
+        wkspace=args[0],
+        region=args[1],
+        stage=args[3],
+        show_chisq=args[4],
+        meta_table=args[5],
+        log_patterns=args[6],
+    )
+    output_file = f"{args[2]}/{args[1]}_{args[3]}Fit.pdf"
+    fig.savefig(output_file)
+    plt.close(fig)
+    del fig, ax0, ax1
+    log.info("Created %s" % output_file)
+
+
 def plot_all_regions(
     wkspace: Union[str, os.PathLike],
     outdir: Union[str, os.PathLike],
-    stage: str = "both",
+    stage: str = "pre",
     fitname: str = "tW",
     show_chisq: bool = True,
 ) -> None:
@@ -485,7 +530,7 @@ def plot_all_regions(
     outdir : str or os.PathLike
         Path to save resulting files to
     stage : str
-        Fitting stage (`"pre"`, `"post"`, or `"both"`)
+        Fitting stage (`"pre"` or `"post"`).
     fitname : str
         Name of the Fit
     show_chisq : bool
@@ -493,24 +538,11 @@ def plot_all_regions(
     """
     PosixPath(outdir).mkdir(parents=True, exist_ok=True)
     regions = available_regions(wkspace)
-
-    def plot_region_stage(stage):
-        for region in regions:
-            fig, ax0, ax1 = stack_canvas(
-                wkspace, region, stage=stage, show_chisq=show_chisq
-            )
-            output_file = f"{outdir}/{region}_{stage}Fit.pdf"
-            fig.savefig(output_file)
-            plt.close(fig)
-            del fig, ax0, ax1
-            log.info("Created %s" % output_file)
-
-    if stage == "both":
-        plot_region_stage("pre")
-        plot_region_stage("post")
-    elif stage == "pre":
-        plot_region_stage("pre")
-    elif stage == "post":
-        plot_region_stage("post")
-    else:
-        raise ValueError("stage can be 'both', 'pre', or 'post'")
+    meta_table = tdub.config.PLOTTING_META_TABLE.copy()
+    log_patterns = tdub.config.PLOTTING_LOGY.copy()
+    args = [
+        [wkspace, region, outdir, stage, show_chisq, meta_table, log_patterns]
+        for region in regions
+    ]
+    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    pool.map(plot_region_stage_ff, args)
