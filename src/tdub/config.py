@@ -249,12 +249,24 @@ dict, optional: Plotting metadata table.
 """
 
 
-def download_meta_table():
+def download_or_load_meta_table():
     """Load metadata from network to define PLOTTING_META_TABLE."""
     global PLOTTING_META_TABLE
     global META_TABLE_URL
-    import requests, yaml # noqa
-    table_content = requests.get(META_TABLE_URL).content
+    import platform, pathlib, requests, yaml  # noqa
+
+    if platform.system() == "Darwin":
+        possible_local_file = pathlib.PosixPath(
+            "/Users/ddavis/atlas/cernbox/ddavis/www/tdub_data/meta.yml"
+        )
+    else:
+        possible_local_file = pathlib.PosixPath(
+            "/ddd/atlas/cernbox/ddavis/www/tdub_data/meta.yml"
+        )
+    try:
+        table_content = possible_local_file.read_text()
+    except FileNotFoundError:
+        table_content = requests.get(META_TABLE_URL).content
     PLOTTING_META_TABLE = yaml.full_load(table_content)
 
 
@@ -267,7 +279,8 @@ list(str): Plots (defined as TRExFitter Regions) to use log scale.
 def set_default_logy():
     """Set a `sensible default` PLOTTING_LOGY value."""
     global PLOTTING_LOGY
-    import re # noqa
+    import re  # noqa
+
     PLOTTING_LOGY = [
         re.compile(r"genericMT2$"),
     ]
