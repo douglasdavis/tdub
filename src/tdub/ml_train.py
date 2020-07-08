@@ -791,6 +791,8 @@ def single_training(
     fig_roc.subplots_adjust(bottom=0.125, left=0.15)
     fig_roc.savefig("roc.pdf")
 
+    importances_gain = {}
+    importances_split = {}
     # Plot Importances
     if not use_sklearn:
         fig_imp, (ax_imp_gain, ax_imp_split) = plt.subplots(2, 1)
@@ -802,6 +804,16 @@ def single_training(
         ax_imp_split.set_title("")
         fig_imp.subplots_adjust(left=0.475, top=0.975, bottom=0.09, right=0.925)
         fig_imp.savefig("imp.pdf")
+        imp_gain = model.booster_.feature_importance(importance_type="gain")
+        imp_split = model.booster_.feature_importance(importance_type="split")
+        feat_name = model.booster_.feature_name()
+        imp_gain = np.array(imp_gain, dtype=np.float64)
+        imp_split = np.array(imp_split, dtype=np.float64)
+        imp_gain *= (1.0 / np.sum(imp_gain))
+        imp_split *= (1.0 /  np.sum(imp_split))
+        for n, g, s in zip(feat_name, imp_gain, imp_split):
+            importances_gain[n] = float(g)
+            importances_split[n] = float(s)
 
     # Histograms: plot and extract information from them
     proba_histograms = ResponseHistograms(
@@ -841,6 +853,9 @@ def single_training(
     summary["set_params"] = train_axes
     summary["all_params"] = model.get_params()
     summary["best_iteration"] = -1
+    summary["importances_gain"] = importances_gain
+    summary["importances_split"] = importances_split
+
     if early_stopping_rounds is not None:
         if use_sklearn:
             summary["best_iteration"] = int(model.n_iter_)

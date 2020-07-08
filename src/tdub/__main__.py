@@ -580,9 +580,41 @@ def rex_plot(workspace, outdir, chisq):
     tdub.rex.plot_all_regions(workspace, outdir, stage="post", show_chisq=chisq)
 
 
+@cli.command("imp-tables", context_settings=dict(max_content_width=92))
+@click.argument("summary-file", type=click.Path(exists=True))
+def imp_tables(summary_file):
+    import tdub.config
+    import json
+    from textwrap import dedent
+    tdub.config.download_or_load_meta_table()
+    summary = json.loads(PosixPath(summary_file).read_text())
+    imp_gain = summary["importances_gain"]
+    imp_split = summary["importances_split"]
+    names = imp_gain.keys()
+    imp_gain = [round(x, 4) for x in imp_gain.values()]
+    imp_split = [round(x, 4) for x in imp_split.values()]
+    imp_gain, names, imp_split = (list(reversed(t)) for t in zip(*sorted(zip(imp_gain, names, imp_split))))
+    print(dedent("""\
+    \\begin{table}[htbp]
+      \\begin{center}
+        \\caption{XXX}
+        \\label{XXX}
+        \\begin{tabular}{lcc}
+          \\toprule
+          Variable & Importance (gain) & Importance (split) \\\\
+          \\midrule"""))
+    for n, g, s in zip(names, imp_gain, imp_split):
+        print("      {} & {} & {} \\\\".format(tdub.config.PLOTTING_META_TABLE["titles"][n]["mpl"], g, s))
+    print(dedent("""\
+          \\bottomrule
+        \\end{tabular}
+      \\end{center}
+    \\end{table}
+    """))
+
+
 def run_cli():
     import tdub.config
-
     tdub.config.AVOID_IN_CLF_1j1b = []
     tdub.config.AVOID_IN_CLF_2j1b = []
     tdub.config.AVOID_IN_CLF_2j2b = []
