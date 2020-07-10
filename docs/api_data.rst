@@ -35,8 +35,6 @@ Reference
 .. autoclass:: Region
    :inherited-members:
 
-.. autofunction:: tdub.data.Region.from_str
-
 .. autoclass:: SampleInfo
    :members:
 

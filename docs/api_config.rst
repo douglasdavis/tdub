@@ -29,8 +29,8 @@ Function Summary
 
 .. autosummary::
 
-   download_meta_table
-   set_default_logy
+   init_meta_table
+   init_meta_logy
 
 Constant Reference
 ^^^^^^^^^^^^^^^^^^
@@ -64,5 +64,5 @@ Constant Reference
 Function Reference
 ^^^^^^^^^^^^^^^^^^
 
-.. autofunction:: download_meta_table
-.. autofunction:: set_default_logy
+.. autofunction:: init_meta_table
+.. autofunction:: init_meta_logy

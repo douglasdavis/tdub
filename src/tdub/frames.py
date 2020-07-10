@@ -126,7 +126,7 @@ def iterative_selection(
     keep_category : str, optional
         If not ``None``, the selected dataframe(s) will only include
         columns which are part of the given category (see
-        :py:func:`tdub.branches.categorize_branches`). The weight branch
+        :py:func:`tdub.data.categorize_branches`). The weight branch
         is always kept.
     exclude_avoids : bool
         Exclude branches defined by :py:data:`tdub.config.AVOID_IN_CLF`.

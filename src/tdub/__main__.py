@@ -574,8 +574,8 @@ def rex_plot(workspace, outdir, chisq):
     else:
         outdir = PosixPath(outdir)
     outdir.mkdir(exist_ok=True)
-    tdub.config.download_or_load_meta_table()
-    tdub.config.set_default_logy()
+    tdub.config.init_meta_table()
+    tdub.config.init_meta_logy()
     tdub.rex.plot_all_regions(workspace, outdir, stage="pre", show_chisq=chisq)
     tdub.rex.plot_all_regions(workspace, outdir, stage="post", show_chisq=chisq)
 
@@ -586,7 +586,7 @@ def imp_tables(summary_file):
     import tdub.config
     import json
     from textwrap import dedent
-    tdub.config.download_or_load_meta_table()
+    tdub.config.init_meta_table()
     summary = json.loads(PosixPath(summary_file).read_text())
     imp_gain = summary["importances_gain"]
     imp_split = summary["importances_split"]

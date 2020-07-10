@@ -249,7 +249,7 @@ dict, optional: Plotting metadata table.
 """
 
 
-def download_or_load_meta_table():
+def init_meta_table():
     """Load metadata from network to define PLOTTING_META_TABLE."""
     global PLOTTING_META_TABLE
     global META_TABLE_URL
@@ -276,7 +276,7 @@ list(str): Plots (defined as TRExFitter Regions) to use log scale.
 """
 
 
-def set_default_logy():
+def init_meta_logy():
     """Set a `sensible default` PLOTTING_LOGY value."""
     global PLOTTING_LOGY
     import re  # noqa
