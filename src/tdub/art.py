@@ -15,17 +15,11 @@ from uproot_methods.classes.TH1 import Methods as ROOT_TH1
 
 # tdub
 from tdub import setup_logging
-import tdub._art
 import tdub.hist
 
 
 setup_logging()
 log = logging.getLogger(__name__)
-
-
-def setup_tdub_style():
-    """Modify matplotlib's rcParams."""
-    tdub._art.setup_style()
 
 
 def adjust_figure(
@@ -285,3 +279,48 @@ def canvas_from_counts(
         ax.set_ylim([0, ax.get_ylim()[1] * 1.375])
 
     return fig, ax, axr
+
+
+def setup_tdub_style():
+    """Modify matplotlib's rcParams."""
+    matplotlib.rcParams["font.sans-serif"] = [
+        "Helvetica",
+        "helvetica",
+        "Nimbus Sans L",
+        "FreeSans",
+    ]
+    matplotlib.rcParams["axes.formatter.limits"] = [-4, 4]
+    matplotlib.rcParams["axes.formatter.use_mathtext"] = True
+    matplotlib.rcParams["axes.labelsize"] = 15
+    matplotlib.rcParams["figure.figsize"] = (5.8, 5.2)
+    matplotlib.rcParams["figure.facecolor"] = "white"
+    matplotlib.rcParams["figure.subplot.left"] = 0.125
+    matplotlib.rcParams["figure.subplot.bottom"] = 0.1075
+    matplotlib.rcParams["figure.subplot.right"] = 0.965
+    matplotlib.rcParams["figure.subplot.top"] = 0.95
+    matplotlib.rcParams["font.size"] = 13
+    matplotlib.rcParams["legend.frameon"] = False
+    matplotlib.rcParams["legend.numpoints"] = 1
+    matplotlib.rcParams["legend.fontsize"] = 11
+    matplotlib.rcParams["legend.handlelength"] = 1.5
+    matplotlib.rcParams["lines.linewidth"] = 1
+    matplotlib.rcParams["xtick.top"] = True
+    matplotlib.rcParams["ytick.right"] = True
+    matplotlib.rcParams["xtick.direction"] = "in"
+    matplotlib.rcParams["ytick.direction"] = "in"
+    matplotlib.rcParams["xtick.labelsize"] = 13
+    matplotlib.rcParams["ytick.labelsize"] = 13
+    matplotlib.rcParams["xtick.minor.visible"] = True
+    matplotlib.rcParams["ytick.minor.visible"] = True
+    matplotlib.rcParams["xtick.major.width"] = 0.8
+    matplotlib.rcParams["xtick.minor.width"] = 0.8
+    matplotlib.rcParams["xtick.major.size"] = 7.0
+    matplotlib.rcParams["xtick.minor.size"] = 4.0
+    matplotlib.rcParams["xtick.major.pad"] = 3.5
+    matplotlib.rcParams["xtick.minor.pad"] = 3.4
+    matplotlib.rcParams["ytick.major.width"] = 0.8
+    matplotlib.rcParams["ytick.minor.width"] = 0.8
+    matplotlib.rcParams["ytick.major.size"] = 7.0
+    matplotlib.rcParams["ytick.minor.size"] = 4.0
+    matplotlib.rcParams["ytick.major.pad"] = 3.5
+    matplotlib.rcParams["ytick.minor.pad"] = 3.4
