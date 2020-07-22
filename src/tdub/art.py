@@ -14,6 +14,7 @@ from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymm
 from uproot_methods.classes.TH1 import Methods as ROOT_TH1
 
 # tdub
+from tdub.hist import bin_centers
 from tdub import setup_logging
 import tdub.hist
 
@@ -279,6 +280,17 @@ def canvas_from_counts(
         ax.set_ylim([0, ax.get_ylim()[1] * 1.375])
 
     return fig, ax, axr
+
+
+def drds_comparison(dr_counts, ds_counts, edges):
+    differences = dr_counts - ds_counts
+    variation = dr_counts - differences
+    fig, ax = plt.subplots()
+    centers = bin_centers(edges)
+    ax.hist(centers, bins=edges, weights=dr_counts, color="black", histtype="step", label="DR")
+    ax.hist(centers, bins=edges, weights=ds_counts, color="red", histtype="step", label=r"DS ($+1\sigma$)")
+    ax.hist(centers, bins=edges, weights=variation, color="blue", histtype="step", label=r"DS ($-1\sigma$)")
+    return fig, ax
 
 
 def setup_tdub_style():

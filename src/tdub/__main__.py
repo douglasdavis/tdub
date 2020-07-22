@@ -583,6 +583,7 @@ def rex_plot(workspace, outdir, chisq):
 @cli.command("imp-tables", context_settings=dict(max_content_width=92))
 @click.argument("summary-file", type=click.Path(exists=True))
 def imp_tables(summary_file):
+    """Generate importance tables."""
     import tdub.config
     import json
     from textwrap import dedent
@@ -611,6 +612,77 @@ def imp_tables(summary_file):
       \\end{center}
     \\end{table}
     """))
+
+
+@cli.command("bdt-cut-plots", context_settings=dict(max_content_width=92))
+@click.argument("source", type=click.Path(exists=True))
+@click.option("--branch", type=str, default="bdtres03", help="BDT branch")
+@click.option("--lo-1j1b", type=float, help="Low end 1j1b BDT cut")
+@click.option("--hi-2j1b", type=float, help="High end 2j1b BDT cut")
+@click.option("--lo-2j2b", type=float, help="Low end 2j2b BDT cut")
+@click.option("--hi-2j2b", type=float, help="High end 2j2b BDT cut")
+@click.option("--bins-1j1b", type=(int, float, float), default=(20, 0, 1), help="Binning (n, min, max) of 1j1b bins")
+@click.option("--bins-2j1b", type=(int, float, float), default=(20, 0, 1), help="Binning (n, min, max) of 2j1b bins")
+@click.option("--bins-2j2b", type=(int, float, float), default=(20, 0, 1), help="Binning (n, min, max) of 2j2b bins")
+def bdt_cut_plots(
+    source,
+    branch,
+    lo_1j1b,
+    hi_2j1b,
+    lo_2j2b,
+    hi_2j2b,
+    bins_1j1b,
+    bins_2j1b,
+    bins_2j2b,
+):
+    """Geneate plots showing BDT cuts."""
+    from pygram11 import fix1d
+    from tdub.frames import raw_dataframe
+    from tdub.data import quick_files
+    from tdub.art import drds_comparison
+    import tdub.config
+    import numpy as np
+    source = PosixPath(source)
+    is_rex = "Histograms" in [d.name for d in source.iterdir()]
+    if is_rex:
+        pass
+    else:
+        qf = quick_files(source)
+
+        def drds_histograms(
+            dr_df,
+            ds_df,
+            region,
+            branch="bdtres03",
+            weight_branch="weight_nominal",
+            nbins=20,
+            xmin=0.0,
+            xmax=1.0,
+        ):
+            dr_hist, err = fix1d(
+                dr_df[branch].to_numpy(),
+                bins=nbins,
+                range=(xmin, xmax),
+                weights=dr_df[weight_branch].to_numpy(),
+                flow=True
+            )
+            ds_hist, err = fix1d(
+                ds_df[branch].to_numpy(),
+                bins=nbins,
+                range=(xmin, xmax),
+                weights=ds_df[weight_branch].to_numpy(),
+                flow=True
+            )
+            return dr_hist, ds_hist
+
+        branches = [branch, "weight_nominal", "reg1j1b", "reg2j1b", "reg2j2b", "OS"]
+        dr_df = raw_dataframe(qf["tW_DR"], branches=branches)
+        ds_df = raw_dataframe(qf["tW_DS"], branches=branches)
+        dr, ds = drds_histograms(dr_df.query(tdub.config.SELECTION_1j1b),
+                                 ds_df.query(tdub.config.SELECTION_1j1b),
+                                 "1j1b")
+        fig, ax = drds_comparison(dr, ds, np.linspace(0, 1, 21))
+        fig.savefig("oko.pdf")
 
 
 def run_cli():
