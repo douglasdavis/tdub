@@ -308,7 +308,7 @@ class ResponseHistograms:
         ax.legend(handles, labels, loc="upper right", ncol=1, frameon=False, numpoints=1)
         ax.set_ylabel("Arbitrary Units")
         draw_atlas_label(
-            ax, internal_shift=0.2, cme_and_lumi=False, extra_lines=["$tW$ BDT Training"]
+            ax, follow_shift=0.2, cme_and_lumi=False, extra_lines=["$tW$ BDT Training"]
         )
         if xlabel is None:
             if self.response_type == "proba":

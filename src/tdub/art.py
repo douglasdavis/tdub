@@ -53,14 +53,14 @@ def legend_last_to_first(ax: plt.Axes, **kwargs):
 
 def draw_atlas_label(
     ax: plt.Axes,
-    internal: bool = True,
+    follow: str = "Internal",
     cme_and_lumi: bool = True,
     extra_lines: Optional[List[str]] = None,
     cme: Union[int, float] = 13,
     lumi: float = 139,
     x: float = 0.050,
     y: float = 0.905,
-    internal_shift: float = 0.15,
+    follow_shift: float = 0.15,
     s1: int = 14,
     s2: int = 12,
 ) -> None:
@@ -70,8 +70,8 @@ def draw_atlas_label(
     ----------
     ax : matplotlib.axes.Axes
         Axes to draw the text on.
-    internal : bool
-        Flag the text as ATLAS internal.
+    follow : str
+        Text to follow the ATLAS label (usually 'Internal').
     extra_lines : list(str), optional
         Set of extra lines to draw below ATLAS label.
     cme : int or float
@@ -82,8 +82,8 @@ def draw_atlas_label(
         `x`-location of the text.
     y : float
         `y`-location of the text.
-    internal_shift : float
-        `x`-shift of the `Internal` ATLAS label.
+    follow_shift : float
+        `x`-shift of the text following the ATLAS label.
     s1 : int
         Size of the main label.
     s2 : int
@@ -99,8 +99,8 @@ def draw_atlas_label(
         transform=ax.transAxes,
         size=s1,
     )
-    if internal:
-        ax.text(x + internal_shift, y, r"Internal", transform=ax.transAxes, size=s1)
+    if follow:
+        ax.text(x + follow_shift, y, follow, transform=ax.transAxes, size=s1)
     if cme_and_lumi:
         exlines = [f"$\\sqrt{{s}}$ = {cme} TeV, $L = {lumi}$ fb$^{{-1}}$"]
     else:
@@ -280,17 +280,6 @@ def canvas_from_counts(
         ax.set_ylim([0, ax.get_ylim()[1] * 1.375])
 
     return fig, ax, axr
-
-
-def drds_comparison(dr_counts, ds_counts, edges):
-    differences = dr_counts - ds_counts
-    variation = dr_counts - differences
-    fig, ax = plt.subplots()
-    centers = bin_centers(edges)
-    ax.hist(centers, bins=edges, weights=dr_counts, color="black", histtype="step", label="DR")
-    ax.hist(centers, bins=edges, weights=ds_counts, color="red", histtype="step", label=r"DS ($+1\sigma$)")
-    ax.hist(centers, bins=edges, weights=variation, color="blue", histtype="step", label=r"DS ($-1\sigma$)")
-    return fig, ax
 
 
 def setup_tdub_style():
