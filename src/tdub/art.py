@@ -14,7 +14,6 @@ from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymm
 from uproot_methods.classes.TH1 import Methods as ROOT_TH1
 
 # tdub
-from tdub.hist import bin_centers
 from tdub import setup_logging
 import tdub.hist
 
