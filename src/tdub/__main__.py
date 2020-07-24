@@ -578,6 +578,7 @@ def rex_plot(workspace, outdir, chisq):
     tdub.config.init_meta_logy()
     tdub.rex.plot_all_regions(workspace, outdir, stage="pre", show_chisq=chisq)
     tdub.rex.plot_all_regions(workspace, outdir, stage="post", show_chisq=chisq)
+    tdub.rex.nuispar_impact_plot_top15(workspace)
 
 
 @cli.command("imp-tables", context_settings=dict(max_content_width=92))

@@ -2,8 +2,10 @@
 
 # stdlib
 import logging
+import math
 import multiprocessing
 import os
+from dataclasses import dataclass
 from pathlib import PosixPath
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
@@ -31,6 +33,19 @@ import tdub.config
 setup_tdub_style()
 
 log = logging.getLogger(__name__)
+
+
+@dataclass
+class NuisPar:
+    name: str
+    label: str
+    pre_down: float
+    pre_up: float
+    post_down: float
+    post_up: float
+    central: float
+    sig_down: float
+    sig_up: float
 
 
 def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
@@ -546,3 +561,165 @@ def plot_all_regions(
     ]
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
     pool.map(plot_region_stage_ff, args)
+
+
+def specific_nuispar(
+    wkspace: Union[str, os.PathLike], name: str, label: Optional[str] = None
+) -> NuisPar:
+    """Extract a specific nuisance parameter from a fit workspace.
+
+    Parameters
+    ----------
+    wkspace : str or os.PathLike
+        Path of the TRExFitter workspace.
+    name : str
+        Name of the nuisance parameter.
+    label : str, optional
+        Give the nuisance parameter a label other than its name.
+
+    Returns
+    -------
+    NuisPar
+        Desired nuisance parameter summary.
+    """
+    with open(PosixPath(wkspace) / "Fits" / "NPRanking.txt") as f:
+        for line in f:
+            if line.startswith(name):
+                n, c, su, sd, postup, postdn, preup, predn = line.strip().split()
+                break
+    npar = NuisPar(
+        name,
+        name,
+        round(float(predn), 5),
+        round(float(preup), 5),
+        round(float(postdn), 5),
+        round(float(postup), 5),
+        round(float(c), 5),
+        round(float(sd), 5),
+        round(float(su), 5),
+    )
+    if label is not None:
+        npar.label = label
+    return npar
+
+
+def nuispar_impacts(wkspace: Union[str, os.PathLike], sort: bool = True) -> List[NuisPar]:
+    """Get list of nuisance parameter impacts.
+
+    Parameters
+    ----------
+    wkspace : str or os.PathLike
+        Path of the TRExFitter workspace.
+
+    Returns
+    -------
+    list(NuisPar)
+        The nuisance parameters.
+    """
+    nuispars = []
+    np_ranking = PosixPath(wkspace) / "Fits" / "NPRanking.txt"
+    with open(np_ranking, "r") as f:
+        for line in f:
+            name, c, su, sd, postup, postdn, preup, predn = line.strip().split()
+            npar = NuisPar(
+                name,
+                name,
+                round(float(predn), 5),
+                round(float(preup), 5),
+                round(float(postdn), 5),
+                round(float(postup), 5),
+                round(float(c), 5),
+                round(float(sd), 5),
+                round(float(su), 5),
+            )
+            nuispars.append(npar)
+    if sort:
+        return sorted(
+            nuispars, key=lambda par: (math.fabs(par.post_up) + math.fabs(par.post_down)),
+        )
+    return nuispars
+
+
+def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
+    """Plot the top 15 nuisance parameters based on impact.
+
+    Parameters
+    ----------
+    wkspace : str, os.PathLike
+        Path of the TRExFitter workspace.
+    """
+    nuispars = nuispar_impacts(wkspace, sort=True)[-15:]
+    for npar in nuispars:
+        npar.label = (
+            npar.label.replace("_", " ")
+            .replace("ttbar", r"$t\bar{t}$")
+            .replace("tW", r"$tW$")
+            .replace("muF", r"$\mu_F$")
+            .replace("muR", r"$\mu_R$")
+            .replace("AR ", "")
+            .replace("hdamp", r"$h_{\mathrm{damp}}$")
+            .replace("DRDS", "DR vs DS")
+            .replace("ptreweight", r"$p_{\mathrm{T}}$ reweighting")
+            .replace("MET", r"$E_{\mathrm{T}}^{\mathrm{miss}}$")
+        )
+
+    pre_down = np.array([p.pre_down for p in nuispars])
+    pre_up = np.array([p.pre_up for p in nuispars])
+    post_down = np.array([p.post_down for p in nuispars])
+    post_up = np.array([p.post_up for p in nuispars])
+    central = np.array([p.central for p in nuispars])
+    sig_up = np.array([p.sig_up for p in nuispars])
+    sig_down = np.array([p.sig_down for p in nuispars])
+    pre_down_lefts = np.zeros_like(pre_down)
+    pre_down_lefts[pre_down < 0] = pre_down[pre_down < 0]
+    pre_up_lefts = np.zeros_like(pre_up)
+    pre_up_lefts[pre_up < 0] = pre_up[pre_up < 0]
+    post_down_lefts = np.zeros_like(post_down)
+    post_down_lefts[post_down < 0] = post_down[post_down < 0]
+    post_up_lefts = np.zeros_like(post_up)
+    post_up_lefts[post_up < 0] = post_up[post_up < 0]
+    ys = np.arange(len(pre_down))
+    xlims = np.amax([np.abs(pre_down), np.abs(pre_up)]) * 1.25
+    fig, ax = plt.subplots(figsize=(5, 7.5))
+    # fmt: off
+    ax.barh(ys, np.abs(pre_down), left=pre_down_lefts, fill=False, edgecolor="peru", zorder=5,
+            label=r"Prefit $\theta=\hat{\theta}-\Delta\theta$")
+    ax.barh(ys, np.abs(pre_up), left=pre_up_lefts, fill=False, edgecolor="skyblue", zorder=5,
+            label=r"Prefit $\theta=\hat{\theta}+\Delta\theta$")
+    ax.barh(ys, np.abs(post_down), left=post_down_lefts, fill=True, color="peru", zorder=6,
+            label=r"Postfit $\theta=\hat{\theta}-\Delta\theta$")
+    ax.barh(ys, np.abs(post_up), left=post_up_lefts, fill=True, color="skyblue", zorder=6,
+            label=r"Postfit $\theta=\hat{\theta}+\Delta\theta$")
+    ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(-0.75, 1.11))
+    # fmt: on
+    ax.set_xlim([-xlims, xlims])
+    ax.set_yticks(ys)
+    ax.set_yticklabels([p.label for p in nuispars])
+    ax.set_ylim([-1, ys[-1] + 2.4])
+    ax.yaxis.set_ticks_position("none")
+    ax2 = ax.twiny()
+    ax2.errorbar(
+        central,
+        ys,
+        xerr=[np.abs(sig_down), sig_up],
+        fmt="ko",
+        zorder=999,
+        label="Nuisance Parameter Pull",
+    )
+    ax2.set_xlim([-1.8, 1.8])
+    ax2.plot([-1, -1], [-0.5, ys[-1] + 0.5], ls="--", color="black")
+    ax2.plot([1, 1], [-0.5, ys[-1] + 0.5], ls="--", color="black")
+    ax2.legend(loc="lower left", bbox_to_anchor=(-0.75, -0.09))
+    ax2.xaxis.set_ticks_position("bottom")
+    ax2.set_xlabel(r"$\Delta\mu$", labelpad=25)
+    ax.set_xlabel(r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=20)
+    ax.xaxis.set_ticks_position("top")
+    # fmt: off
+    ax.text(0.10, 0.95, "ATLAS", fontstyle="italic", fontweight="bold", size=14, transform=ax.transAxes)
+    ax.text(0.37, 0.95, "Internal", size=14, transform=ax.transAxes)
+    ax.text(0.10, 0.91, "$\\sqrt{s}$ = 13 TeV, $L = {139}$ fb$^{-1}$", size=12, transform=ax.transAxes)
+    # fmt: on
+    fig.subplots_adjust(left=0.45, bottom=0.085, top=0.915, right=0.975)
+    mpl_dir = PosixPath(wkspace) / "matplotlib"
+    mpl_dir.mkdir(exist_ok=True)
+    fig.savefig(mpl_dir / "Impact.pdf")
