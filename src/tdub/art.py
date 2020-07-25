@@ -281,6 +281,67 @@ def canvas_from_counts(
     return fig, ax, axr
 
 
+def draw_impact_barh(ax, df, hi_color="skyblue", lo_color="peru") -> Tuple[plt.Axes, plt.Axes]:
+    """Draw the impact plot.
+    """
+    ys = np.array(df.ys)
+    ax.barh(
+        ys,
+        df.pre_down.abs(),
+        left=df.pre_down_lefts,
+        fill=False,
+        edgecolor=lo_color,
+        zorder=5,
+        label=r"Prefit $\theta=\hat{\theta}-\Delta\theta$",
+    )
+    ax.barh(
+        ys,
+        df.pre_up.abs(),
+        left=df.pre_up_lefts,
+        fill=False,
+        edgecolor=hi_color,
+        zorder=5,
+        label=r"Prefit $\theta=\hat{\theta}+\Delta\theta$",
+    )
+    ax.barh(
+        ys,
+        df.post_down.abs(),
+        left=df.post_down_lefts,
+        fill=True,
+        color=lo_color,
+        zorder=6,
+        label=r"Postfit $\theta=\hat{\theta}-\Delta\theta$",
+    )
+    ax.barh(
+        ys,
+        df.post_up.abs(),
+        left=df.post_up_lefts,
+        fill=True,
+        color=hi_color,
+        zorder=6,
+        label=r"Postfit $\theta=\hat{\theta}+\Delta\theta$",
+    )
+    xlims = np.amax([np.abs(df.pre_down), np.abs(df.pre_up)]) * 1.25
+    ax.set_xlim([-xlims, xlims])
+    ax.set_yticks(ys)
+    ax2 = ax.twiny()
+    ax2.errorbar(
+        df.central,
+        ys,
+        xerr=[np.abs(df.sig_lo), df.sig_hi],
+        fmt="ko",
+        zorder=999,
+        label="Nuisance Parameter Pull",
+    )
+    ax2.set_xlim([-1.8, 1.8])
+    ax2.plot([-1, -1], [-0.5, ys[-1] + 0.5], ls="--", color="black")
+    ax2.plot([1, 1], [-0.5, ys[-1] + 0.5], ls="--", color="black")
+    ax2.xaxis.set_ticks_position("bottom")
+    ax.yaxis.set_ticks_position("none")
+    ax.xaxis.set_ticks_position("top")
+    return ax, ax2
+
+
 def setup_tdub_style():
     """Modify matplotlib's rcParams."""
     matplotlib.rcParams["font.sans-serif"] = [

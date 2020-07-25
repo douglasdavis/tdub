@@ -26,6 +26,7 @@ from .art import (
     canvas_from_counts,
     setup_tdub_style,
     draw_atlas_label,
+    draw_impact_barh,
     legend_last_to_first,
 )
 import tdub.config
@@ -733,49 +734,20 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
             .replace("MET", r"$E_{\mathrm{T}}^{\mathrm{miss}}$")
         )
 
-    df = nuispar_impact_plot_arrays(nuispars)
-    ys = df.ys.to_numpy()
-    xlims = np.amax([np.abs(df.pre_down), np.abs(df.pre_up)]) * 1.25
+    df = nuispar_impact_plot_df(nuispars)
+    ys = np.array(df.ys)
     fig, ax = plt.subplots(figsize=(5, 7.5))
-    # fmt: off
-    ax.barh(ys, df.pre_down.abs(), left=df.pre_down_lefts, fill=False, edgecolor="peru", zorder=5,
-            label=r"Prefit $\theta=\hat{\theta}-\Delta\theta$")
-    ax.barh(ys, df.pre_up.abs(), left=df.pre_up_lefts, fill=False, edgecolor="skyblue", zorder=5,
-            label=r"Prefit $\theta=\hat{\theta}+\Delta\theta$")
-    ax.barh(ys, df.post_down.abs(), left=df.post_down_lefts, fill=True, color="peru", zorder=6,
-            label=r"Postfit $\theta=\hat{\theta}-\Delta\theta$")
-    ax.barh(ys, df.post_up.abs(), left=df.post_up_lefts, fill=True, color="skyblue", zorder=6,
-            label=r"Postfit $\theta=\hat{\theta}+\Delta\theta$")
+    ax, ax2 = draw_impact_barh(ax, df)
     ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(-0.75, 1.11))
-    # fmt: on
-    ax.set_xlim([-xlims, xlims])
     ax.set_xticks([-0.2, -0.1, 0.0, 0.1, 0.2])
-    ax.set_yticks(ys)
-    ax.set_yticklabels([p.label for p in nuispars])
     ax.set_ylim([-1, ys[-1] + 2.4])
-    ax.yaxis.set_ticks_position("none")
-    ax2 = ax.twiny()
-    ax2.errorbar(
-        df.central,
-        ys,
-        xerr=[np.abs(df.sig_lo), df.sig_hi],
-        fmt="ko",
-        zorder=999,
-        label="Nuisance Parameter Pull",
-    )
-    ax2.set_xlim([-1.8, 1.8])
-    ax2.plot([-1, -1], [-0.5, ys[-1] + 0.5], ls="--", color="black")
-    ax2.plot([1, 1], [-0.5, ys[-1] + 0.5], ls="--", color="black")
+    ax.set_yticklabels([p.label for p in nuispars])
     ax2.legend(loc="lower left", bbox_to_anchor=(-0.75, -0.09))
-    ax2.xaxis.set_ticks_position("bottom")
     ax2.set_xlabel(r"$\Delta\mu$", labelpad=25)
     ax.set_xlabel(r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=20)
-    ax.xaxis.set_ticks_position("top")
-    # fmt: off
     ax.text(0.10, 0.95, "ATLAS", fontstyle="italic", fontweight="bold", size=14, transform=ax.transAxes)
     ax.text(0.37, 0.95, "Internal", size=14, transform=ax.transAxes)
     ax.text(0.10, 0.91, "$\\sqrt{s}$ = 13 TeV, $L = {139}$ fb$^{-1}$", size=12, transform=ax.transAxes)
-    # fmt: on
     fig.subplots_adjust(left=0.45, bottom=0.085, top=0.915, right=0.975)
     mpl_dir = PosixPath(wkspace) / "matplotlib"
     mpl_dir.mkdir(exist_ok=True)
