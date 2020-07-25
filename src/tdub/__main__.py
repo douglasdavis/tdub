@@ -564,7 +564,8 @@ def soverb(datadir, selections, use_tptrw):
 @click.argument("workspace", type=click.Path(exists=True))
 @click.option("-o", "outdir", type=str, default="auto")
 @click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")
-def rex_plot(workspace, outdir, chisq):
+@click.option("--impact-only", is_flag=True, help="Only produce the impact plot.")
+def rex_plot(workspace, outdir, chisq, impact_only):
     """Generate plots from TRExFitter WORKSPACE using METADATA."""
     import tdub.rex
     import tdub.config
@@ -574,11 +575,13 @@ def rex_plot(workspace, outdir, chisq):
     else:
         outdir = PosixPath(outdir)
     outdir.mkdir(exist_ok=True)
+    if impact_only:
+        tdub.rex.nuispar_impact_plot_top15(workspace)
+        return 0
     tdub.config.init_meta_table()
     tdub.config.init_meta_logy()
     tdub.rex.plot_all_regions(workspace, outdir, stage="pre", show_chisq=chisq)
     tdub.rex.plot_all_regions(workspace, outdir, stage="post", show_chisq=chisq)
-    tdub.rex.nuispar_impact_plot_top15(workspace)
 
 
 @cli.command("imp-tables", context_settings=dict(max_content_width=92))

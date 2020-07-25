@@ -1,9 +1,17 @@
 tdub.rex
 --------
 
-A module for parsing TRExFitter results.
+A module for parsing TRExFitter results and producing additional
+plots/tables.
 
 .. currentmodule:: tdub.rex
+
+Class Summary
+^^^^^^^^^^^^^
+
+.. autosummary::
+
+   NuisPar
 
 Function Summary
 ^^^^^^^^^^^^^^^^
@@ -16,6 +24,10 @@ Function Summary
    data_histogram
    meta_axis_label
    meta_text
+   nuispar_specific
+   nuispar_impact_plot_df
+   nuispar_impacts
+   nuispar_impact_plot_top15
    plot_all_regions
    plot_region_stage_ff
    prefit_total_and_uncertainty
@@ -30,6 +42,8 @@ Function Summary
 Reference
 ^^^^^^^^^
 
+
+.. autoclass:: NuisPar
 .. autofunction:: available_regions
 .. autofunction:: chisq
 .. autofunction:: chisq_text
@@ -38,6 +52,10 @@ Reference
 .. autofunction:: plot_region_stage_ff
 .. autofunction:: meta_axis_label
 .. autofunction:: meta_text
+.. autofunction:: nuispar_specific
+.. autofunction:: nuispar_impact_plot_df
+.. autofunction:: nuispar_impacts
+.. autofunction:: nuispar_impact_plot_top15
 .. autofunction:: prefit_total_and_uncertainty
 .. autofunction:: prefit_histogram
 .. autofunction:: prefit_histograms

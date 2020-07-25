@@ -2,7 +2,6 @@
 
 # stdlib
 import logging
-import math
 import multiprocessing
 import os
 from dataclasses import dataclass
@@ -15,6 +14,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import uproot
 from uproot.rootio import ROOTDirectory
 from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymmErrors
@@ -37,6 +37,29 @@ log = logging.getLogger(__name__)
 
 @dataclass
 class NuisPar:
+    """Nuisance parameter description as a dataclass.
+
+    Attributes
+    ----------
+    name : str
+        Technical name of the nuisance parameter.
+    label : str
+        Pretty name for plotting.
+    pre_down : float
+        Prefit down variation impact on delta mu.
+    pre_up : float
+        Prefit up variation impact on delta mu.
+    post_down : float
+        Postfit down variation impact on delta mu.
+    post_up : float
+        Postfit up variation impact on delta mu.
+    central : float
+        Central value of the NP.
+    sig_lo : float
+        Lo error on the NP.
+    sig_hi : float
+        Hi error on the NP.
+    """
     name: str
     label: str
     pre_down: float
@@ -44,8 +67,11 @@ class NuisPar:
     post_down: float
     post_up: float
     central: float
-    sig_down: float
-    sig_up: float
+    sig_lo: float
+    sig_hi: float
+
+    def __post_init__(self):
+        self.sort_by = max(abs(self.post_down), abs(self.post_up))
 
 
 def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
@@ -563,7 +589,7 @@ def plot_all_regions(
     pool.map(plot_region_stage_ff, args)
 
 
-def specific_nuispar(
+def nuispar_specific(
     wkspace: Union[str, os.PathLike], name: str, label: Optional[str] = None
 ) -> NuisPar:
     """Extract a specific nuisance parameter from a fit workspace.
@@ -617,27 +643,71 @@ def nuispar_impacts(wkspace: Union[str, os.PathLike], sort: bool = True) -> List
         The nuisance parameters.
     """
     nuispars = []
-    np_ranking = PosixPath(wkspace) / "Fits" / "NPRanking.txt"
-    with open(np_ranking, "r") as f:
-        for line in f:
-            name, c, su, sd, postup, postdn, preup, predn = line.strip().split()
-            npar = NuisPar(
-                name,
-                name,
-                round(float(predn), 5),
-                round(float(preup), 5),
-                round(float(postdn), 5),
-                round(float(postup), 5),
-                round(float(c), 5),
-                round(float(sd), 5),
-                round(float(su), 5),
+    np_ranking_yaml = yaml.full_load((PosixPath(wkspace) / "Ranking.yaml").read_text())
+    for entry in np_ranking_yaml:
+        nuispars.append(
+            NuisPar(
+                entry["Name"],
+                entry["Name"],
+                entry["POIdownPreFit"],
+                entry["POIupPreFit"],
+                entry["POIdown"],
+                entry["POIup"],
+                entry["NPhat"],
+                entry["NPerrLo"],
+                entry["NPerrHi"],
             )
-            nuispars.append(npar)
-    if sort:
-        return sorted(
-            nuispars, key=lambda par: (math.fabs(par.post_up) + math.fabs(par.post_down)),
         )
+    if sort:
+        return sorted(nuispars, key=lambda par: par.sort_by)
     return nuispars
+
+
+def nuispar_impact_plot_df(nuispars: List[NuisPar]) -> pd.DataFrame:
+    """Construct a DataFrame to organize impact plot ingredients.
+
+    Parameters
+    ----------
+    nuispars : list(NuisPar)
+        The nuisance parameters.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame describing the plot ingredients.
+    """
+    pre_down = np.array([p.pre_down for p in nuispars])
+    pre_up = np.array([p.pre_up for p in nuispars])
+    post_down = np.array([p.post_down for p in nuispars])
+    post_up = np.array([p.post_up for p in nuispars])
+    central = np.array([p.central for p in nuispars])
+    sig_hi = np.array([p.sig_hi for p in nuispars])
+    sig_lo = np.array([p.sig_lo for p in nuispars])
+    pre_down_lefts = np.zeros_like(pre_down)
+    pre_down_lefts[pre_down < 0] = pre_down[pre_down < 0]
+    pre_up_lefts = np.zeros_like(pre_up)
+    pre_up_lefts[pre_up < 0] = pre_up[pre_up < 0]
+    post_down_lefts = np.zeros_like(post_down)
+    post_down_lefts[post_down < 0] = post_down[post_down < 0]
+    post_up_lefts = np.zeros_like(post_up)
+    post_up_lefts[post_up < 0] = post_up[post_up < 0]
+    ys = np.arange(len(pre_down))
+    return pd.DataFrame.from_dict(
+        dict(
+            pre_down=pre_down,
+            pre_up=pre_up,
+            post_down=post_down,
+            post_up=post_up,
+            central=central,
+            sig_hi=sig_hi,
+            sig_lo=sig_lo,
+            pre_down_lefts=pre_down_lefts,
+            pre_up_lefts=pre_up_lefts,
+            post_down_lefts=post_down_lefts,
+            post_up_lefts=post_up_lefts,
+            ys=ys,
+        )
+    )
 
 
 def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
@@ -659,49 +729,36 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
             .replace("AR ", "")
             .replace("hdamp", r"$h_{\mathrm{damp}}$")
             .replace("DRDS", "DR vs DS")
-            .replace("ptreweight", r"$p_{\mathrm{T}}$ reweighting")
+            .replace("ptreweight", r"top-$p_{\mathrm{T}}$-reweight")
             .replace("MET", r"$E_{\mathrm{T}}^{\mathrm{miss}}$")
         )
 
-    pre_down = np.array([p.pre_down for p in nuispars])
-    pre_up = np.array([p.pre_up for p in nuispars])
-    post_down = np.array([p.post_down for p in nuispars])
-    post_up = np.array([p.post_up for p in nuispars])
-    central = np.array([p.central for p in nuispars])
-    sig_up = np.array([p.sig_up for p in nuispars])
-    sig_down = np.array([p.sig_down for p in nuispars])
-    pre_down_lefts = np.zeros_like(pre_down)
-    pre_down_lefts[pre_down < 0] = pre_down[pre_down < 0]
-    pre_up_lefts = np.zeros_like(pre_up)
-    pre_up_lefts[pre_up < 0] = pre_up[pre_up < 0]
-    post_down_lefts = np.zeros_like(post_down)
-    post_down_lefts[post_down < 0] = post_down[post_down < 0]
-    post_up_lefts = np.zeros_like(post_up)
-    post_up_lefts[post_up < 0] = post_up[post_up < 0]
-    ys = np.arange(len(pre_down))
-    xlims = np.amax([np.abs(pre_down), np.abs(pre_up)]) * 1.25
+    df = nuispar_impact_plot_arrays(nuispars)
+    ys = df.ys.to_numpy()
+    xlims = np.amax([np.abs(df.pre_down), np.abs(df.pre_up)]) * 1.25
     fig, ax = plt.subplots(figsize=(5, 7.5))
     # fmt: off
-    ax.barh(ys, np.abs(pre_down), left=pre_down_lefts, fill=False, edgecolor="peru", zorder=5,
+    ax.barh(ys, df.pre_down.abs(), left=df.pre_down_lefts, fill=False, edgecolor="peru", zorder=5,
             label=r"Prefit $\theta=\hat{\theta}-\Delta\theta$")
-    ax.barh(ys, np.abs(pre_up), left=pre_up_lefts, fill=False, edgecolor="skyblue", zorder=5,
+    ax.barh(ys, df.pre_up.abs(), left=df.pre_up_lefts, fill=False, edgecolor="skyblue", zorder=5,
             label=r"Prefit $\theta=\hat{\theta}+\Delta\theta$")
-    ax.barh(ys, np.abs(post_down), left=post_down_lefts, fill=True, color="peru", zorder=6,
+    ax.barh(ys, df.post_down.abs(), left=df.post_down_lefts, fill=True, color="peru", zorder=6,
             label=r"Postfit $\theta=\hat{\theta}-\Delta\theta$")
-    ax.barh(ys, np.abs(post_up), left=post_up_lefts, fill=True, color="skyblue", zorder=6,
+    ax.barh(ys, df.post_up.abs(), left=df.post_up_lefts, fill=True, color="skyblue", zorder=6,
             label=r"Postfit $\theta=\hat{\theta}+\Delta\theta$")
     ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(-0.75, 1.11))
     # fmt: on
     ax.set_xlim([-xlims, xlims])
+    ax.set_xticks([-0.2, -0.1, 0.0, 0.1, 0.2])
     ax.set_yticks(ys)
     ax.set_yticklabels([p.label for p in nuispars])
     ax.set_ylim([-1, ys[-1] + 2.4])
     ax.yaxis.set_ticks_position("none")
     ax2 = ax.twiny()
     ax2.errorbar(
-        central,
+        df.central,
         ys,
-        xerr=[np.abs(sig_down), sig_up],
+        xerr=[np.abs(df.sig_lo), df.sig_hi],
         fmt="ko",
         zorder=999,
         label="Nuisance Parameter Pull",
