@@ -43,6 +43,7 @@ class Region(Enum):
     >>> from tdub.data import Region, selection_for
     >>> from tdub.frames import iterative_selection
     >>> df = iterative_selection(files, selection_for(Region.r2j2b))
+
     """
 
     r1j1b = 0
@@ -144,6 +145,7 @@ class SampleInfo:
     MC16d
     >>> sampinfo.tree
     nominal
+
     """
 
     phy_process: str
@@ -238,6 +240,7 @@ def branches_from(
     ["pT_lep1", "pT_lep2"]
     >>> branches_from("/path/to/file.root")
     ["pT_lep1", "pT_lep2", "weight_nominal", "weight_tptrw"]
+
     """
     if isinstance(source, ROOTDirectory):
         t = source.get(tree)
@@ -294,6 +297,7 @@ def categorize_branches(source: List[str]) -> Dict[str, List[str]]:
 
     >>> root_file = PosixPath("/path/to/file.root")
     >>> cated = categorize_branches(branches_from(root_file))
+
     """
     metas = {
         "reg1j1b",
@@ -414,6 +418,7 @@ def files_for_tree(
     ['/data/path/ttbar_410472_FS_MC16a_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root',
      '/data/path/ttbar_410472_FS_MC16d_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root',
      '/data/path/ttbar_410472_FS_MC16e_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root']
+
     """
     if campaign is None:
         camp = ""
@@ -602,6 +607,7 @@ def selection_as_numexpr(selection: str) -> str:
     >>> from tdub.data import selection_as_numexpr
     >>> selection_as_numexpr(selection)
     '(reg1j1b == True) & (OS == True) & (mass_lep1jet1 < 155)'
+
     """
     return formulate.from_auto(selection).to_numexpr()
 
@@ -625,6 +631,7 @@ def selection_as_root(selection: str) -> str:
     >>> from tdub.data import selection_as_root
     >>> selection_as_root(selection)
     '(reg1j1b == true) && (OS == true) && (mass_lep1jet1 < 155)'
+
     """
     return formulate.from_auto(selection).to_root()
 
@@ -651,6 +658,7 @@ def selection_branches(selection: str) -> Set[str]:
     >>> selection = "reg2j1b == true && OS == true && (mass_lep1jet1 < 155)"
     >>> minimal_branches(selection)
     {'OS', 'mass_lep1jet1', 'reg2j1b'}
+
     """
     return formulate.from_auto(selection).variables
 

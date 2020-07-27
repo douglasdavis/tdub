@@ -60,6 +60,7 @@ class NuisPar:
         Lo error on the NP.
     sig_hi : float
         Hi error on the NP.
+
     """
     name: str
     label: str
@@ -87,6 +88,7 @@ def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
     -------
     list(str)
         Regions discovered in the workspace.
+
     """
     root_files = (PosixPath(wkspace) / "Histograms").glob("*_preFit.root")
     return [rf.name[:-12] for rf in root_files]
@@ -110,6 +112,7 @@ def data_histogram(
     -------
     uproot_methods.base.ROOTMethods
         ROOT histogram for the Data sample.
+
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{fitname}_{region}_histos.root"
     return uproot.open(root_path).get(f"{region}_Data")
@@ -137,6 +140,7 @@ def chisq(
         Number of degrees of freedom.
     float
         :math:`\chi^2` probability for the region.
+
     """
     if stage not in ("pre", "post"):
         raise ValueError("stage can only be 'pre' or 'post'")
@@ -188,6 +192,7 @@ def prefit_histogram(root_file: ROOTDirectory, sample: str, region: str) -> ROOT
     -------
     uproot_methods.classes.TH1.Methods
         ROOT histogram.
+
     """
     histname = f"{region}_{sample}"
     try:
@@ -221,6 +226,7 @@ def prefit_histograms(
     -------
     dict(str, uproot_methods.classes.TH1.Methods)
         Prefit ROOT histograms
+
     """
 
     root_path = PosixPath(wkspace) / "Histograms" / f"{fitname}_{region}_histos.root"
@@ -247,6 +253,7 @@ def hepdata(
         Region to get histograms for
     stage : str
         Fitting stage (`"pre"` or `"post"`).
+
     """
     yaml_path = PosixPath(wkspace) / "Plots" / f"{region}_{stage}fit.yaml"
     return yaml.full_load(yaml_path.read_text())
@@ -270,6 +277,7 @@ def prefit_total_and_uncertainty(
         The total MC expectation histogram.
     uproot_methods.classes.TGraphAsymmErrors.Methods
         The error TGraph.
+
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{region}_preFit.root"
     root_file = uproot.open(root_path)
@@ -290,6 +298,7 @@ def postfit_available(wkspace: Union[str, os.PathLike]) -> bool:
     -------
     bool
         True of postFit discovered
+
     """
     histdir = PosixPath(wkspace) / "Histograms"
     for f in histdir.iterdir():
@@ -312,6 +321,7 @@ def postfit_histogram(root_file: ROOTDirectory, sample: str) -> ROOT_TH1:
     -------
     uproot_methods.classes.TH1.Methods
         ROOT histogram.
+
     """
     histname = f"h_{sample}_postFit"
     try:
@@ -340,6 +350,7 @@ def postfit_histograms(
     -------
     dict(str, uproot_methods.classes.TH1.Methods)
         Postfit ROOT histograms
+
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{region}_postFit.root"
     root_file = uproot.open(root_path)
@@ -372,6 +383,7 @@ def postfit_total_and_uncertainty(
         The total MC expectation histogram.
     uproot_methods.classes.TGraphAsymmErrors.Methods
         The error TGraph.
+
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{region}_postFit.root"
     root_file = uproot.open(root_path)
@@ -394,6 +406,7 @@ def meta_text(region: str, stage: str) -> str:
     -------
     str
         Resulting metadata text
+
     """
     if stage == "pre":
         stage = "Pre-fit"
@@ -428,6 +441,7 @@ def meta_axis_label(region: str, meta_table: Optional[Dict[str, Any]] = None) ->
     -------
     str
         Axis label for the region.
+
     """
     if "VRP" in region:
         region = region[12:]
@@ -482,6 +496,7 @@ def stack_canvas(
         Main axes for the histogram stack.
     :py:obj:`matplotlib.axes.Axes`
         Ratio axes to show Data/MC.
+
     """
     samples = ("tW", "ttbar", "Zjets", "Diboson", "MCNP")
     if stage == "pre":
@@ -540,6 +555,7 @@ def plot_region_stage_ff(args):
     ----------
     args: list(Any)
         Arguments passed to :py:func:`stack_canvas`.
+
     """
     fig, ax0, ax1 = stack_canvas(
         wkspace=args[0],
@@ -577,6 +593,7 @@ def plot_all_regions(
         Name of the Fit
     show_chisq : bool
         Print :math:`\chi^2` information on ratio canvas.
+
     """
     PosixPath(outdir).mkdir(parents=True, exist_ok=True)
     regions = available_regions(wkspace)
@@ -608,6 +625,7 @@ def nuispar_specific(
     -------
     NuisPar
         Desired nuisance parameter summary.
+
     """
     with open(PosixPath(wkspace) / "Fits" / "NPRanking.txt") as f:
         for line in f:
@@ -642,6 +660,7 @@ def nuispar_impacts(wkspace: Union[str, os.PathLike], sort: bool = True) -> List
     -------
     list(NuisPar)
         The nuisance parameters.
+
     """
     nuispars = []
     np_ranking_yaml = yaml.full_load((PosixPath(wkspace) / "Ranking.yaml").read_text())
@@ -676,6 +695,7 @@ def nuispar_impact_plot_df(nuispars: List[NuisPar]) -> pd.DataFrame:
     -------
     pandas.DataFrame
         DataFrame describing the plot ingredients.
+
     """
     pre_down = np.array([p.pre_down for p in nuispars])
     pre_up = np.array([p.pre_up for p in nuispars])
@@ -718,6 +738,7 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
     ----------
     wkspace : str, os.PathLike
         Path of the TRExFitter workspace.
+
     """
     nuispars = nuispar_impacts(wkspace, sort=True)[-15:]
     for npar in nuispars:

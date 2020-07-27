@@ -239,6 +239,7 @@ def bin_centers(bin_edges: np.ndarray) -> np.ndarray:
     array([ 25.,  45.,  65.,  85., 105., 125., 145., 165., 185., 205., 225.])
     >>> centers
     array([ 35.,  55.,  75.,  95., 115., 135., 155., 175., 195., 215.])
+
     """
     return (bin_edges[1:] + bin_edges[:-1]) * 0.5
 
@@ -267,6 +268,7 @@ def to_uniform_bins(bin_edges: np.ndarray):
     >>> var_width = [0, 1, 3, 7, 15]
     >>> to_uniform_bins(var_width)
     array([0.5, 1.5, 2.5, 3.5, 4.5])
+
     """
     return np.arange(0.5, len(bin_edges) + 0.5, dtype=np.float64)
 
@@ -300,6 +302,7 @@ def edges_and_centers(
     from pre-existing edges
 
     >>> edges, centers = edges_and_centers(np.linspace(0, 10, 21))
+
     """
     if isinstance(bins, int):
         if range is None:

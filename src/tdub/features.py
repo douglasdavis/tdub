@@ -88,6 +88,7 @@ class FeatureSelector:
     >>> from tdub.features import FeatureSelector, prepare_from_parquet
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
     >>> fs = FeatureSelector(df=df, labels=labels, weights=weights, corr_threshold=0.90)
+
     """
 
     def __init__(
@@ -240,6 +241,7 @@ class FeatureSelector:
         >>> fs.check_collinearity(threshold=0.85)
         >>> fs.corr_threshold
         0.85
+
         """
         log.info("starting check_collinearity step")
         if threshold is not None:
@@ -302,6 +304,7 @@ class FeatureSelector:
         >>> fs.check_for_uniques(and_drop=True)
         >>> fs.check_collinearity()
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
+
         """
         import lightgbm as lgbm
 
@@ -362,9 +365,8 @@ class FeatureSelector:
         and build a list of ordered important features. When a feature
         that should be dropped due to a collinear feature is found, we
         ensure that the more important member of the pair is included
-        in the resulting list and drop the other member of the
-        pair. This will populate the ``candidates`` attribute for the
-        class.
+        in the resulting list and drop the other member of the pair.
+        This will populate the ``candidates`` attribute for the class.
 
         Parameters
         ----------
@@ -556,6 +558,7 @@ class FeatureSelector:
         >>> fs.check_importances(extra_fit_opts=dict(verbose=40, early_stopping_round=15))
         >>> fs.check_candidates(n=25)
         >>> fs.check_iterative_add_aucs(max_features=20)
+
         """
         import lightgbm as lgbm
 
@@ -631,6 +634,7 @@ class FeatureSelector:
         >>> fs.check_iterative_add_aucs(max_features=20)
         >>> fs.name = "2j1b_DR"
         >>> fs.save_result()
+
         """
         if self.name is None:
             raise ValueError("name attribute cannot be None to save result")
@@ -683,6 +687,7 @@ def create_parquet_files(
     --------
     >>> from tdub.features import create_parquet_files
     >>> create_parquet_files("/path/to/root/files", "/path/to/pq/output", entrysteps="250 MB")
+
     """
     indir = str(PosixPath(qf_dir).resolve())
     qf = quick_files(indir)
@@ -774,6 +779,7 @@ def prepare_from_parquet(
     --------
     >>> from tdub.features import prepare_from_parquet
     >>> df, labels, weights = prepare_from_parquet("/path/to/pq/output", "2j1b", "DR")
+
     """
     if weight_scale is not None and weight_mean is not None:
         raise ValueError("weight_scale and weight_mean cannot be used together")

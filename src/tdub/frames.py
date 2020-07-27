@@ -68,6 +68,7 @@ def raw_dataframe(
     >>> from tdub.frames import raw_dataframe
     >>> files = quick_files("/path/to/files")["ttbar"]
     >>> df = raw_dataframe(files)
+
     """
     if branches is not None:
         branches = sorted(set(branches) | set([weight_name]), key=str.lower)
@@ -389,6 +390,7 @@ def apply_weight(
     >>> import tdub.frames
     >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
     >>> df.apply_weight("weight_campaign")
+
     """
     sys_weight_cols = [c for c in df.columns if "weight_sys" in c]
     cols = ["weight_nominal"] + sys_weight_cols
@@ -429,6 +431,7 @@ def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None)
     >>> df.apply_weight_campaign()
     >>> df.weight_nominal[5]
     0.0012
+
     """
     apply_weight(df, "weight_campaign", exclude=exclude)
 
@@ -459,6 +462,7 @@ def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) ->
     >>> df.apply_weight_tptrw()
     >>> df.weight_nominal[5]
     0.00196
+
     """
     excludes = ["weight_sys_noreweight"]
     if exclude is not None:

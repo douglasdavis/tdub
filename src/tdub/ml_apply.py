@@ -90,6 +90,7 @@ class FoldedTrainSummary(BaseTrainSummary):
     --------
     >>> from tdub.apply import FoldedTrainSummary
     >>> fr_1j1b = FoldedTrainSummary("/path/to/folded_training_1j1b")
+
     """
 
     def __init__(self, fold_output: str) -> None:
@@ -106,6 +107,7 @@ class FoldedTrainSummary(BaseTrainSummary):
         ----------
         summary_file : str or os.PathLike
             the summary json file
+
         """
         super().parse_summary_json(summary_file)
         self._folder = KFold(**(self.summary["kfold"]))
@@ -204,6 +206,7 @@ class SingleTrainSummary(BaseTrainSummary):
     --------
     >>> from tdub.apply import SingleTrainSummary
     >>> res_1j1b = SingleTrainSummary("/path/to/some_1j1b_training_outdir")
+
     """
 
     def __init__(self, training_output: os.PathLike) -> None:
@@ -247,8 +250,8 @@ class SingleTrainSummary(BaseTrainSummary):
         >>> df = raw_dataframe("/path/to/file.root")
         >>> sr_1j1b = SingleTrainSummary("/path/to/single_training_1j1b")
         >>> sr_1j1b.apply_to_dataframe(df, do_query=True)
-        """
 
+        """
         if df.shape[0] == 0:
             log.info("Dataframe is empty, doing nothing")
             return None
@@ -311,6 +314,7 @@ def build_array(summaries: List[BaseTrainSummary], df: pd.DataFrame) -> np.ndarr
     >>> sr_2j1b = SingleTrainSummary("/path/to/single_training_2j1b")
     >>> sr_2j2b = SingleTrainSummary("/path/to/single_training_2j2b")
     >>> res = build_array([sr_1j1b, sr_2j1b, sr_2j2b], df)
+
     """
     if df.shape[0] == 0:
         log.info("build_array: Returning an empty array")

@@ -65,8 +65,8 @@ class SingleTrainingSummary:
         the binned KS test value for background
     ks_pvalue_bkg : float
         the binned KS test p-value for background
-    """
 
+    """
     def __init__(
         self,
         *,
@@ -125,7 +125,6 @@ class ResponseHistograms:
         Number of bins to use.
 
     """
-
     def __init__(
         self,
         response_type,
@@ -191,46 +190,22 @@ class ResponseHistograms:
 
     @property
     def ks_sig_test(self) -> float:
-        """Two sample binned KS test for signal.
-
-        Returns
-        -------
-        float
-            The signal KS-test test value.
-        """
+        """float: Two sample binned KS test for signal."""
         return round(float(self.ks_sig[0]), 5)
 
     @property
     def ks_sig_pval(self) -> float:
-        """Two sample binned KS p-value for signal.
-
-        Returns
-        -------
-        float
-            The signal KS-test p-value.
-        """
+        """float: Two sample binned KS p-value for signal."""
         return round(float(self.ks_sig[1]), 5)
 
     @property
     def ks_bkg_test(self) -> float:
-        """Two sample binned KS test for background.
-
-        Returns
-        -------
-        float
-            The background KS-test test value.
-        """
+        """float: Two sample binned KS test for background."""
         return round(float(self.ks_bkg[0]), 5)
 
     @property
     def ks_bkg_pval(self) -> float:
-        """Two sample binned KS p-value for background.
-
-        Returns
-        -------
-        float
-            The background KS-test p-value.
-        """
+        """float: Two sample binned KS p-value for background."""
         return round(float(self.ks_bkg[1]), 5)
 
     def draw(
@@ -493,6 +468,7 @@ def tdub_train_axes(
     -------
     dict(str, Any)
         The argument names and values
+
     """
     return dict(
         learning_rate=learning_rate,
@@ -534,6 +510,7 @@ def sklearn_gen_classifier(
     -------
     sklearn.ensemble.HistGradientBoostingClassifier
         The classifier.
+
     """
     if train_axes is None:
         train_axes = tdub_train_axes()
@@ -606,6 +583,7 @@ def lgbm_gen_classifier(train_axes: Dict[str, Any] = None, **clf_params) -> Base
     -------
     lightgbm.LGBMClassifier
         The classifier.
+
     """
     import lightgbm as lgbm
 
@@ -658,6 +636,7 @@ def lgbm_train_classifier(
     -------
     lightgbm.LGBMClassifier
         The same classifier object passed to the function
+
     """
     X_t, X_v, y_t, y_v, w_t, w_v = train_test_split(
         X_train,
@@ -884,12 +863,12 @@ def folded_training(
     """Execute a folded training.
 
     Train a :obj:`lightgbm.LGBMClassifier` model using :math:`k`-fold
-    cross validation using the given input data and parameters.  The
+    cross validation using the given input data and parameters. The
     models resulting from the training (and other important training
     information) are saved to ``output_dir``. The entries in the
     ``kfold_kw`` argument are forwarded to the
-    :obj:`sklearn.model_selection.KFold` class for data
-    preprocessing. The default arguments that we use are:
+    :obj:`sklearn.model_selection.KFold` class for data preprocessing.
+    The default arguments that we use are:
 
     - ``n_splits``: 3
     - ``shuffle``: ``True``
@@ -944,6 +923,7 @@ def folded_training(
     ...     "2j2b",
     ...     kfold_kw={"n_splits": 5, "shuffle": True, "random_state": 17}
     ... )
+
     """
     import lightgbm as lgbm
 
@@ -1205,6 +1185,7 @@ def gp_minimize_auc(
     >>> from tdub.train import prepare_from_root, gp_minimize_auc
     >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DS", "opt_DS_2j1b")
     >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DR", "opt_DR_2j1b")
+
     """
 
     from skopt.utils import use_named_args

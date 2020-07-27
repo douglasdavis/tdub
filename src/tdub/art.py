@@ -42,6 +42,7 @@ def legend_last_to_first(ax: plt.Axes, **kwargs):
         Matplotlib axes to create a legend on.
     kwargs : dict
         Arguments passed to :py:obj:`matplotlib.axes.Axes.legend`.
+
     """
     ax.legend()
     handles, labels = ax.get_legend_handles_labels()
@@ -135,6 +136,7 @@ def draw_uncertainty_bands(
         Legend label for the uncertainty.
     zero_threshold : float
         When total MC events are below threshold, zero contents and error.
+
     """
     lo = np.hstack([uncertainty.yerrorslow, uncertainty.yerrorslow[-1]])
     hi = np.hstack([uncertainty.yerrorshigh, uncertainty.yerrorshigh[-1]])
@@ -215,6 +217,7 @@ def canvas_from_counts(
         Matplotlib axes for the histogram stack.
     :py:obj:`matplotlib.axes.Axes`
         Matplotlib axes for the ratio comparison.
+
     """
     tW_name = "tW_DR"
     if tW_name not in counts.keys():
@@ -282,8 +285,7 @@ def canvas_from_counts(
 
 
 def draw_impact_barh(ax, df, hi_color="skyblue", lo_color="peru") -> Tuple[plt.Axes, plt.Axes]:
-    """Draw the impact plot.
-    """
+    """Draw the impact plot."""
     ys = np.array(df.ys)
     ax.barh(
         ys,
@@ -342,7 +344,7 @@ def draw_impact_barh(ax, df, hi_color="skyblue", lo_color="peru") -> Tuple[plt.A
     return ax, ax2
 
 
-def setup_tdub_style():
+def setup_tdub_style() -> None:
     """Modify matplotlib's rcParams."""
     matplotlib.rcParams["font.sans-serif"] = [
         "Helvetica",

@@ -62,6 +62,7 @@ def create_condor_workspace(
     >>> with open(ws / "condor.sub", "w") as f:
     ...     preamble = tb.condor_preamble(ws, shutil.which("tdub"), to_file=f)
     ...     tb.add_condor_arguments("train-single ......", f)
+
     """
     ws = PosixPath(name).resolve()
     if overwrite and ws.exists():
@@ -119,6 +120,7 @@ def condor_preamble(
     >>> with open(ws / "condor.sub", "w") as f:
     ...     preamble = tb.condor_preamble(ws, shutil.which("tdub"), to_file=f)
     ...     tb.add_condor_arguments("train-single ......", f)
+
     """
     res = BNL_CONDOR_PREAMBLE.format(
         universe=universe,
@@ -157,6 +159,7 @@ def add_condor_arguments(arguments: str, to_file: TextIO) -> None:
     >>> with open(ws / "condor.sub", "w") as f:
     ...     preamble = tb.condor_preamble(ws, shutil.which("tdub"), to_file=f)
     ...     tb.add_condor_arguments("train-single ......", f)
+
     """
     to_file.write("\n")
     to_file.write(f"Arguments = {arguments}\n")
@@ -170,6 +173,7 @@ def condor_submit(workspace: Union[str, os.PathLike]) -> None:
     ----------
     workspace : str or os.PathLike
         the workspace containing the condor.sub file
+
     """
     ws = PosixPath(workspace).resolve()
     proc = subprocess.Popen(
