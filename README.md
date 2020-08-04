@@ -11,11 +11,11 @@ a simple command line interface for performing standard analysis tasks
 including:
 
 - BDT feature selection and hyperparameter optimization.
-- training BDT models on our Monte Carlo.
-- applying trained BDT models to our data and Monte Carlo.
-- generating plots from various raw sources (our ROOT files and
-  classifier training output).
-- generating plots from the output of
+- Training BDT models on our Monte Carlo.
+- Applying trained BDT models to our data and Monte Carlo.
+- Generating plots from various raw sources (our ROOT files and
+  Classifier training output).
+- Generating plots from the output of
   [`TRExFitter`](https://gitlab.cern.ch/TRExStats/TRExFitter/).
 
 For potentially finer-grained tasks the API is fully documented. The

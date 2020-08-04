@@ -22,6 +22,7 @@ Helper Function Summary
    apply_weight
    apply_weight_campaign
    apply_weight_tptrw
+   apply_weight_trrw
    drop_avoid
    drop_cols
    drop_jet2
@@ -36,6 +37,7 @@ Reference
 .. autofunction:: apply_weight
 .. autofunction:: apply_weight_campaign
 .. autofunction:: apply_weight_tptrw
+.. autofunction:: apply_weight_trrw
 .. autofunction:: drop_avoid
 .. autofunction:: drop_cols
 .. autofunction:: drop_jet2

@@ -543,14 +543,6 @@ def apply_weight_trrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> 
     apply_weight(df, "weight_trrw_tool", exclude=excludes)
 
 
-def apply_weight_trrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
-    """TBD."""
-    excludes = ["weight_sys_noreweight"]
-    if exclude is not None:
-        excludes += exclude
-    apply_weight(df, "weight_trrw_tool", exclude=excludes)
-
-
 pd.DataFrame.drop_cols = drop_cols
 pd.DataFrame.drop_avoid = drop_avoid
 pd.DataFrame.drop_jet2 = drop_jet2
