@@ -1,5 +1,9 @@
 import pytest
+
+import pathlib
+
 import uproot
+import uproot4
 
 from tdub.data import (
     SampleInfo,
@@ -144,7 +148,7 @@ def test_avoids_for():
 
 
 def test_branches_from():
-    f1 = uproot.open("tests/test_data/testfile1.root")
+    f1 = uproot4.open("tests/test_data/testfile1.root")
     f2 = "tests/test_data/testfile1.root"
     f3 = ["tests/test_data/testfile1.root"]
     b1 = sorted(branches_from(f1))
@@ -152,6 +156,10 @@ def test_branches_from():
     b3 = sorted(branches_from(f3))
     assert b1 == b2
     assert b2 == b3
+    f4 = pathlib.PosixPath(f2)
+    b4 = sorted(branches_from(f4, ignore_weights=True))
+    b5 = sorted(branches_from(f2, ignore_weights=True))
+    assert b4 == b5
 
 
 def test_categorize_branches():

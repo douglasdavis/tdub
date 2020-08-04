@@ -12,15 +12,23 @@ from typing import Union, Set, Dict, Iterable, List, Optional
 
 # external
 import formulate
-import uproot
-from uproot.rootio import ROOTDirectory
+import uproot4
+from uproot4.reading import ReadOnlyDirectory
+from uproot4.models.TTree import Model_TTree_v20
 
 # tdub
 import tdub.config
 
 log = logging.getLogger(__name__)
 
-DataSource = Union[ROOTDirectory, str, Iterable[str], os.PathLike, Iterable[os.PathLike]]
+DataSource = Union[
+    str,
+    Iterable[str],
+    os.PathLike,
+    Iterable[os.PathLike],
+    ReadOnlyDirectory,
+    Model_TTree_v20,
+]
 
 
 class Region(Enum):
@@ -214,14 +222,14 @@ def avoids_for(region: Union[str, Region]) -> List[str]:
 def branches_from(
     source: DataSource, tree: str = "WtLoop_nominal", ignore_weights: bool = False,
 ) -> List[str]:
-    """Get a list of branches from a `source`.
+    """Get a list of branches from a data source.
 
     If the `source` is a list of files, the first file is the only
     file that is parsed.
 
     Parameters
     ----------
-    source : str, list(str), os.PathLike, list(os.PathLike), or uproot.rootio.ROOTDirectory
+    source : str, list(str), os.PathLike, list(os.PathLike), or uproot File/Tree
         What to parse to get the branch information.
     tree : str
         Name of the tree to get branches from
@@ -242,23 +250,26 @@ def branches_from(
     ["pT_lep1", "pT_lep2", "weight_nominal", "weight_tptrw"]
 
     """
-    if isinstance(source, ROOTDirectory):
+    print(type(source))
+    if isinstance(source, (str, os.PathLike)):
+        t = uproot4.open(source).get(tree)
+    elif isinstance(source, list):
+        t = uproot4.open(source[0]).get(tree)
+    elif isinstance(source, uproot4.reading.ReadOnlyDirectory):
         t = source.get(tree)
-    elif isinstance(source, (str, os.PathLike)):
-        t = uproot.open(source).get(tree)
-    else:
-        t = uproot.open(source[0]).get(tree)
-    branches = [b.decode("utf-8") for b in t.allkeys()]
+    elif isinstance(source, uproot4.models.TTree.Model_TTree_v20):
+        t = source
+    branches = t.keys()
 
     # return here if weights are not ignored
     if not ignore_weights:
         return branches
 
     # check for weight branches
-    weight_re = re.compile(r"(weight_\w+")
+    weight_re = re.compile(r"(weight_\w+)")
     weights = set(filter(weight_re.match, branches))
 
-    return list(set(branches) ^ weights)
+    return list(sorted(set(branches) ^ weights, key=str.lower))
 
 
 def categorize_branches(source: List[str]) -> Dict[str, List[str]]:
