@@ -396,7 +396,6 @@ def prepare_from_root(
         exclude_avoids=True,
         use_campaign_weight=use_campaign_weight,
         use_tptrw=use_tptrw,
-        entrysteps="1 GB",
     )
 
     if test_case_size is not None:

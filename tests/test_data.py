@@ -2,7 +2,6 @@ import pytest
 
 import pathlib
 
-import uproot
 import uproot4
 
 from tdub.data import (

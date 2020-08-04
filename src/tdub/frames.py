@@ -8,7 +8,7 @@ from typing import Optional, Union, List, Iterable
 
 # externals
 import pandas as pd
-import uproot
+import uproot4
 
 # tdub
 from tdub.config import AVOID_IN_CLF
@@ -40,7 +40,7 @@ def raw_dataframe(
     and weight branches won't be separated, etc.) -- just a pure raw
     dataframe from some ROOT files.
 
-    Extra `kwargs` are fed to uproot.pandas.iterate
+    Extra `kwargs` are fed to uproot's ``arrays()`` interface.
 
     Parameters
     ----------
@@ -81,8 +81,11 @@ def raw_dataframe(
         branches = sorted(
             set(branches) ^ set(filter(weight_sys_re.match, branches)), key=str.lower
         )
-    itr = uproot.pandas.iterate(files, tree, branches=branches, **kwargs)
-    result = pd.concat([d for d in itr])
+    if isinstance(files, str):
+        files = [files]
+    result = pd.concat(
+        [uproot4.open(f).get(tree).arrays(branches, library="pd", **kwargs) for f in files]
+    )
     result.selection_used = None
     return result
 
@@ -97,6 +100,7 @@ def iterative_selection(
     exclude_avoids: bool = False,
     use_campaign_weight: bool = False,
     use_tptrw: bool = False,
+    use_trrw: bool = False,
     **kwargs,
 ) -> pd.DataFrame:
     """Build a selected dataframe via uproot's iterate.
@@ -138,6 +142,8 @@ def iterative_selection(
         weight.
     use_tptrw : bool
         Apply the top pt reweighting factor.
+    use_trrw : bool
+        Apply the top recursive reweighting factor.
 
     Returns
     -------
@@ -174,6 +180,9 @@ def iterative_selection(
     if use_tptrw:
         weights_to_grab.add("weight_tptrw_tool")
         log.info("applying the top pt reweighting factor")
+    if use_trrw:
+        weights_to_grab.add("weight_trrw_tool")
+        log.info("applying the top recursive reweighting factor")
     if branches is None:
         branches = set(branches_from(files, tree=tree))
     branches = set(branches)
@@ -185,10 +194,10 @@ def iterative_selection(
         branches_cated = categorize_branches(list(branches))
         keep_cat = set(branches_cated.get(keep_category))
         keep = keep_cat & branches
-        read_branches = keep | weights_to_grab | sel_branches
+        read_branches = list(keep | weights_to_grab | sel_branches)
     else:
         keep = branches
-        read_branches = branches | weights_to_grab | sel_branches
+        read_branches = list(branches | weights_to_grab | sel_branches)
 
     # drop avoided classifier variables
     if exclude_avoids:
@@ -202,19 +211,24 @@ def iterative_selection(
     keep.add(weight_name)
     keep = sorted(keep, key=str.lower)
 
-    numexpr_sel = selection_as_numexpr(selection)
+    if isinstance(files, str):
+        files = [files]
 
+    numexpr_sel = selection_as_numexpr(selection)
     dfs = []
-    itr = uproot.pandas.iterate(files, tree, branches=list(read_branches), **kwargs)
-    for i, df in enumerate(itr):
+    for i, f in enumerate(files):
+        df = uproot4.open(f).get(tree).arrays(read_branches, library="pd", **kwargs)
         if use_campaign_weight:
             apply_weight_campaign(df)
         if use_tptrw:
             apply_weight_tptrw(df)
+        if use_trrw:
+            apply_weight_trrw(df)
         idf = df.query(numexpr_sel)
         idf = idf[keep]
         dfs.append(idf)
         log.debug(f"finished iteration {i}")
+
     result = pd.concat(dfs)
     result.selection_used = numexpr_sel
     return result
