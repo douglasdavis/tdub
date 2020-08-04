@@ -34,7 +34,7 @@ def adjust_figure(
 
 
 def legend_last_to_first(ax: plt.Axes, **kwargs):
-    """Move the last element of the legend to first
+    """Move the last element of the legend to first.
 
     Parameters
     ----------

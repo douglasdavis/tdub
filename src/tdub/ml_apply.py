@@ -26,22 +26,22 @@ class BaseTrainSummary:
 
     @property
     def features(self) -> List[str]:
-        """The list of features used."""
+        """Features used by the model."""
         return self._features
 
     @property
     def region(self) -> Region:
-        """The region where the training was executed."""
+        """Region where the training was executed."""
         return self._region
 
     @property
     def selection_used(self) -> str:
-        """The selection used on the trained datasets."""
+        """Numexpr selection used on the trained datasets."""
         return self._selection_used
 
     @property
     def summary(self) -> Dict[str, Any]:
-        """The training summary dictionary from the training json."""
+        """Training summary dictionary from the training json."""
         return self._summary
 
     def parse_summary_json(self, summary_file: os.PathLike) -> None:
@@ -94,6 +94,7 @@ class FoldedTrainSummary(BaseTrainSummary):
     """
 
     def __init__(self, fold_output: str) -> None:
+        """Class constructor."""
         fold_path = PosixPath(fold_output).resolve()
         self._model0 = joblib.load(fold_path / "model_fold0.joblib.gz")
         self._model1 = joblib.load(fold_path / "model_fold1.joblib.gz")
@@ -114,22 +115,22 @@ class FoldedTrainSummary(BaseTrainSummary):
 
     @property
     def model0(self) -> BaseEstimator:
-        """The model for the 0th fold."""
+        """Model for the 0th fold."""
         return self._model0
 
     @property
     def model1(self) -> BaseEstimator:
-        """The model for the 1st fold."""
+        """Model for the 1st fold."""
         return self._model1
 
     @property
     def model2(self) -> BaseEstimator:
-        """The model for the 2nd fold."""
+        """Model for the 2nd fold."""
         return self._model2
 
     @property
     def folder(self) -> KFold:
-        """the folding object used during training."""
+        """Folding object used during training."""
         return self._folder
 
     def apply_to_dataframe(
@@ -210,13 +211,14 @@ class SingleTrainSummary(BaseTrainSummary):
     """
 
     def __init__(self, training_output: os.PathLike) -> None:
+        """Class constructor."""
         training_path = PosixPath(training_output)
         self._model = joblib.load(training_path / "model.joblib.gz")
         self.parse_summary_json(training_path / "summary.json")
 
     @property
     def model(self) -> BaseEstimator:
-        """The trained model."""
+        """Trained model."""
         return self._model
 
     def apply_to_dataframe(
@@ -279,7 +281,7 @@ class SingleTrainSummary(BaseTrainSummary):
 
 
 def build_array(summaries: List[BaseTrainSummary], df: pd.DataFrame) -> np.ndarray:
-    """Get a NumPy array which is the response for all events in `df`
+    """Get a NumPy array which is the response for all events in `df`.
 
     This will use the :py:func:`~BaseTrainSummary.apply_to_dataframe`
     function from the list of summaries. We query the input dataframe

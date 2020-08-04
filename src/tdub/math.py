@@ -10,7 +10,7 @@ import scipy.special
 
 
 def kolmogorov_prob(z: float) -> float:
-    """Calculates the Kolmogorov distribution function.
+    """Calculate the Kolmogorov distribution function.
 
     See ROOT's implementation in TMath_ (TMath::KolmogorovProb).
 
@@ -109,7 +109,7 @@ def ks_twosample_binned(
 
 
 def chisquared_cdf_c(chi2: float, ndf: float) -> float:
-    r"""Calculate :math:`\chi^2` probability from the value and degrees of freedom
+    r"""Calculate :math:`\chi^2` probability from the value and NDF.
 
     See ROOT's ``TMath::Prob`` & ``ROOT::Math::chisquared_cdf_c``.
     Quoting the ROOT documentation:
@@ -145,7 +145,7 @@ def chisquared_cdf_c(chi2: float, ndf: float) -> float:
 def chisquared_test(
     h1: np.ndarray, err1: np.ndarray, h2: np.ndarray, err2: np.ndarray,
 ) -> Tuple[float, float, float]:
-    r"""Perform :math:`\chi^2` test on two histograms
+    r"""Perform :math:`\chi^2` test on two histograms.
 
     Parameters
     ----------

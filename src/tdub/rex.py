@@ -62,6 +62,7 @@ class NuisPar:
         Hi error on the NP.
 
     """
+
     name: str
     label: str
     pre_down: float
@@ -73,6 +74,7 @@ class NuisPar:
     sig_hi: float
 
     def __post_init__(self):
+        """Execute after init."""
         self.sort_by = max(abs(self.post_down), abs(self.post_up))
 
 
@@ -228,7 +230,6 @@ def prefit_histograms(
         Prefit ROOT histograms
 
     """
-
     root_path = PosixPath(wkspace) / "Histograms" / f"{fitname}_{region}_histos.root"
     root_file = uproot.open(root_path)
     histograms = {}
@@ -545,7 +546,7 @@ def stack_canvas(
 
 
 def plot_region_stage_ff(args):
-    """A free (multiprocessing compatible) function to plot a region + stage.
+    """Free (multiprocessing compatible) function to plot a region + stage.
 
     This function is designed to be used internally by
     :py:func:`plot_all_regions`, where it is sent to a multiprocessing

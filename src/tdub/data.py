@@ -103,6 +103,7 @@ class Region(Enum):
                 raise ValueError(f"{s} doesn't correspond to a Region")
 
     def __str__(self) -> str:
+        """Convert to string, removing prefix 'r'."""
         return self.name[1:]
 
 
@@ -163,6 +164,7 @@ class SampleInfo:
     tree: str
 
     def __init__(self, input_file: str) -> None:
+        """Class constructor."""
         if "Data_Data" in input_file:
             self.phy_process = "Data"
             self.dsid = 0
@@ -624,7 +626,7 @@ def selection_as_numexpr(selection: str) -> str:
 
 
 def selection_as_root(selection: str) -> str:
-    """Get the ROOT selection string from an arbitrary selection
+    """Get the ROOT selection string from an arbitrary selection.
 
     Parameters
     -----------

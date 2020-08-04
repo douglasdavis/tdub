@@ -67,6 +67,7 @@ class SingleTrainingSummary:
         the binned KS test p-value for background
 
     """
+
     def __init__(
         self,
         *,
@@ -125,6 +126,7 @@ class ResponseHistograms:
         Number of bins to use.
 
     """
+
     def __init__(
         self,
         response_type,
@@ -137,6 +139,7 @@ class ResponseHistograms:
         w_test,
         nbins: int = 30,
     ):
+        """Class constructor."""
         self.response_type = response_type
         r_train, r_test = self._eval_model(model, X_train, X_test)
         self._calculate(r_train, r_test, y_train, y_test, w_train, w_test, nbins)
@@ -1186,7 +1189,6 @@ def gp_minimize_auc(
     >>> gp_minimize_auc("/path/to/data", Region.r2j1b, "DR", "opt_DR_2j1b")
 
     """
-
     from skopt.utils import use_named_args
     from skopt.space import Real, Integer
     from skopt.plots import plot_convergence

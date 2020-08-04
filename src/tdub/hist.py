@@ -20,6 +20,7 @@ class CustomTAxis:
     """A TAxis like object."""
 
     def __init__(self, edges: np.ndarray) -> None:
+        """Class constructor."""
         self._fNbins = len(edges) - 1
         self._fXmin = edges[0]
         self._fXmax = edges[-1]
@@ -78,7 +79,6 @@ def arrays_to_th1(
     :obj:`CustomTH1`
        the ROOT like histogram object
     """
-
     output = CustomTH1.__new__(CustomTH1)
     if content.dtype == np.float32:
         output._classname = "TH1F"
