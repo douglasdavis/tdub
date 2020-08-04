@@ -405,6 +405,45 @@ def apply_weight(
     df.loc[:, cols] = df.loc[:, cols].multiply(df.loc[:, weight_name], axis="index")
 
 
+def apply_weight_inverse(
+    df: pd.DataFrame, weight_name: str, exclude: Optional[List[str]] = None
+) -> None:
+    """Apply an inverse weight (via division) to all other weights in the DataFrame.
+
+    This will divide the nominal weight and all systematic weights in
+    the DataFrame by the ``weight_name`` column. We augment
+    :py:class:`pandas.DataFrame` with this function.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataaframe to operate on.
+    weight_name : str
+        Column name to divide all other weight columns by.
+    exclude : list(str), optional
+        List of columns ot exclude when determining the other weight
+        columns to operate on.
+
+    Examples
+    --------
+    >>> import tdub.frames
+    >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
+    >>> df.apply_weight_inverse("weight_tptrw_tool")
+
+    """
+    sys_weight_cols = [c for c in df.columns if "weight_sys" in c]
+    cols = ["weight_nominal"] + sys_weight_cols
+    if exclude is not None:
+        for entry in exclude:
+            if entry in cols:
+                cols.remove(entry)
+    if weight_name in cols:
+        log.warn(f"{weight_name} is in the columns list, dropping")
+        cols.remove(weight_name)
+
+    df.loc[:, cols] = df.loc[:, cols].divide(df.loc[:, weight_name], axis="index")
+
+
 def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
     """Multiply nominal and systematic weights by the campaign weight.
 
@@ -470,9 +509,52 @@ def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) ->
     apply_weight(df, "weight_tptrw_tool", exclude=excludes)
 
 
+def apply_weight_trrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
+    """Multiply nominal and systematic weights by the top recursive reweight term.
+
+    This is useful for samples that were produced without the top
+    recursive reweighting term already applied to all other weights.
+    We augment :py:class:`pandas.DataFrame` with this function.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe to operate on.
+    exclude : list(str), optional
+        List of columns to exclude when determining the other weight
+        columns to operate on.
+
+    Examples
+    --------
+    >>> import tdub.frames
+    >>> df = tdub.frames.raw_dataframe("/path/to/file.root")
+    >>> df.weight_nominal[5]
+    0.002
+    >>> df.weight_trrw_tool[5]
+    0.98
+    >>> df.apply_weight_trrw()
+    >>> df.weight_nominal[5]
+    0.00196
+
+    """
+    excludes = ["weight_sys_noreweight"]
+    if exclude is not None:
+        excludes += exclude
+    apply_weight(df, "weight_trrw_tool", exclude=excludes)
+
+
+def apply_weight_trrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
+    """TBD."""
+    excludes = ["weight_sys_noreweight"]
+    if exclude is not None:
+        excludes += exclude
+    apply_weight(df, "weight_trrw_tool", exclude=excludes)
+
+
 pd.DataFrame.drop_cols = drop_cols
 pd.DataFrame.drop_avoid = drop_avoid
 pd.DataFrame.drop_jet2 = drop_jet2
 pd.DataFrame.apply_weight = apply_weight
 pd.DataFrame.apply_weight_campaign = apply_weight_campaign
 pd.DataFrame.apply_weight_tptrw = apply_weight_tptrw
+pd.DataFrame.apply_weight_trrw = apply_weight_trrw
