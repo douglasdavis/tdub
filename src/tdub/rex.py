@@ -63,19 +63,20 @@ class NuisPar:
 
     """
 
-    name: str
-    label: str
-    pre_down: float
-    pre_up: float
-    post_down: float
-    post_up: float
-    central: float
-    sig_lo: float
-    sig_hi: float
+    name: str = ""
+    label: str = ""
+    pre_down: float = 0.0
+    pre_up: float = 0.0
+    post_down: float = 0.0
+    post_up: float = 0.0
+    central: float = 0.0
+    sig_lo: float = 0.0
+    sig_hi: float = 0.0
+    post_max: float = 0.0
 
     def __post_init__(self):
         """Execute after init."""
-        self.sort_by = max(abs(self.post_down), abs(self.post_up))
+        self.post_max = max(abs(self.post_down), abs(self.post_up))
 
 
 def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
@@ -680,7 +681,7 @@ def nuispar_impacts(wkspace: Union[str, os.PathLike], sort: bool = True) -> List
             )
         )
     if sort:
-        return sorted(nuispars, key=lambda par: par.sort_by)
+        return sorted(nuispars, key=lambda par: par.post_max)
     return nuispars
 
 
@@ -758,6 +759,7 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
 
     df = nuispar_impact_plot_df(nuispars)
     ys = np.array(df.ys)
+    # fmt: off
     fig, ax = plt.subplots(figsize=(5, 7.5))
     ax, ax2 = draw_impact_barh(ax, df)
     ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(-0.75, 1.11))
@@ -774,3 +776,5 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
     mpl_dir = PosixPath(wkspace) / "matplotlib"
     mpl_dir.mkdir(exist_ok=True)
     fig.savefig(mpl_dir / "Impact.pdf")
+    # fmt: on
+    return 0
