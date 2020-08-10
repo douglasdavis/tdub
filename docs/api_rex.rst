@@ -24,9 +24,9 @@ Function Summary
    data_histogram
    meta_axis_label
    meta_text
-   nuispar_specific
-   nuispar_impact_plot_df
+   nuispar_impact
    nuispar_impacts
+   nuispar_impact_plot_df
    nuispar_impact_plot_top15
    plot_all_regions
    plot_region_stage_ff
@@ -52,9 +52,9 @@ Reference
 .. autofunction:: plot_region_stage_ff
 .. autofunction:: meta_axis_label
 .. autofunction:: meta_text
-.. autofunction:: nuispar_specific
-.. autofunction:: nuispar_impact_plot_df
+.. autofunction:: nuispar_impact
 .. autofunction:: nuispar_impacts
+.. autofunction:: nuispar_impact_plot_df
 .. autofunction:: nuispar_impact_plot_top15
 .. autofunction:: prefit_total_and_uncertainty
 .. autofunction:: prefit_histogram

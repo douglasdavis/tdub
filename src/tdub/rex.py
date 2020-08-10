@@ -609,10 +609,10 @@ def plot_all_regions(
     pool.map(plot_region_stage_ff, args)
 
 
-def nuispar_specific(
+def nuispar_impact(
     wkspace: Union[str, os.PathLike], name: str, label: Optional[str] = None
 ) -> NuisPar:
-    """Extract a specific nuisance parameter from a fit workspace.
+    """Extract a specific nuisance parameter from a fit.
 
     Parameters
     ----------
@@ -629,21 +629,19 @@ def nuispar_specific(
         Desired nuisance parameter summary.
 
     """
-    with open(PosixPath(wkspace) / "Fits" / "NPRanking.txt") as f:
-        for line in f:
-            if line.startswith(name):
-                n, c, su, sd, postup, postdn, preup, predn = line.strip().split()
-                break
+    n, c, su, sd, postup, postdn, preup, predn = (
+        (PosixPath(wkspace) / "Fits" / f"NPRanking_{name}.txt").read_text().strip().split()
+    )
     npar = NuisPar(
         name,
         name,
-        round(float(predn), 5),
-        round(float(preup), 5),
-        round(float(postdn), 5),
-        round(float(postup), 5),
-        round(float(c), 5),
-        round(float(sd), 5),
-        round(float(su), 5),
+        round(float(predn), 6),
+        round(float(preup), 6),
+        round(float(postdn), 6),
+        round(float(postup), 6),
+        round(float(c), 6),
+        round(float(sd), 6),
+        round(float(su), 6),
     )
     if label is not None:
         npar.label = label
@@ -651,7 +649,7 @@ def nuispar_specific(
 
 
 def nuispar_impacts(wkspace: Union[str, os.PathLike], sort: bool = True) -> List[NuisPar]:
-    """Get list of nuisance parameter impacts.
+    """Extract a list of nuisance parameter impacts from a fit.
 
     Parameters
     ----------
