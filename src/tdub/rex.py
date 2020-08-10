@@ -2,6 +2,7 @@
 
 # stdlib
 import logging
+import math
 import multiprocessing
 import os
 from dataclasses import dataclass
@@ -776,3 +777,57 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
     fig.savefig(mpl_dir / "Impact.pdf")
     # fmt: on
     return 0
+
+
+def delta_poi(
+    wkspace1: Union[str, os.PathLike],
+    wkspace2: Union[str, os.PathLike],
+    fitname1: str = "tW",
+    fitname2: str = "tW",
+    poi: str = "SigXsecOverSM",
+):
+    r"""Calculate difference of a POI between two workspaces.
+
+    The default arguments will perform a calculation of
+    :math:`\Delta\mu` between two different fits. Standard error
+    propagation is performed on both the up and down uncertainties.
+
+    Parameters
+    ----------
+    wkspace1 : str or os.PathLike
+        Path of the first TRExFitter workspace.
+    wkspace2 : str or os.PathLike
+        Path of the second TRExFitter workspace.
+    fitname1 : str
+        Name of the first fit.
+    fitname2 : str
+        Name of the second fit.
+    poi : str
+        Name of the parameter of interest.
+
+    Returns
+    -------
+    float
+        Central value of delta mu.
+    float
+        Up uncertainty on delta mu.
+    float
+        Down uncertainty on delta mu.
+
+    """
+
+    def get_param(fit_file, name):
+        with fit_file.open("r") as f:
+            for line in f.readlines():
+                if name in line:
+                    n, c, u, d = tuple(line.split())
+                    return n, float(c), float(u), float(d)
+
+    fit_file1 = PosixPath(wkspace1) / "Fits" / f"{fitname1}.txt"
+    fit_file2 = PosixPath(wkspace2) / "Fits" / f"{fitname2}.txt"
+    mu1 = get_param(fit_file1, poi)
+    mu2 = get_param(fit_file2, poi)
+    delta_mu = mu1[1] - mu2[1]
+    sig_delta_mu_up = math.sqrt(mu1[2] ** 2 + mu2[2] ** 2)
+    sig_delta_mu_dn = math.sqrt(mu1[3] ** 2 + mu2[3] ** 2)
+    return delta_mu, sig_delta_mu_up, sig_delta_mu_dn

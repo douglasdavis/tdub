@@ -22,6 +22,7 @@ Function Summary
    chisq
    chisq_text
    data_histogram
+   delta_poi
    meta_axis_label
    meta_text
    nuispar_impact
@@ -48,6 +49,7 @@ Reference
 .. autofunction:: chisq
 .. autofunction:: chisq_text
 .. autofunction:: data_histogram
+.. autofunction:: delta_poi
 .. autofunction:: plot_all_regions
 .. autofunction:: plot_region_stage_ff
 .. autofunction:: meta_axis_label
