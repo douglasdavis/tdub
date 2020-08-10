@@ -10,8 +10,6 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
-from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymmErrors
-from uproot_methods.classes.TH1 import Methods as ROOT_TH1
 
 # tdub
 from tdub import setup_logging
@@ -23,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 def adjust_figure(
-    fig: plt.Figure,
+    fig: Any,
     left: float = 0.125,
     bottom: float = 0.095,
     right: float = 0.965,
@@ -33,7 +31,7 @@ def adjust_figure(
     NotImplementedError("TODO")
 
 
-def legend_last_to_first(ax: plt.Axes, **kwargs):
+def legend_last_to_first(ax: Any, **kwargs):
     """Move the last element of the legend to first.
 
     Parameters
@@ -52,7 +50,7 @@ def legend_last_to_first(ax: plt.Axes, **kwargs):
 
 
 def draw_atlas_label(
-    ax: plt.Axes,
+    ax: Any,
     follow: str = "Internal",
     cme_and_lumi: bool = True,
     extra_lines: Optional[List[str]] = None,
@@ -112,10 +110,10 @@ def draw_atlas_label(
 
 
 def draw_uncertainty_bands(
-    uncertainty: ROOT_TGraphAsymmErrors,
-    total_mc: ROOT_TH1,
-    ax: plt.Axes,
-    axr: plt.Axes,
+    uncertainty: Any,
+    total_mc: Any,
+    ax: Any,
+    axr: Any,
     label: str = "Uncertainty",
     edgecolor: Any = "mediumblue",
     zero_threshold: float = 0.25,
@@ -174,14 +172,14 @@ def draw_uncertainty_bands(
 
 
 def canvas_from_counts(
-    counts: Dict[str, np.ndarray],
-    errors: Dict[str, np.ndarray],
+    counts: Dict[str, Any],
+    errors: Dict[str, Any],
     bin_edges: np.ndarray,
-    uncertainty: Optional[ROOT_TGraphAsymmErrors] = None,
-    total_mc: Optional[ROOT_TH1] = None,
+    uncertainty: Optional[Any] = None,
+    total_mc: Optional[Any] = None,
     logy: bool = False,
     **subplots_kw,
-) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
+) -> Tuple[Any, Any, Any]:
     """Create a plot canvas given a dictionary of counts and bin edges.
 
     The ``counts`` and ``errors`` dictionaries are expected to have
@@ -284,8 +282,30 @@ def canvas_from_counts(
     return fig, ax, axr
 
 
-def draw_impact_barh(ax, df, hi_color="skyblue", lo_color="peru") -> Tuple[plt.Axes, plt.Axes]:
-    """Draw the impact plot."""
+def draw_impact_barh(
+    ax: Any, df: Any, hi_color: str = "skyblue", lo_color: str = "peru"
+) -> Any:
+    """Draw the impact plot.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Axes for the "delta mu" impact.
+    df : pandas.DataFrame
+        Dataframe containing impact information.
+    hi_color : str
+        Up variation color.
+    lo_color : str
+        Down variation color.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        Axes for the impact: "delta mu".
+    matplotlib.axes.Axes
+        Axes for the nuisance parameter pull.
+
+    """
     ys = np.array(df.ys)
     ax.barh(
         ys,
@@ -324,6 +344,8 @@ def draw_impact_barh(ax, df, hi_color="skyblue", lo_color="peru") -> Tuple[plt.A
         label=r"Postfit $\theta=\hat{\theta}+\Delta\theta$",
     )
     xlims = np.amax([np.abs(df.pre_down), np.abs(df.pre_up)]) * 1.25
+    if xlims > 0.25:
+        xlims = 0.24
     ax.set_xlim([-xlims, xlims])
     ax.set_yticks(ys)
     ax2 = ax.twiny()
@@ -345,7 +367,7 @@ def draw_impact_barh(ax, df, hi_color="skyblue", lo_color="peru") -> Tuple[plt.A
 
 
 def setup_tdub_style() -> None:
-    """Modify matplotlib's rcParams."""
+    """Modifies matplotlib's rcParams to our preference."""
     matplotlib.rcParams["font.sans-serif"] = [
         "Helvetica",
         "helvetica",
