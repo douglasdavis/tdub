@@ -17,9 +17,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import uproot
-from uproot.rootio import ROOTDirectory
-from uproot_methods.classes.TGraphAsymmErrors import Methods as ROOT_TGraphAsymmErrors
-from uproot_methods.classes.TH1 import Methods as ROOT_TH1
 import yaml
 
 # tdub
@@ -100,7 +97,7 @@ def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
 
 def data_histogram(
     wkspace: Union[str, os.PathLike], region: str, fitname: str = "tW"
-) -> ROOT_TH1:
+) -> Any:
     """Get the histogram for the Data in a region from a workspace.
 
     Parameters
@@ -180,7 +177,7 @@ def chisq_text(wkspace: Union[str, os.PathLike], region: str, stage: str = "pre"
     )
 
 
-def prefit_histogram(root_file: ROOTDirectory, sample: str, region: str) -> ROOT_TH1:
+def prefit_histogram(root_file: Any, sample: str, region: str) -> Any:
     """Get a prefit histogram from a file.
 
     Parameters
@@ -212,7 +209,7 @@ def prefit_histograms(
     samples: Iterable[str],
     region: str,
     fitname: str = "tW",
-) -> Dict[str, ROOT_TH1]:
+) -> Dict[str, Any]:
     """Retrieve sample prefit histograms for a region.
 
     Parameters
@@ -264,7 +261,7 @@ def hepdata(
 
 def prefit_total_and_uncertainty(
     wkspace: Union[str, os.PathLike], region: str
-) -> Tuple[ROOT_TGraphAsymmErrors, ROOT_TH1]:
+) -> Tuple[Any, Any]:
     """Get the prefit total MC prediction and uncertainty band for a region.
 
     Parameters
@@ -310,7 +307,7 @@ def postfit_available(wkspace: Union[str, os.PathLike]) -> bool:
     return False
 
 
-def postfit_histogram(root_file: ROOTDirectory, sample: str) -> ROOT_TH1:
+def postfit_histogram(root_file: Any, sample: str) -> Any:
     """Get a postfit histogram from a file.
 
     Parameters
@@ -337,7 +334,7 @@ def postfit_histogram(root_file: ROOTDirectory, sample: str) -> ROOT_TH1:
 
 def postfit_histograms(
     wkspace: Union[str, os.PathLike], samples: Iterable[str], region: str
-) -> Dict[str, ROOT_TH1]:
+) -> Dict[str, Any]:
     """Retrieve sample postfit histograms for a region.
 
     Parameters
@@ -370,7 +367,7 @@ def postfit_histograms(
 
 def postfit_total_and_uncertainty(
     wkspace: Union[str, os.PathLike], region: str
-) -> Tuple[ROOT_TGraphAsymmErrors, ROOT_TH1]:
+) -> Tuple[Any, Any]:
     """Get the postfit total MC prediction and uncertainty band for a region.
 
     Parameters
