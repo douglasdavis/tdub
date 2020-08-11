@@ -566,7 +566,7 @@ def soverb(datadir, selections, use_tptrw):
 @click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")
 @click.option("--impact-only", is_flag=True, help="Only produce the impact plot.")
 def rex_plot(workspace, outdir, chisq, impact_only):
-    """Generate plots from TRExFitter WORKSPACE using METADATA."""
+    """Generate plots from TRExFitter WORKSPACE."""
     import tdub.rex
     import tdub.config
 

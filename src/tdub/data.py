@@ -12,7 +12,7 @@ from typing import Union, Set, Dict, Iterable, List, Optional
 
 # external
 import formulate
-import uproot4
+import uproot4 as uproot
 from uproot4.reading import ReadOnlyDirectory
 from uproot4.models.TTree import Model_TTree_v20
 
@@ -243,6 +243,11 @@ def branches_from(
     list(str)
         Branches from the source.
 
+    Raises
+    ------
+    TypeError
+        If `source` can't be used to find a list of branches.
+
     Examples
     --------
     >>> from tdub.data import branches_from
@@ -252,26 +257,25 @@ def branches_from(
     ["pT_lep1", "pT_lep2", "weight_nominal", "weight_tptrw"]
 
     """
-    print(type(source))
     if isinstance(source, (str, os.PathLike)):
-        t = uproot4.open(source).get(tree)
+        t = uproot.open(source).get(tree)
     elif isinstance(source, list):
-        t = uproot4.open(source[0]).get(tree)
-    elif isinstance(source, uproot4.reading.ReadOnlyDirectory):
+        t = uproot.open(source[0]).get(tree)
+    elif isinstance(source, uproot.reading.ReadOnlyDirectory):
         t = source.get(tree)
-    elif isinstance(source, uproot4.models.TTree.Model_TTree_v20):
+    elif isinstance(source, uproot.behaviors.TTree.TTree):
         t = source
+    else:
+        raise TypeError("Cannot use source (it is type %s)" % str(type(source)))
     branches = t.keys()
 
     # return here if weights are not ignored
-    if not ignore_weights:
-        return branches
+    if ignore_weights:
+        weight_re = re.compile(r"(weight_\w+)")
+        weights = set(filter(weight_re.match, branches))
+        branches = set(branches) ^ weights
 
-    # check for weight branches
-    weight_re = re.compile(r"(weight_\w+)")
-    weights = set(filter(weight_re.match, branches))
-
-    return list(sorted(set(branches) ^ weights, key=str.lower))
+    return list(sorted(branches, key=str.lower))
 
 
 def categorize_branches(source: List[str]) -> Dict[str, List[str]]:
