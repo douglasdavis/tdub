@@ -269,10 +269,8 @@ def branches_from(
         raise TypeError("Cannot use source (it is type %s)" % str(type(source)))
     branches = t.keys()
 
-    # return here if weights are not ignored
     if ignore_weights:
-        weight_re = re.compile(r"(weight_\w+)")
-        weights = set(filter(weight_re.match, branches))
+        weights = set(filter(re.compile(r"(weight_\w+)").match, branches))
         branches = set(branches) ^ weights
 
     return list(sorted(branches, key=str.lower))

@@ -159,6 +159,7 @@ def test_branches_from():
     b4 = sorted(branches_from(f4, ignore_weights=True))
     b5 = sorted(branches_from(f2, ignore_weights=True))
     assert b4 == b5
+    assert all(["weight_" not in b for b in b5])
 
 
 def test_categorize_branches():
