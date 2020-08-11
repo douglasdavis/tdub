@@ -575,8 +575,8 @@ def rex_plot(workspace, outdir, chisq, impact_only):
     else:
         outdir = PosixPath(outdir)
     outdir.mkdir(exist_ok=True)
+    tdub.rex.nuispar_impact_plot_top15(workspace)
     if impact_only:
-        tdub.rex.nuispar_impact_plot_top15(workspace)
         return 0
     tdub.config.init_meta_table()
     tdub.config.init_meta_logy()

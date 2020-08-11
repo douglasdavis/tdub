@@ -8,7 +8,7 @@ def setup_logging():
 
     logging.basicConfig(
         level=logging.INFO,
-        format="%(name)-15s %(funcName)-22s %(levelname)-8s    %(message)s",
+        format="%(name)-15s %(funcName)-28s %(levelname)-9s    %(message)s",
     )
     logging.addLevelName(
         logging.WARNING,

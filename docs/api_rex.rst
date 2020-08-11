@@ -34,6 +34,7 @@ Function Summary
    prefit_total_and_uncertainty
    prefit_histogram
    prefit_histograms
+   prettify_nuispar_label
    postfit_available
    postfit_total_and_uncertainty
    postfit_histogram
@@ -61,6 +62,7 @@ Reference
 .. autofunction:: prefit_total_and_uncertainty
 .. autofunction:: prefit_histogram
 .. autofunction:: prefit_histograms
+.. autofunction:: prettify_nuispar_label
 .. autofunction:: postfit_available
 .. autofunction:: postfit_total_and_uncertainty
 .. autofunction:: postfit_histogram

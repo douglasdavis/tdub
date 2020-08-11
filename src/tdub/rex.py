@@ -729,6 +729,37 @@ def nuispar_impact_plot_df(nuispars: List[NuisPar]) -> pd.DataFrame:
     )
 
 
+def prettify_nuispar_label(label: str) -> str:
+    """Fix nuisance parameter label to look nice for plots.
+
+    Replace underscores with whitespace, TeXify some stuff, remove
+    unnecessary things, etc.
+
+    Parameters
+    ----------
+    label : str
+        Original label.
+
+    Returns
+    -------
+    str
+        Prettified label.
+
+    """
+    return (
+        label.replace("_", " ")
+        .replace("ttbar", r"$t\bar{t}$")
+        .replace("tW", r"$tW$")
+        .replace("muF", r"$\mu_F$")
+        .replace("muR", r"$\mu_R$")
+        .replace("AR ", "")
+        .replace("hdamp", r"$h_{\mathrm{damp}}$")
+        .replace("DRDS", "DR vs DS")
+        .replace("ptreweight", r"top-$p_{\mathrm{T}}$-reweight")
+        .replace("MET", r"$E_{\mathrm{T}}^{\mathrm{miss}}$")
+    )
+
+
 def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
     """Plot the top 15 nuisance parameters based on impact.
 
@@ -740,19 +771,7 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
     """
     nuispars = nuispar_impacts(wkspace, sort=True)[-15:]
     for npar in nuispars:
-        npar.label = (
-            npar.label.replace("_", " ")
-            .replace("ttbar", r"$t\bar{t}$")
-            .replace("tW", r"$tW$")
-            .replace("muF", r"$\mu_F$")
-            .replace("muR", r"$\mu_R$")
-            .replace("AR ", "")
-            .replace("hdamp", r"$h_{\mathrm{damp}}$")
-            .replace("DRDS", "DR vs DS")
-            .replace("ptreweight", r"top-$p_{\mathrm{T}}$-reweight")
-            .replace("MET", r"$E_{\mathrm{T}}^{\mathrm{miss}}$")
-        )
-
+        npar.label = prettify_nuispar_label(npar.label)
     df = nuispar_impact_plot_df(nuispars)
     ys = np.array(df.ys)
     # fmt: off
@@ -771,7 +790,11 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
     fig.subplots_adjust(left=0.45, bottom=0.085, top=0.915, right=0.975)
     mpl_dir = PosixPath(wkspace) / "matplotlib"
     mpl_dir.mkdir(exist_ok=True)
-    fig.savefig(mpl_dir / "Impact.pdf")
+    output_file = str(mpl_dir / "Impact.pdf")
+    fig.savefig(output_file)
+    log.info("Created %s" % output_file)
+    plt.close(fig)
+    del fig, ax, ax2
     # fmt: on
     return 0
 
