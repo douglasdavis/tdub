@@ -562,26 +562,28 @@ def soverb(datadir, selections, use_tptrw):
 
 @cli.command("rex-plot", context_settings=dict(max_content_width=92))
 @click.argument("workspace", type=click.Path(exists=True))
-@click.option("-o", "outdir", type=str, default="auto")
+@click.option("-o", "--outdir", type=str, default="auto", help="Manual output directory.")
+@click.option("-n", "--n-test", type=int, default=-1, help="Test only n plots (for stacks).")
+@click.option("--stacks/--no-stacks", default=True, help="Do or don't plot stacks.")
 @click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")
-@click.option("--impact-only", is_flag=True, help="Only produce the impact plot.")
-def rex_plot(workspace, outdir, chisq, impact_only):
+@click.option("--impact/--no-impact", default=True, help="Do or don't produce the impact plot.")
+def rex_plot(workspace, outdir, stacks, chisq, impact, n_test):
     """Generate plots from TRExFitter WORKSPACE."""
     import tdub.rex
     import tdub.config
-
     if outdir == "auto":
         outdir = PosixPath(workspace) / "matplotlib"
     else:
         outdir = PosixPath(outdir)
     outdir.mkdir(exist_ok=True)
-    tdub.rex.nuispar_impact_plot_top15(workspace)
-    if impact_only:
-        return 0
-    tdub.config.init_meta_table()
-    tdub.config.init_meta_logy()
-    tdub.rex.plot_all_regions(workspace, outdir, stage="pre", show_chisq=chisq)
-    tdub.rex.plot_all_regions(workspace, outdir, stage="post", show_chisq=chisq)
+    if impact:
+        tdub.rex.nuispar_impact_plot_top15(workspace)
+    if stacks:
+        tdub.config.init_meta_table()
+        tdub.config.init_meta_logy()
+        tdub.rex.plot_all_regions(workspace, outdir, stage="pre", show_chisq=chisq, n_test=n_test)
+        tdub.rex.plot_all_regions(workspace, outdir, stage="post", show_chisq=chisq, n_test=n_test)
+    return 0
 
 
 @cli.command("imp-tables", context_settings=dict(max_content_width=92))

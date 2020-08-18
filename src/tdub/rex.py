@@ -5,6 +5,7 @@ import logging
 import math
 import multiprocessing
 import os
+import random
 from dataclasses import dataclass
 from pathlib import PosixPath
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
@@ -92,7 +93,7 @@ def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
 
     """
     root_files = (PosixPath(wkspace) / "Histograms").glob("*_preFit.root")
-    return [rf.name[:-12] for rf in root_files]
+    return [rf.name[:-12] for rf in root_files if "asimov" not in rf.name]
 
 
 def data_histogram(
@@ -153,7 +154,7 @@ def chisq(
 def chisq_text(wkspace: Union[str, os.PathLike], region: str, stage: str = "pre") -> None:
     r"""Generate nicely formatted text for :math:`\chi^2` information.
 
-    Deploys the :py:func:`tdub.rex.chisq` for grab the info.
+    Deploys :py:func:`tdub.rex.chisq` for grab the info.
 
     Parameters
     ----------
@@ -536,9 +537,9 @@ def stack_canvas(
         ax1.set_yticks([0.9, 0.95, 1.0, 1.05])
     if show_chisq:
         ax1.text(
-            0.02, 0.8, chisq_text(wkspace, region, stage), transform=ax1.transAxes, size=10
+            0.02, 0.8, chisq_text(wkspace, region, stage), transform=ax1.transAxes, size=11
         )
-    ax1.legend(loc="lower left", fontsize=10)
+    ax1.legend(loc="lower left", fontsize=11)
 
     # return objects
     return fig, ax0, ax1
@@ -578,6 +579,7 @@ def plot_all_regions(
     stage: str = "pre",
     fitname: str = "tW",
     show_chisq: bool = True,
+    n_test: int = -1,
 ) -> None:
     r"""Plot all regions discovered in a workspace.
 
@@ -593,10 +595,14 @@ def plot_all_regions(
         Name of the Fit
     show_chisq : bool
         Print :math:`\chi^2` information on ratio canvas.
+    n_test : int
+        Maximum number of regions to plot (for quick tests).
 
     """
     PosixPath(outdir).mkdir(parents=True, exist_ok=True)
     regions = available_regions(wkspace)
+    if n_test > 0:
+        regions = random.sample(regions, n_test)
     meta_table = tdub.config.PLOTTING_META_TABLE.copy()
     log_patterns = tdub.config.PLOTTING_LOGY.copy()
     args = [

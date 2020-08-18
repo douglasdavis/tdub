@@ -56,11 +56,11 @@ def draw_atlas_label(
     extra_lines: Optional[List[str]] = None,
     cme: Union[int, float] = 13,
     lumi: float = 139,
-    x: float = 0.050,
+    x: float = 0.040,
     y: float = 0.905,
-    follow_shift: float = 0.15,
-    s1: int = 14,
-    s2: int = 12,
+    follow_shift: float = 0.16,
+    s1: int = 18,
+    s2: int = 16,
 ) -> None:
     """Draw the ATLAS label text, with extra lines if desired.
 
@@ -376,17 +376,17 @@ def setup_tdub_style() -> None:
     ]
     matplotlib.rcParams["axes.formatter.limits"] = [-4, 4]
     matplotlib.rcParams["axes.formatter.use_mathtext"] = True
-    matplotlib.rcParams["axes.labelsize"] = 15
-    matplotlib.rcParams["figure.figsize"] = (5.8, 5.2)
+    matplotlib.rcParams["axes.labelsize"] = 16
+    matplotlib.rcParams["figure.figsize"] = (6.7, 6.1)
     matplotlib.rcParams["figure.facecolor"] = "white"
-    matplotlib.rcParams["figure.subplot.left"] = 0.125
-    matplotlib.rcParams["figure.subplot.bottom"] = 0.1075
+    matplotlib.rcParams["figure.subplot.left"] = 0.12
+    matplotlib.rcParams["figure.subplot.bottom"] = 0.1
     matplotlib.rcParams["figure.subplot.right"] = 0.965
     matplotlib.rcParams["figure.subplot.top"] = 0.95
-    matplotlib.rcParams["font.size"] = 13
+    matplotlib.rcParams["font.size"] = 14
     matplotlib.rcParams["legend.frameon"] = False
     matplotlib.rcParams["legend.numpoints"] = 1
-    matplotlib.rcParams["legend.fontsize"] = 11
+    matplotlib.rcParams["legend.fontsize"] = 12
     matplotlib.rcParams["legend.handlelength"] = 1.5
     matplotlib.rcParams["lines.linewidth"] = 1
     matplotlib.rcParams["xtick.top"] = True
@@ -399,13 +399,13 @@ def setup_tdub_style() -> None:
     matplotlib.rcParams["ytick.minor.visible"] = True
     matplotlib.rcParams["xtick.major.width"] = 0.8
     matplotlib.rcParams["xtick.minor.width"] = 0.8
-    matplotlib.rcParams["xtick.major.size"] = 7.0
-    matplotlib.rcParams["xtick.minor.size"] = 4.0
-    matplotlib.rcParams["xtick.major.pad"] = 3.5
-    matplotlib.rcParams["xtick.minor.pad"] = 3.4
-    matplotlib.rcParams["ytick.major.width"] = 0.8
-    matplotlib.rcParams["ytick.minor.width"] = 0.8
-    matplotlib.rcParams["ytick.major.size"] = 7.0
-    matplotlib.rcParams["ytick.minor.size"] = 4.0
-    matplotlib.rcParams["ytick.major.pad"] = 3.5
-    matplotlib.rcParams["ytick.minor.pad"] = 3.4
+    matplotlib.rcParams["xtick.major.size"] = 7.5
+    matplotlib.rcParams["xtick.minor.size"] = 4.5
+    matplotlib.rcParams["xtick.major.pad"] = 4.0
+    matplotlib.rcParams["xtick.minor.pad"] = 3.7
+    matplotlib.rcParams["ytick.major.width"] = 0.9
+    matplotlib.rcParams["ytick.minor.width"] = 0.9
+    matplotlib.rcParams["ytick.major.size"] = 7.5
+    matplotlib.rcParams["ytick.minor.size"] = 4.5
+    matplotlib.rcParams["ytick.major.pad"] = 3.9
+    matplotlib.rcParams["ytick.minor.pad"] = 3.6
