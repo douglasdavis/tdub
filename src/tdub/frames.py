@@ -416,6 +416,7 @@ def apply_weight(
         log.warn(f"{weight_name} is in the columns list, dropping")
         cols.remove(weight_name)
 
+    log.info(f"Applying {weight_name} to all weights in dataframe.")
     df.loc[:, cols] = df.loc[:, cols].multiply(df.loc[:, weight_name], axis="index")
 
 

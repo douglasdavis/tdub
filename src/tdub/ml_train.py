@@ -309,6 +309,7 @@ def prepare_from_root(
     scale_sum_weights: bool = True,
     use_campaign_weight: bool = False,
     use_tptrw: bool = False,
+    use_trrw: bool = False,
     test_case_size: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
     """Prepare the data to train in a region with signal and background ROOT files.
@@ -336,7 +337,9 @@ def prepare_from_root(
     use_campaign_weight : bool
         See the parameter description for :py:func:`tdub.frames.iterative_selection`.
     use_tptrw : bool
-        Apply the top pt reweighing factor.
+        Apply the top pt reweighting factor.
+    use_tptrw : bool
+        Apply the top recursive reweighting factor.
     test_case_size : int, optional
         Prepare a small test case dataset using this many training and
         testing samples.
@@ -399,6 +402,7 @@ def prepare_from_root(
         exclude_avoids=True,
         use_campaign_weight=use_campaign_weight,
         use_tptrw=use_tptrw,
+        use_trrw=use_trrw,
     )
 
     if test_case_size is not None:

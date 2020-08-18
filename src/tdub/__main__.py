@@ -32,6 +32,7 @@ def cli():
 @click.option("-n", "--nlo-method", type=str, default="DR", help="tW simluation NLO method", show_default=True)
 @click.option("-x", "--override-selection", type=str, help="override selection with contents of file")
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
+@click.option("-r", "--use-trrw", is_flag=True, help="apply top recursive reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
 @click.option("-s", "--test-size", type=float, default=0.40, help="training test size", show_default=True)
 @click.option("-e", "--early-stop", type=int, default=10, help="number of early stopping rounds", show_default=True)
@@ -50,6 +51,7 @@ def single(
     nlo_method,
     override_selection,
     use_tptrw,
+    use_trrw,
     ignore_list,
     test_size,
     early_stop,
@@ -82,6 +84,7 @@ def single(
         weight_mean=1.0,
         override_selection=override_sel,
         use_tptrw=use_tptrw,
+        use_trrw=use_trrw,
     )
     drop_cols(df, *avoids_for(region))
     if ignore_list:
@@ -118,6 +121,7 @@ def single(
 @click.option("-e", "--early-stop", type=int, default=10, help="number of early stopping rounds", show_default=True)
 @click.option("-x", "--override-selection", type=str, help="override selection with contents of file")
 @click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
+@click.option("-r", "--use-trrw", is_flag=True, help="apply top recursive reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
 @click.option("-s", "--test-size", type=float, default=0.40, help="training test size", show_default=True)
 @click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
@@ -132,6 +136,7 @@ def scan(
     early_stop,
     override_selection,
     use_tptrw,
+    use_trrw,
     ignore_list,
     test_size,
     use_dilep,
@@ -217,6 +222,7 @@ def scan(
             "--early-stop {} "
             "{}"
             "{}"
+            "{}"
         ).format(
             datadir,
             region,
@@ -232,6 +238,7 @@ def scan(
             max_depth,
             reg_lambda,
             early_stop,
+            "-r " if use_trrw else "",
             "-t " if use_tptrw else "",
             "-d " if use_dilep else "",
         )
