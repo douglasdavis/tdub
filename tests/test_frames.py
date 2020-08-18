@@ -79,7 +79,7 @@ def test_selection_strings():
     assert df_r_sel1.equals(df_n_sel2)
 
 
-def test_apply_weight():
+def test_apply_weight_tptrw():
     f = test_file_root / "testfile4.root"
     t = uproot.open(f).get("WtLoop_nominal")
     w1 = t.arrays(["weight_nominal"], library="np")["weight_nominal"]
@@ -89,6 +89,22 @@ def test_apply_weight():
     r2 = w2 * wr
     df = t.arrays(library="pd")
     apply_weight_tptrw(df)
+    rr1 = df["weight_nominal"].to_numpy()
+    rr2 = df["weight_sys_pileup_DOWN"].to_numpy()
+    assert np.allclose(r1, rr1)
+    assert np.allclose(r2, rr2)
+
+
+def test_apply_weight_trrw():
+    f = test_file_root / "testfile4.root"
+    t = uproot.open(f).get("WtLoop_nominal")
+    w1 = t.arrays(["weight_nominal"], library="np")["weight_nominal"]
+    w2 = t.arrays(["weight_sys_pileup_DOWN"], library="np")["weight_sys_pileup_DOWN"]
+    wr = t.arrays(["weight_trrw_tool"], library="np")["weight_trrw_tool"]
+    r1 = w1 * wr
+    r2 = w2 * wr
+    df = t.arrays(library="pd")
+    apply_weight_trrw(df)
     rr1 = df["weight_nominal"].to_numpy()
     rr2 = df["weight_sys_pileup_DOWN"].to_numpy()
     assert np.allclose(r1, rr1)
