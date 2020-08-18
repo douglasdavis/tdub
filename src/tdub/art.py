@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 def adjust_figure(
-    fig: Any,
+    fig: plt.Figure,
     left: float = 0.125,
     bottom: float = 0.095,
     right: float = 0.965,
@@ -31,7 +31,7 @@ def adjust_figure(
     NotImplementedError("TODO")
 
 
-def legend_last_to_first(ax: Any, **kwargs):
+def legend_last_to_first(ax: plt.Axes, **kwargs):
     """Move the last element of the legend to first.
 
     Parameters
@@ -50,7 +50,7 @@ def legend_last_to_first(ax: Any, **kwargs):
 
 
 def draw_atlas_label(
-    ax: Any,
+    ax: plt.Axes,
     follow: str = "Internal",
     cme_and_lumi: bool = True,
     extra_lines: Optional[List[str]] = None,
@@ -112,10 +112,10 @@ def draw_atlas_label(
 def draw_uncertainty_bands(
     uncertainty: Any,
     total_mc: Any,
-    ax: Any,
-    axr: Any,
+    ax: plt.Axes,
+    axr: plt.Axes,
     label: str = "Uncertainty",
-    edgecolor: Any = "mediumblue",
+    edgecolor: Union[str, int] = "mediumblue",
     zero_threshold: float = 0.25,
 ) -> None:
     """Draw uncertainty bands on both axes in stack plot with a ratio.
@@ -179,7 +179,7 @@ def canvas_from_counts(
     total_mc: Optional[Any] = None,
     logy: bool = False,
     **subplots_kw,
-) -> Tuple[Any, Any, Any]:
+) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
     """Create a plot canvas given a dictionary of counts and bin edges.
 
     The ``counts`` and ``errors`` dictionaries are expected to have
@@ -283,8 +283,8 @@ def canvas_from_counts(
 
 
 def draw_impact_barh(
-    ax: Any, df: Any, hi_color: str = "skyblue", lo_color: str = "peru"
-) -> Any:
+    ax: plt.Axes, df: Any, hi_color: str = "skyblue", lo_color: str = "peru"
+) -> Tuple[plt.Axes, plt.Axes]:
     """Draw the impact plot.
 
     Parameters
