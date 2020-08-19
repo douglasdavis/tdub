@@ -38,6 +38,7 @@ def cli():
 @click.option("-e", "--early-stop", type=int, default=10, help="number of early stopping rounds", show_default=True)
 @click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
 @click.option("-k", "--use-sklearn", is_flag=True, help="use sklearn instead of lgbm")
+@click.option("-m", "--multiple-ttbar-samples", is_flag=True, help="use multiple ttbar MC samples")
 @click.option("--learning-rate", type=float, default=0.1, help="learning_rate model parameter", show_default=True)
 @click.option("--num-leaves", type=int, default=31, help="num_leaves model parameter", show_default=True)
 @click.option("--min-child-samples", type=int, default=50, help="min_child_samples model parameter", show_default=True)
@@ -57,6 +58,7 @@ def single(
     early_stop,
     use_dilep,
     use_sklearn,
+    multiple_ttbar_samples,
     learning_rate,
     num_leaves,
     min_child_samples,
@@ -73,7 +75,10 @@ def single(
 
     qf = quick_files(datadir)
     sig_files = qf[f"tW_{nlo_method}"] if use_dilep else qf[f"tW_{nlo_method}_inc"]
-    bkg_files = qf["ttbar"] if use_dilep else qf["ttbar_inc"]
+    if multiple_ttbar_samples:
+        bkg_files = qf["ttbar_inc_AFII"] + qf["ttbar_PS"]
+    else:
+        bkg_files = qf["ttbar"] if use_dilep else qf["ttbar_inc"]
     override_sel = override_selection
     if override_sel:
         override_sel = PosixPath(override_sel).read_text().strip()
@@ -125,6 +130,7 @@ def single(
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
 @click.option("-s", "--test-size", type=float, default=0.40, help="training test size", show_default=True)
 @click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
+@click.option("-m", "--multiple-ttbar-samples", is_flag=True, help="use multiple ttbar MC samples")
 @click.option("--overwrite", is_flag=True, help="overwrite existing workspace")
 @click.option("--and-submit", is_flag=True, help="submit the condor jobs")
 def scan(
@@ -140,6 +146,7 @@ def scan(
     ignore_list,
     test_size,
     use_dilep,
+    multiple_ttbar_samples,
     overwrite,
     and_submit,
 ):
@@ -223,6 +230,7 @@ def scan(
             "{}"
             "{}"
             "{}"
+            "{}"
         ).format(
             datadir,
             region,
@@ -241,6 +249,7 @@ def scan(
             "-r " if use_trrw else "",
             "-t " if use_tptrw else "",
             "-d " if use_dilep else "",
+            "-m " if multiple_ttbar_samples else "",
         )
         arglist = arglist.replace("-x _NONE ", "")
         arglist = arglist.replace("-i _NONE ", "")
