@@ -146,8 +146,12 @@ class ResponseHistograms:
 
     def _eval_model(self, model, X_train, X_test):
         if self.response_type == "predict":
-            r_test = model.predict(X_test, raw_score=True)
-            r_train = model.predict(X_train, raw_score=True)
+            try:
+                r_test = model.predict(X_test, raw_score=True)
+                r_train = model.predict(X_train, raw_score=True)
+            except TypeError:
+                r_test = model.predict(X_test)
+                r_train = model.predict(X_train)
         elif self.response_type == "decision_function":
             r_test = model.decision_function(X_test)
             r_train = model.decision_function(X_train)
@@ -663,6 +667,90 @@ def lgbm_train_classifier(
     )
 
 
+def xgb_gen_classifier(train_axes: Dict[str, Any] = None, **clf_params) -> BaseEstimator:
+    """Create a classifier using XGBoost.
+
+    Parameters
+    ----------
+    train_axes : dict[str, Any]
+        Values of required tdub training parameters.
+    clf_params : kwargs
+        Extra arguments passed to the constructor.
+
+    Returns
+    -------
+    xgboost.XGBClassifier
+        The classifier.
+
+    """
+    import xgboost as xgb
+
+    if train_axes is None:
+        train_axes = tdub_train_axes()
+    params = dict(
+        learning_rate=train_axes.get("learning_rate", 0.1),
+        max_depth=train_axes.get("max_depth", 5),
+        min_child_weight=train_axes.get("min_child_samples", 50),
+        reg_lambda=train_axes.get("reg_lambda", 0.0),
+    )
+    clf = xgb.XGBClassifier(booster="gbtree", n_estimators=500, **params)
+    for k, v in clf.get_params().items():
+        log.info(f"{k:>20} = {v}")
+    return clf
+
+
+def xgb_train_classifier(
+    clf: BaseEstimator,
+    X_train: Any,
+    y_train: Any,
+    w_train: Any,
+    validation_fraction: float = 0.33,
+    early_stopping_rounds: int = 10,
+    **fit_params,
+) -> BaseEstimator:
+    """Train a XGBClassifier.
+
+    clf : xgboost.XGBClassifier
+        The classifier
+    X_train : array_like
+        Training events matrix
+    y_train : array_like
+        Training event labels
+    w_train : array_like
+        Training event weights
+    validation_fraction : float
+        Fraction of training events to use in validation set.
+    early_stopping_rounds : int
+        Number of early stopping rounds to use in training.
+    fit_params : keyword arguments
+        Extra keyword arguments passed to the classifier.
+
+    Returns
+    -------
+    xgboost.XGBClassifier
+        The same classifier object passed to the function
+
+    """
+
+    X_t, X_v, y_t, y_v, w_t, w_v = train_test_split(
+        X_train,
+        y_train,
+        w_train,
+        test_size=validation_fraction,
+        random_state=414,
+        shuffle=True,
+    )
+    return clf.fit(
+        X_t,
+        y_t,
+        sample_weight=w_t,
+        eval_set=[(X_v, y_v)],
+        eval_metric="auc",
+        sample_weight_eval_set=[w_v],
+        early_stopping_rounds=early_stopping_rounds,
+    )
+
+
 def single_training(
     df: pd.DataFrame,
     labels: np.ndarray,
@@ -674,6 +762,7 @@ def single_training(
     early_stopping_rounds: Optional[int] = None,
     extra_summary_entries: Optional[Dict[str, Any]] = None,
     use_sklearn: bool = False,
+    use_xgboost: bool = False,
 ) -> None:
     """Execute a single training with some parameters.
 
@@ -703,6 +792,8 @@ def single_training(
         Extra entries to save in the JSON output summary.
     use_sklearn : bool
         Use Scikit-learn's HistGradientBoostingClassifier.
+    use_xgboost : bool
+        Use XGBoost's XGBClassifier.
 
     Returns
     -------
@@ -756,7 +847,11 @@ def single_training(
             train_axes=train_axes,
         )
         sklearn_train_classifier(model, X_train, y_train, w_train)
-
+    elif use_xgboost:
+        model = xgb_gen_classifier(train_axes=train_axes)
+        xgb_train_classifier(
+            model, X_train, y_train, w_train, early_stopping_rounds=early_stopping_rounds
+        )
     else:
         model = lgbm_gen_classifier(train_axes=train_axes)
         lgbm_train_classifier(
@@ -779,7 +874,7 @@ def single_training(
     importances_gain = {}
     importances_split = {}
     # Plot Importances
-    if not use_sklearn:
+    if not use_sklearn and not use_xgboost:
         fig_imp, (ax_imp_gain, ax_imp_split) = plt.subplots(2, 1)
         lgbm.plot_importance(model, ax=ax_imp_gain, importance_type="gain", precision=2)
         lgbm.plot_importance(model, ax=ax_imp_split, importance_type="split", precision=2)
@@ -804,14 +899,19 @@ def single_training(
     proba_histograms = ResponseHistograms(
         "proba", model, X_train, X_test, y_train, y_test, w_train, w_test
     )
-    if not use_sklearn:
+    if use_sklearn:
+        pred_histograms = ResponseHistograms(
+            "decision_function", model, X_train, X_test, y_train, y_test, w_train, w_test
+        )
+    elif use_xgboost:
         pred_histograms = ResponseHistograms(
             "predict", model, X_train, X_test, y_train, y_test, w_train, w_test
         )
     else:
         pred_histograms = ResponseHistograms(
-            "decision_function", model, X_train, X_test, y_train, y_test, w_train, w_test
+            "predict", model, X_train, X_test, y_train, y_test, w_train, w_test
         )
+
     fig_pred, ax_pred = pred_histograms.draw()
     fig_proba, ax_proba = proba_histograms.draw()
     fig_pred.subplots_adjust(bottom=0.125, left=0.15)
@@ -842,10 +942,14 @@ def single_training(
     summary["importances_split"] = importances_split
 
     if early_stopping_rounds is not None:
-        if use_sklearn:
+        if hasattr(model, "n_iter_"):
             summary["best_iteration"] = int(model.n_iter_)
-        else:
+        elif hasattr(model, "best_iteration"):
+            summary["best_iteration"] = int(model.best_iteration)
+        elif hasattr(model, "best_iteration_"):
             summary["best_iteration"] = int(model.best_iteration_)
+        else:
+            log.warn("best iteration undetected")
     if extra_summary_entries is not None:
         for k, v in extra_summary_entries.items():
             summary[k] = v

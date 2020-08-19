@@ -38,6 +38,7 @@ def cli():
 @click.option("-e", "--early-stop", type=int, default=10, help="number of early stopping rounds", show_default=True)
 @click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
 @click.option("-k", "--use-sklearn", is_flag=True, help="use sklearn instead of lgbm")
+@click.option("-g", "--use-xgboost", is_flag=True, help="use xgboost instead of lgbm")
 @click.option("-m", "--multiple-ttbar-samples", is_flag=True, help="use multiple ttbar MC samples")
 @click.option("--learning-rate", type=float, default=0.1, help="learning_rate model parameter", show_default=True)
 @click.option("--num-leaves", type=int, default=31, help="num_leaves model parameter", show_default=True)
@@ -58,6 +59,7 @@ def single(
     early_stop,
     use_dilep,
     use_sklearn,
+    use_xgboost,
     multiple_ttbar_samples,
     learning_rate,
     num_leaves,
@@ -113,6 +115,7 @@ def single(
         early_stopping_rounds=early_stop,
         extra_summary_entries=extra_sum,
         use_sklearn=use_sklearn,
+        use_xgboost=use_xgboost,
     )
     return 0
 
