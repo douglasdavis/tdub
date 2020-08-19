@@ -14,7 +14,7 @@ from typing import Union, Set, Dict, Iterable, List, Optional
 import formulate
 import uproot4 as uproot
 from uproot4.reading import ReadOnlyDirectory
-from uproot4.models.TTree import Model_TTree_v20
+from uproot4.behaviors.TTree import TTree
 
 # tdub
 import tdub.config
@@ -22,12 +22,7 @@ import tdub.config
 log = logging.getLogger(__name__)
 
 DataSource = Union[
-    str,
-    Iterable[str],
-    os.PathLike,
-    Iterable[os.PathLike],
-    ReadOnlyDirectory,
-    Model_TTree_v20,
+    str, Iterable[str], os.PathLike, Iterable[os.PathLike], ReadOnlyDirectory, TTree
 ]
 
 
