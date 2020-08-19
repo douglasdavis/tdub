@@ -1,6 +1,6 @@
 """tW analysis tools."""
 
-from .version import version as __version__
+from .version import version as __version__  # noqa
 
 
 def setup_logging():
