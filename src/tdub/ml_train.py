@@ -338,7 +338,7 @@ def prepare_from_root(
         See the parameter description for :py:func:`tdub.frames.iterative_selection`.
     use_tptrw : bool
         Apply the top pt reweighting factor.
-    use_tptrw : bool
+    use_trrw : bool
         Apply the top recursive reweighting factor.
     test_case_size : int, optional
         Prepare a small test case dataset using this many training and
@@ -795,7 +795,7 @@ def single_training(
         imp_gain = np.array(imp_gain, dtype=np.float64)
         imp_split = np.array(imp_split, dtype=np.float64)
         imp_gain *= (1.0 / np.sum(imp_gain))
-        imp_split *= (1.0 /  np.sum(imp_split))
+        imp_split *= (1.0 / np.sum(imp_split))
         for n, g, s in zip(feat_name, imp_gain, imp_split):
             importances_gain[n] = float(g)
             importances_split[n] = float(s)
