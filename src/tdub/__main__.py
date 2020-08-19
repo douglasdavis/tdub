@@ -181,7 +181,7 @@ def scan(
     log.info(f"  - NLO method: {nlo_method}")
     log.info("  - Using {} samples".format("dilepton" if use_dilep else "inclusive"))
     log.info("  - Apply top pt reweight: {}".format("yes" if use_tptrw else "no"))
-    log.info("  - Apply top recursive reweight: {}".format("yes"  if use_trrw else "no"))
+    log.info("  - Apply top recursive reweight: {}".format("yes" if use_trrw else "no"))
 
     if use_tptrw and use_trrw:
         log.error("Cannot use both tptrw and trrw together.")
