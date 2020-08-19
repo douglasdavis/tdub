@@ -794,8 +794,8 @@ def single_training(
         feat_name = model.booster_.feature_name()
         imp_gain = np.array(imp_gain, dtype=np.float64)
         imp_split = np.array(imp_split, dtype=np.float64)
-        imp_gain *= (1.0 / np.sum(imp_gain))
-        imp_split *= (1.0 / np.sum(imp_split))
+        imp_gain *= 1.0 / np.sum(imp_gain)
+        imp_split *= 1.0 / np.sum(imp_split)
         for n, g, s in zip(feat_name, imp_gain, imp_split):
             importances_gain[n] = float(g)
             importances_split[n] = float(s)
