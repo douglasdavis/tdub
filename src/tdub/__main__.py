@@ -40,6 +40,7 @@ def cli():
 @click.option("-k", "--use-sklearn", is_flag=True, help="use sklearn instead of lgbm")
 @click.option("-g", "--use-xgboost", is_flag=True, help="use xgboost instead of lgbm")
 @click.option("-m", "--multiple-ttbar-samples", is_flag=True, help="use multiple ttbar MC samples")
+@click.option("-f", "--bkg-sample-frac", type=float, help="use a fraction of the background")
 @click.option("--learning-rate", type=float, default=0.1, help="learning_rate model parameter", show_default=True)
 @click.option("--num-leaves", type=int, default=31, help="num_leaves model parameter", show_default=True)
 @click.option("--min-child-samples", type=int, default=50, help="min_child_samples model parameter", show_default=True)
@@ -61,6 +62,7 @@ def single(
     use_sklearn,
     use_xgboost,
     multiple_ttbar_samples,
+    bkg_sample_frac,
     learning_rate,
     num_leaves,
     min_child_samples,
@@ -92,6 +94,7 @@ def single(
         override_selection=override_sel,
         use_tptrw=use_tptrw,
         use_trrw=use_trrw,
+        bkg_sample_frac=bkg_sample_frac,
     )
     drop_cols(df, *avoids_for(region))
     if ignore_list:
@@ -377,9 +380,8 @@ def check(workspace, print_top, n_res):
 @click.argument("scandir", type=click.Path(exists=True))
 @click.argument("datadir", type=click.Path(exists=True))
 @click.option("-t", "--use-tptrw", is_flag=True, help="use top pt reweighting")
-@click.option("-r", "--random-seed", type=int, default=414, help="random seed for folding", show_default=True)
 @click.option("-n", "--n-splits", type=int, default=3, help="number of splits for folding", show_default=True)
-def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
+def fold(scandir, datadir, use_tptrw, n_splits):
     """Perform a folded training based on a hyperparameter scan result."""
     from tdub.ml_train import folded_training, prepare_from_root
     from tdub.data import quick_files
@@ -418,7 +420,7 @@ def fold(scandir, datadir, use_tptrw, random_seed, n_splits):
         {"verbose": 10},
         str(outdir),
         summary["region"],
-        kfold_kw={"n_splits": n_splits, "shuffle": True, "random_state": random_seed},
+        kfold_kw={"n_splits": n_splits, "shuffle": True},
     )
     return 0
 

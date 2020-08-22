@@ -11,7 +11,7 @@ import pandas as pd
 import uproot4
 
 # tdub
-from tdub.config import AVOID_IN_CLF
+import tdub.config
 from tdub.data import (
     Region,
     avoids_for,
@@ -101,6 +101,7 @@ def iterative_selection(
     use_campaign_weight: bool = False,
     use_tptrw: bool = False,
     use_trrw: bool = False,
+    sample_frac: Optional[float] = None,
     **kwargs,
 ) -> pd.DataFrame:
     """Build a selected dataframe via uproot's iterate.
@@ -144,6 +145,8 @@ def iterative_selection(
         Apply the top pt reweighting factor.
     use_trrw : bool
         Apply the top recursive reweighting factor.
+    sample_frac : float, optional
+        Sample a fraction of the available data.
 
     Returns
     -------
@@ -183,6 +186,8 @@ def iterative_selection(
     if use_trrw:
         weights_to_grab.add("weight_trrw_tool")
         log.info("applying the top recursive reweighting factor")
+    if sample_frac is not None:
+        log.info(f"Sampling {100 * sample_frac}% of events")
     if branches is None:
         branches = set(branches_from(files, tree=tree))
     branches = set(branches)
@@ -201,7 +206,7 @@ def iterative_selection(
 
     # drop avoided classifier variables
     if exclude_avoids:
-        keep = keep - set(AVOID_IN_CLF)
+        keep = keep - set(tdub.config.AVOID_IN_CLF)
 
     # always drop selection only branches
     keep = keep - sel_only_branches
@@ -218,6 +223,8 @@ def iterative_selection(
     dfs = []
     for i, f in enumerate(files):
         df = uproot4.open(f).get(tree).arrays(read_branches, library="pd", **kwargs)
+        if sample_frac is not None:
+            df = df.sample(frac=sample_frac, random_state=tdub.config.RANDOM_STATE)
         if use_campaign_weight:
             apply_weight_campaign(df)
         if use_tptrw:
@@ -345,7 +352,7 @@ def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) ->
     False
 
     """
-    to_drop = AVOID_IN_CLF
+    to_drop = tdub.config.AVOID_IN_CLF
     if region is not None:
         to_drop += avoids_for(region)
     drop_cols(df, *to_drop)

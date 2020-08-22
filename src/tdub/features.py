@@ -18,6 +18,7 @@ from sklearn.model_selection import train_test_split
 # tdub
 from tdub.frames import iterative_selection, drop_cols
 from tdub.data import quick_files, Region, selection_for
+import tdub.config
 
 log = logging.getLogger(__name__)
 
@@ -274,7 +275,6 @@ class FeatureSelector:
         extra_fit_opts: Optional[Dict[str, Any]] = None,
         n_fits: int = 5,
         test_size: float = 0.5,
-        random_state: int = 414,
     ) -> None:
         """Train vanilla GBDT to calculate feature importance.
 
@@ -292,8 +292,6 @@ class FeatureSelector:
         n_fits : int
            number of models to fit to determine importances
         test_size : float
-           forwarded to :py:func:`sklearn.model_selection.train_test_split`
-        random_state : int
            forwarded to :py:func:`sklearn.model_selection.train_test_split`
 
         Examples
@@ -334,7 +332,7 @@ class FeatureSelector:
                 self.weights,
                 shuffle=True,
                 test_size=test_size,
-                random_state=(i * random_state),
+                random_state=(i * tdub.config.RANDOM_STATE),
             )
             fit_opts = dict(
                 eval_metric="auc",
@@ -471,7 +469,7 @@ class FeatureSelector:
             self.labels,
             self.weights,
             test_size=0.33,
-            random_state=414,
+            random_state=tdub.config.RANDOM_STATE,
             shuffle=True,
         )
 
@@ -575,7 +573,7 @@ class FeatureSelector:
             self.labels,
             self.weights,
             test_size=0.33,
-            random_state=414,
+            random_state=tdub.config.RANDOM_STATE,
             shuffle=True,
         )
 
@@ -819,13 +817,13 @@ def prepare_from_parquet(
                 ttbar_frac = 1.00
         if ttbar_frac < 1:
             log.info(f"sampling a fraction ({ttbar_frac}) of the background")
-            bkg = bkg.sample(frac=ttbar_frac, random_state=414)
+            bkg = bkg.sample(frac=ttbar_frac, random_state=tdub.config.RANDOM_STATE)
 
     if test_case_size is not None:
         if test_case_size > 5000:
             log.warn("why bother with test_case_size > 5000?")
-        sig = sig.sample(n=test_case_size, random_state=414)
-        bkg = bkg.sample(n=test_case_size, random_state=414)
+        sig = sig.sample(n=test_case_size, random_state=tdub.config.RANDOM_STATE)
+        bkg = bkg.sample(n=test_case_size, random_state=tdub.config.RANDOM_STATE)
 
     sig_weights = sig.pop("weight_nominal").to_numpy()
     bkg_weights = bkg.pop("weight_nominal").to_numpy()

@@ -30,6 +30,7 @@ from tdub.data import Region, features_for, quick_files, selection_for, selectio
 from tdub.frames import iterative_selection, drop_cols
 from tdub.hist import bin_centers
 from tdub.math import ks_twosample_binned
+import tdub.config
 
 setup_tdub_style()
 log = logging.getLogger(__name__)
@@ -236,7 +237,7 @@ class ResponseHistograms:
 
         """
         if ax is None:
-            fig, ax = plt.subplots(figsize=(4.5, 4))
+            fig, ax = plt.subplots(figsize=(5.06, 4.5))
         else:
             fig = ax.get_figure()
         bc = bin_centers(self.bins)
@@ -290,7 +291,7 @@ class ResponseHistograms:
         ax.legend(handles, labels, loc="upper right", ncol=1, frameon=False, numpoints=1)
         ax.set_ylabel("Arbitrary Units")
         draw_atlas_label(
-            ax, follow_shift=0.2, cme_and_lumi=False, extra_lines=["$tW$ BDT Training"]
+            ax, cme_and_lumi=False, extra_lines=["$tW$ BDT Training"], follow_shift=0.22,
         )
         if xlabel is None:
             if self.response_type == "proba":
@@ -315,6 +316,7 @@ def prepare_from_root(
     use_tptrw: bool = False,
     use_trrw: bool = False,
     test_case_size: Optional[int] = None,
+    bkg_sample_frac: Optional[float] = None,
 ) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
     """Prepare the data to train in a region with signal and background ROOT files.
 
@@ -347,6 +349,8 @@ def prepare_from_root(
     test_case_size : int, optional
         Prepare a small test case dataset using this many training and
         testing samples.
+    bkg_sample_frac : float, optional
+        Sample a fraction of the background data.
 
     Returns
     -------
@@ -407,13 +411,14 @@ def prepare_from_root(
         use_campaign_weight=use_campaign_weight,
         use_tptrw=use_tptrw,
         use_trrw=use_trrw,
+        sample_frac=bkg_sample_frac,
     )
 
     if test_case_size is not None:
         if test_case_size > 5000:
             log.warn("why bother with test_case_size > 5000?")
-        sig_df = sig_df.sample(n=test_case_size, random_state=414)
-        bkg_df = bkg_df.sample(n=test_case_size, random_state=414)
+        sig_df = sig_df.sample(n=test_case_size, random_state=tdub.config.RANDOM_STATE)
+        bkg_df = bkg_df.sample(n=test_case_size, random_state=tdub.config.RANDOM_STATE)
 
     w_sig = sig_df.pop("weight_nominal").to_numpy()
     w_bkg = bkg_df.pop("weight_nominal").to_numpy()
@@ -653,7 +658,7 @@ def lgbm_train_classifier(
         y_train,
         w_train,
         test_size=validation_fraction,
-        random_state=414,
+        random_state=tdub.config.RANDOM_STATE,
         shuffle=True,
     )
     return clf.fit(
@@ -737,7 +742,7 @@ def xgb_train_classifier(
         y_train,
         w_train,
         test_size=validation_fraction,
-        random_state=414,
+        random_state=tdub.config.RANDOM_STATE,
         shuffle=True,
     )
     return clf.fit(
@@ -758,7 +763,6 @@ def single_training(
     train_axes: Dict[str, Any],
     output_dir: Union[str, os.PathLike],
     test_size: float = 0.40,
-    random_state: int = 414,
     early_stopping_rounds: Optional[int] = None,
     extra_summary_entries: Optional[Dict[str, Any]] = None,
     use_sklearn: bool = False,
@@ -783,9 +787,6 @@ def single_training(
         Directory to save results of training
     test_size : float
         Test size for splitting into training and testing sets
-    random_state : int
-        Random seed for
-        :py:func:`sklearn.model_selection.train_test_split`.
     early_stopping_rounds : int, optional
         Number of rounds to have no improvement for stopping training.
     extra_summary_entries : dict, optional
@@ -828,7 +829,12 @@ def single_training(
     os.chdir(output_path)
 
     X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-        df, labels, weights, test_size=test_size, random_state=random_state, shuffle=True
+        df,
+        labels,
+        weights,
+        test_size=test_size,
+        random_state=tdub.config.RANDOM_STATE,
+        shuffle=True,
     )
 
     log.info(f"test size used: {test_size}")
@@ -978,11 +984,11 @@ def folded_training(
     information) are saved to ``output_dir``. The entries in the
     ``kfold_kw`` argument are forwarded to the
     :obj:`sklearn.model_selection.KFold` class for data preprocessing.
-    The default arguments that we use are:
+    The default arguments that we use are (random_state is controlled
+    by the tdub.config module):
 
     - ``n_splits``: 3
     - ``shuffle``: ``True``
-    - ``random_state``: 414
 
     Parameters
     ----------
@@ -1031,7 +1037,7 @@ def folded_training(
     ...     {"verbose": 20},
     ...     "/path/to/train/output",
     ...     "2j2b",
-    ...     kfold_kw={"n_splits": 5, "shuffle": True, "random_state": 17}
+    ...     kfold_kw={"n_splits": 5, "shuffle": True},
     ... )
 
     """
@@ -1063,7 +1069,7 @@ def folded_training(
     aucs = []
     importances = np.zeros((len(df.columns)))
     mean_fpr = np.linspace(0, 1, 100)
-    folder = KFold(**kfold_kw)
+    folder = KFold(**kfold_kw, random_state=tdub.config.RANDOM_STATE)
     fold_number = 0
     nfits = 0
     for train_idx, test_idx in folder.split(df):
@@ -1265,7 +1271,6 @@ def gp_minimize_auc(
     output_dir: Union[str, os.PathLike] = "_unnamed_optimization",
     n_calls: int = 15,
     esr: Optional[int] = 10,
-    random_state: int = 414,
 ):
     """Minimize AUC using Gaussian processes.
 
@@ -1316,7 +1321,12 @@ def gp_minimize_auc(
 
     df, labels, weights = prepare_from_root(tW_files, qfiles["ttbar"], region)
     X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
-        df, labels, weights, train_size=0.333, random_state=random_state, shuffle=True
+        df,
+        labels,
+        weights,
+        train_size=0.333,
+        random_state=tdub.config.RANDOM_STATE,
+        shuffle=True,
     )
     validation_data = [(X_test, y_test)]
     validation_w = w_test
