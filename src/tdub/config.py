@@ -34,6 +34,11 @@ requires importing a module or parsing some data from the web).
 
 """
 
+RANDOM_STATE = 414
+"""
+Any: random state to use for various tasks.
+"""
+
 
 SELECTION_1j1b = "(reg1j1b == True) & (OS == True)"
 """
