@@ -36,7 +36,7 @@ requires importing a module or parsing some data from the web).
 
 RANDOM_STATE = 414
 """
-Any: random state to use for various tasks.
+int: Seed for various random tasks requiring reproducibility.
 """
 
 

@@ -20,6 +20,7 @@ Constant Summary
    FEATURESET_2j2b
    PLOTTING_LOGY
    PLOTTING_META_TABLE
+   RANDOM_STATE
    SELECTION_1j1b
    SELECTION_2j1b
    SELECTION_2j2b
@@ -52,6 +53,8 @@ Constant Reference
 .. autodata:: PLOTTING_LOGY
    :annotation:
 .. autodata:: PLOTTING_META_TABLE
+   :annotation:
+.. autodata:: RANDOM_STATE
    :annotation:
 .. autodata:: SELECTION_1j1b
    :annotation:
