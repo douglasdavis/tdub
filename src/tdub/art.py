@@ -136,9 +136,9 @@ def draw_uncertainty_bands(
         When total MC events are below threshold, zero contents and error.
 
     """
-    lo = np.hstack([uncertainty.yerrorslow, uncertainty.yerrorslow[-1]])
-    hi = np.hstack([uncertainty.yerrorshigh, uncertainty.yerrorshigh[-1]])
-    mc = np.hstack([total_mc.values, total_mc.values[-1]])
+    lo = np.hstack([uncertainty.ylo, uncertainty.ylo[-1]])
+    hi = np.hstack([uncertainty.yhi, uncertainty.yhi[-1]])
+    mc = np.hstack([total_mc.counts, total_mc.counts[-1]])
     ratio_y1 = 1 - (lo / mc)
     ratio_y2 = 1 + (hi / mc)
     set_to_zero = mc < zero_threshold

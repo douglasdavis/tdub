@@ -17,7 +17,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import uproot
+import uproot4 as uproot
+from uproot4.model import Model as ROOT_Model
+from uproot4.behaviors.TH1 import TH1 as ROOT_TH1
+
 import yaml
 
 # tdub
@@ -28,11 +31,87 @@ from .art import (
     draw_impact_barh,
     legend_last_to_first,
 )
+from .hist import bin_centers
 import tdub.config
 
 setup_tdub_style()
 
 log = logging.getLogger(__name__)
+
+
+class TGraphAsymmErrors:
+    """Wrapper around uproot's interpretation of ROOT's TGraphAsymmErrors.
+
+    Parameters
+    ----------
+    root_object : uproot4.model.Model
+        Object from reading ROOT file with uproot.
+
+    """
+
+    def __init__(self, root_object: ROOT_Model) -> None:
+        self._root_object = root_object
+        self._xlo = self._root_object.member("fEXlow")
+        self._xhi = self._root_object.member("fEXhigh")
+        self._ylo = self._root_object.member("fEYlow")
+        self._yhi = self._root_object.member("fEYhigh")
+
+    @property
+    def xlo(self) -> np.ndarray:
+        """:py:obj:`numpy.ndarray`: X-axis low errors."""
+        return self._xlo
+
+    @property
+    def xhi(self) -> np.ndarray:
+        """:py:obj:`numpy.ndarray`: X-axis high errors."""
+        return self._xhi
+
+    @property
+    def ylo(self) -> np.ndarray:
+        """:py:obj:`numpy.ndarray`: Y-axis low errors."""
+        return self._ylo
+
+    @property
+    def yhi(self) -> np.ndarray:
+        """:py:obj:`numpy.ndarray`: Y-axis high errors."""
+        return self._yhi
+
+
+class TH1:
+    """Wrapper around uproot's interpretation of ROOT's TH1.
+
+    Parameters
+    ----------
+    root_object : uproot4.behaviors.TH1.TH1
+        Object from reading ROOT file with uproot.
+
+    """
+
+    def __init__(self, root_object: ROOT_TH1) -> None:
+        self._root_object = root_object
+        self._counts, self._errors = self._root_object.values_errors()
+        self._counts, self._errors = self._counts[1:-1], self._errors[1:-1]
+        self._edges = self._root_object.edges()[1:-1]
+
+    @property
+    def counts(self) -> np.ndarray:
+        """:py:obj:`numpy.ndarray`: Histogram bin counts."""
+        return self._counts
+
+    @property
+    def errors(self) -> np.ndarray:
+        """:py:obj:`numpy.ndarray`: Histogram bin errors."""
+        return self._errors
+
+    @property
+    def edges(self) -> np.ndarray:
+        """:py:obj:`numpy.ndarray`: Histogram bin edges."""
+        return self._edges
+
+    @property
+    def centers(self) -> np.ndarray:
+        """:py:obj:`numpy.ndarray`: Histogram bin centers."""
+        return bin_centers(self.edges)
 
 
 @dataclass
@@ -98,7 +177,7 @@ def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
 
 def data_histogram(
     wkspace: Union[str, os.PathLike], region: str, fitname: str = "tW"
-) -> Any:
+) -> TH1:
     """Get the histogram for the Data in a region from a workspace.
 
     Parameters
@@ -112,12 +191,12 @@ def data_histogram(
 
     Returns
     -------
-    uproot_methods.base.ROOTMethods
-        ROOT histogram for the Data sample.
+    tdub.rex.TH1
+        Histogram for the Data sample.
 
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{fitname}_{region}_histos.root"
-    return uproot.open(root_path).get(f"{region}_Data")
+    return TH1(uproot.open(root_path).get(f"{region}_Data"))
 
 
 def chisq(
@@ -136,11 +215,11 @@ def chisq(
 
     Returns
     -------
-    float
+    :py:obj:`float`
         :math:`\chi^2` value for the region.
-    int
+    :py:obj:`int`
         Number of degrees of freedom.
-    float
+    :py:obj:`float`
         :math:`\chi^2` probability for the region.
 
     """
@@ -178,7 +257,7 @@ def chisq_text(wkspace: Union[str, os.PathLike], region: str, stage: str = "pre"
     )
 
 
-def prefit_histogram(root_file: Any, sample: str, region: str) -> Any:
+def prefit_histogram(root_file: Any, sample: str, region: str) -> TH1:
     """Get a prefit histogram from a file.
 
     Parameters
@@ -192,13 +271,14 @@ def prefit_histogram(root_file: Any, sample: str, region: str) -> Any:
 
     Returns
     -------
-    uproot_methods.classes.TH1.Methods
-        ROOT histogram.
+    tdub.rex.TH1
+        Desired histogram.
 
     """
     histname = f"{region}_{sample}"
     try:
         h = root_file.get(histname)
+        h = TH1(root_file.get(histname))
         return h
     except KeyError:
         log.fatal("%s histogram not found in %s" % (histname, root_file))
@@ -210,7 +290,7 @@ def prefit_histograms(
     samples: Iterable[str],
     region: str,
     fitname: str = "tW",
-) -> Dict[str, Any]:
+) -> Dict[str, TH1]:
     """Retrieve sample prefit histograms for a region.
 
     Parameters
@@ -226,8 +306,8 @@ def prefit_histograms(
 
     Returns
     -------
-    dict(str, uproot_methods.classes.TH1.Methods)
-        Prefit ROOT histograms
+    dict(str, tdub.rex.TH1)
+        Prefit histograms.
 
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{fitname}_{region}_histos.root"
@@ -243,7 +323,7 @@ def prefit_histograms(
 
 def hepdata(
     wkspace: Union[str, os.PathLike], region: str, stage: str = "pre",
-):
+) -> Dict[Any, Any]:
     """Parse HEPData information.
 
     Parameters
@@ -262,7 +342,7 @@ def hepdata(
 
 def prefit_total_and_uncertainty(
     wkspace: Union[str, os.PathLike], region: str
-) -> Tuple[Any, Any]:
+) -> Tuple[TH1, TGraphAsymmErrors]:
     """Get the prefit total MC prediction and uncertainty band for a region.
 
     Parameters
@@ -274,16 +354,16 @@ def prefit_total_and_uncertainty(
 
     Returns
     -------
-    uproot_methods.classes.TH1.Methods
+    :py:obj:`tdub.rex.TH1`
         The total MC expectation histogram.
-    uproot_methods.classes.TGraphAsymmErrors.Methods
+    :py:obj:`tdub.rex.TGraphAsymmErrors`
         The error TGraph.
 
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{region}_preFit.root"
     root_file = uproot.open(root_path)
-    err = root_file.get("g_totErr")
-    tot = root_file.get("h_tot")
+    err = TGraphAsymmErrors(root_file.get("g_totErr"))
+    tot = TH1(root_file.get("h_tot"))
     return tot, err
 
 
@@ -308,7 +388,7 @@ def postfit_available(wkspace: Union[str, os.PathLike]) -> bool:
     return False
 
 
-def postfit_histogram(root_file: Any, sample: str) -> Any:
+def postfit_histogram(root_file: Any, sample: str) -> TH1:
     """Get a postfit histogram from a file.
 
     Parameters
@@ -320,13 +400,13 @@ def postfit_histogram(root_file: Any, sample: str) -> Any:
 
     Returns
     -------
-    uproot_methods.classes.TH1.Methods
-        ROOT histogram.
+    tdub.rex.TH1
+        Desired histogram.
 
     """
     histname = f"h_{sample}_postFit"
     try:
-        h = root_file.get(histname)
+        h = TH1(root_file.get(histname))
         return h
     except KeyError:
         log.fatal("%s histogram not found in %s" % (histname, root_file))
@@ -335,7 +415,7 @@ def postfit_histogram(root_file: Any, sample: str) -> Any:
 
 def postfit_histograms(
     wkspace: Union[str, os.PathLike], samples: Iterable[str], region: str
-) -> Dict[str, Any]:
+) -> Dict[str, TH1]:
     """Retrieve sample postfit histograms for a region.
 
     Parameters
@@ -349,8 +429,8 @@ def postfit_histograms(
 
     Returns
     -------
-    dict(str, uproot_methods.classes.TH1.Methods)
-        Postfit ROOT histograms
+    dict(str, tdub.rex.TH1)
+        Postfit histograms detected in the workspace.
 
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{region}_postFit.root"
@@ -380,16 +460,16 @@ def postfit_total_and_uncertainty(
 
     Returns
     -------
-    uproot_methods.classes.TH1.Methods
+    :py:obj:`tdub.rex.TH1`
         The total MC expectation histogram.
-    uproot_methods.classes.TGraphAsymmErrors.Methods
+    :py:obj:`tdub.rex.TGraphAsymmErrors`
         The error TGraph.
 
     """
     root_path = PosixPath(wkspace) / "Histograms" / f"{region}_postFit.root"
     root_file = uproot.open(root_path)
-    err = root_file.get("g_totErr_postFit")
-    tot = root_file.get("h_tot_postFit")
+    err = TGraphAsymmErrors(root_file.get("g_totErr_postFit"))
+    tot = TH1(root_file.get("h_tot_postFit"))
     return tot, err
 
 
@@ -510,8 +590,8 @@ def stack_canvas(
         raise ValueError("stage must be 'pre' or 'post'")
     histograms["Data"] = data_histogram(wkspace, region)
     bin_edges = histograms["Data"].edges
-    counts = {k: v.values for k, v in histograms.items()}
-    errors = {k: np.sqrt(v.variances) for k, v in histograms.items()}
+    counts = {k: v.counts for k, v in histograms.items()}
+    errors = {k: v.errors for k, v in histograms.items()}
 
     if log_patterns is None:
         log_patterns = tdub.config.PLOTTING_LOGY
@@ -629,7 +709,7 @@ def nuispar_impact(
 
     Returns
     -------
-    NuisPar
+    tdub.rex.NuisPar
         Desired nuisance parameter summary.
 
     """
@@ -662,7 +742,7 @@ def nuispar_impacts(wkspace: Union[str, os.PathLike], sort: bool = True) -> List
 
     Returns
     -------
-    list(NuisPar)
+    list(tdub.rex.NuisPar)
         The nuisance parameters.
 
     """
@@ -833,11 +913,11 @@ def delta_poi(
 
     Returns
     -------
-    float
+    :py:obj:`float`
         Central value of delta mu.
-    float
+    :py:obj:`float`
         Up uncertainty on delta mu.
-    float
+    :py:obj:`float`
         Down uncertainty on delta mu.
 
     """
