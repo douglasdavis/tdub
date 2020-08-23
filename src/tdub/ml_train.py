@@ -11,7 +11,7 @@ from typing import Optional, Tuple, List, Union, Dict, Any
 # externals
 import matplotlib
 
-matplotlib.use("Agg")
+matplotlib.use("pdf")
 import joblib
 import numpy as np
 import matplotlib.pyplot as plt
@@ -539,7 +539,7 @@ def tdub_train_axes(
 
 def sklearn_gen_classifier(
     early_stopping_rounds: int = 10,
-    validation_fraction: float = 0.33,
+    validation_fraction: float = 0.20,
     train_axes: Optional[Dict[str, Any]] = None,
     **clf_params,
 ) -> BaseEstimator:
@@ -669,7 +669,7 @@ def lgbm_train_classifier(
     X_train: Any,
     y_train: Any,
     w_train: Any,
-    validation_fraction: float = 0.33,
+    validation_fraction: float = 0.20,
     early_stopping_rounds: int = 10,
     **fit_params,
 ) -> BaseEstimator:
@@ -752,7 +752,7 @@ def xgb_train_classifier(
     X_train: Any,
     y_train: Any,
     w_train: Any,
-    validation_fraction: float = 0.33,
+    validation_fraction: float = 0.20,
     early_stopping_rounds: int = 10,
     **fit_params,
 ) -> BaseEstimator:

@@ -14,7 +14,7 @@ from typing import List, Any, Optional, Tuple, Set
 import numpy as np
 import matplotlib
 
-matplotlib.use("Agg")
+matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import uproot
 import yaml

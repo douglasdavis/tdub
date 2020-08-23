@@ -8,7 +8,7 @@ from typing import Optional, List, Tuple, Union, Sequence, Iterable, Any
 import numpy as np
 import matplotlib
 
-matplotlib.use("Agg")
+matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import pandas as pd
 import pygram11
