@@ -35,7 +35,7 @@ class Region(Enum):
         Label for our `1j1b` region.
     r2j1b
         Label for our `2j1b` region.
-    r2j2b = 1
+    r2j2b
         Label for our `2j2b` region.
 
     Examples
