@@ -454,6 +454,32 @@ def prepare_from_root(
     return df, y, w
 
 
+def persist_prepped_data(
+    out_dir: Union[str, os.PathLike], df: pd.DataFrame, y: np.ndarray, w: np.ndarray
+) -> None:
+    """Persist prepared data to disk.
+
+    Parameters
+    ----------
+    out_dir : str or os.PathLike
+        Directory to save output to.
+    df : pandas.DataFrame
+        Prepared DataFrame object.
+    y : numpy.ndarray
+        Prepared labels.
+    w : numpy.ndarray
+        Prepared weights.
+
+    """
+    out_dir = PosixPath(out_dir)
+    out_dir.mkdir(exist_ok=True, parents=True)
+    df.to_hdf(out_dir / "df.h5", "df", mode="w", complevel=0)
+    np.save(out_dir / "y.npy", y)
+    np.save(out_dir / "w.npy", w)
+    selection_file = PosixPath(out_dir / "selection.txt")
+    selection_file.write_text(f"{df.selection_used}\n")
+
+
 def tdub_train_axes(
     learning_rate: float = 0.1,
     max_depth: int = 5,
