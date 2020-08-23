@@ -24,9 +24,15 @@ def cli():
     pass
 
 
-@cli.group("ml")
-def ml():
+@cli.group("train")
+def train():
     """Tasks to perform machine learning steps."""
+    pass
+
+
+@cli.group("apply")
+def cli_apply():
+    """Tasks to apply machine learning models to data."""
     pass
 
 
@@ -36,7 +42,12 @@ def rex():
     pass
 
 
-@ml.command("prep")
+@cli.group("misc")
+def misc():
+    """Tasks under a miscellaneous umbrella."""
+
+
+@train.command("prep")
 @click.argument("region", type=click.Choice(["1j1b", "2j1b", "2j2b"]))
 @click.argument("datadir", type=click.Path(resolve_path=True, exists=True))
 @click.argument("outdir", type=click.Path(resolve_path=True))
@@ -49,7 +60,7 @@ def rex():
 @click.option("-m", "--multiple-ttbar-samples", is_flag=True, help="use multiple ttbar MC samples")
 @click.option("-f", "--bkg-sample-frac", type=float, help="use a fraction of the background")
 @click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
-def prep(
+def train_prep(
     region,
     datadir,
     outdir,
@@ -103,7 +114,7 @@ def prep(
     (outdir / "files_bkg.txt").write_text("{}\n".format(("\n".join(bkg_files))))
 
 
-@ml.command("single")
+@train.command("single")
 @click.argument("datadir", type=click.Path(resolve_path=True, exists=True))
 @click.argument("outdir", type=click.Path(resolve_path=True))
 @click.option("-p", "--pre-exec", type=click.Path(exists=True, resolve_path=True), help="Python code to pre-execute")
@@ -116,7 +127,7 @@ def prep(
 @click.option("-m", "--min-child-samples", type=int, default=1000, help="min_child_samples model parameter", show_default=True)
 @click.option("-d", "--max-depth", type=int, default=5, help="max_depth model parameter", show_default=True)
 @click.option("-r", "--reg-lambda", type=float, default=0, help="lambda (L2) regularization", show_default=True)
-def st(
+def train_single(
     datadir,
     outdir,
     pre_exec,
@@ -271,7 +282,7 @@ def st(
 
 
 # @cli.command("train-scan", context_settings=dict(max_content_width=140))
-@ml.command("scan")
+@train.command("scan")
 @click.argument("datadir", type=click.Path(exists=True, resolve_path=True))
 @click.argument("workspace", type=click.Path(exists=False))
 @click.option("-p", "--pre-exec", type=click.Path(resolve_path=True), help="Python code to pre-execute")
@@ -279,7 +290,7 @@ def st(
 @click.option("-s", "--test-size", type=float, default=0.40, help="training test size", show_default=True)
 @click.option("--overwrite", is_flag=True, help="overwrite existing workspace")
 @click.option("--and-submit", is_flag=True, help="submit the condor jobs")
-def ml_scan(
+def train_scan(
     datadir,
     workspace,
     pre_exec,
@@ -293,7 +304,7 @@ def ml_scan(
     DATADIR points to the intput ROOT files, training is performed on
     the REGION and all output is saved to WORKSPACE.
 
-    $ tdub ml scan /data/path 2j2b scan_2j2b
+    $ tdub train scan /data/path 2j2b scan_2j2b
 
     """
 
@@ -362,7 +373,7 @@ def ml_scan(
     with (ws / "run.sh").open("w") as outscript:
         print("#!/bin/bash\n\n", file=outscript)
         for run in runs:
-            print(f"tdub ml single {run}\n", file=outscript)
+            print(f"tdub train single {run}\n", file=outscript)
     os.chmod(ws / "run.sh", 0o755)
 
     import pycondor
@@ -382,7 +393,7 @@ def ml_scan(
         dag=condor_dag,
     )
     for run in runs:
-        condor_job_scan.add_arg(f"tdub ml single {run}")
+        condor_job_scan.add_arg(f"tdub train single {run}")
     condor_job_check = pycondor.Job(
         name="job_train_check",
         universe="vanilla",
@@ -396,7 +407,7 @@ def ml_scan(
         log=str(ws / "log"),
         dag=condor_dag,
     )
-    condor_job_check.add_arg(f"tdub ml check {ws}")
+    condor_job_check.add_arg(f"tdub train check {ws}")
     condor_job_check.add_parent(condor_job_scan)
 
     if and_submit:
@@ -415,11 +426,11 @@ def ml_scan(
     return 0
 
 
-@ml.command("check")
+@train.command("check")
 @click.argument("workspace", type=click.Path(exists=True))
 @click.option("-p", "--print-top", is_flag=True, help="Print the top results")
 @click.option("-n", "--n-res", type=int, default=10, help="Number of top results to print", show_default=True)
-def check(workspace, print_top, n_res):
+def train_check(workspace, print_top, n_res):
     """Check the results of a parameter scan WORKSPACE."""
     from tdub.ml_train import SingleTrainingSummary
     import shutil
@@ -467,12 +478,12 @@ def check(workspace, print_top, n_res):
     return 0
 
 
-@ml.command("fold")
+@train.command("fold")
 @click.argument("scandir", type=click.Path(exists=True))
 @click.argument("datadir", type=click.Path(exists=True))
 @click.option("-t", "--use-tptrw", is_flag=True, help="use top pt reweighting")
 @click.option("-n", "--n-splits", type=int, default=3, help="number of splits for folding", show_default=True)
-def ml_fold(scandir, datadir, use_tptrw, n_splits):
+def train_fold(scandir, datadir, use_tptrw, n_splits):
     """Perform a folded training based on a hyperparameter scan result."""
     from tdub.ml_train import folded_training, prepare_from_root
     from tdub.data import quick_files
@@ -516,7 +527,7 @@ def ml_fold(scandir, datadir, use_tptrw, n_splits):
     return 0
 
 
-@cli.command("apply-single", context_settings=dict(max_content_width=92))
+@cli_apply.command("single")
 @click.argument("infile", type=click.Path(exists=True))
 @click.argument("arrname", type=str)
 @click.argument("outdir", type=click.Path())
@@ -569,7 +580,7 @@ def apply_single(infile, arrname, outdir, fold_results=None, single_results=None
     np.save(npyfilename, result_arr)
 
 
-@cli.command("apply-all", context_settings=dict(max_content_width=92))
+@cli_apply.command("all")
 @click.argument("datadir", type=click.Path(exists=True))
 @click.argument("arrname", type=str)
 @click.argument("outdir", type=click.Path(resolve_path=True))
@@ -625,7 +636,7 @@ def apply_all(
         dag=condor_dag,
     )
     for run in arglist:
-        condor_job_scan.add_arg(f"apply-single {run}")
+        condor_job_scan.add_arg(f"apply single {run}")
 
     if and_submit:
         condor_dag.build_submit()
@@ -633,7 +644,7 @@ def apply_all(
         condor_dag.build()
 
 
-@ml.command("itables")
+@train.command("itables")
 @click.argument("summary-file", type=click.Path(exists=True))
 def itables(summary_file):
     """Generate importance tables."""
@@ -667,50 +678,6 @@ def itables(summary_file):
     """))
 
 
-# @cli.command("soverb", context_settings=dict(max_content_width=92))
-# @click.argument("datadir", type=click.Path(exists=True))
-# @click.argument("selections", type=click.Path(exists=True))
-# @click.option("-t", "--use-tptrw", is_flag=True, help="use top pt reweighting")
-# def soverb(datadir, selections, use_tptrw):
-#     """Get signal over background using data in DATADIR and a SELECTIONS file.
-
-#     the format of the JSON entries should be "region": "numexpr selection".
-
-#     Example SELECTIONS file:
-
-#     \b
-#     {
-#         "reg1j1b" : "(mass_lep1lep2 < 150) & (mass_lep2jet1 < 150)",
-#         "reg1j1b" : "(mass_jet1jet2 < 150) & (mass_lep2jet1 < 120)",
-#         "reg2j2b" : "(met < 120)"
-#     }
-
-#     """
-#     from tdub.frames import raw_dataframe, apply_weight_tptrw, satisfying_selection
-#     from tdub.data import quick_files
-#     from tdub.data import selection_branches
-
-#     with open(selections, "r") as f:
-#         selections = json.load(f)
-
-#     necessary_branches = set()
-#     for selection, query in selections.items():
-#         necessary_branches |= selection_branches(query)
-#     necessary_branches = list(necessary_branches) + ["weight_tptrw_tool"]
-
-#     qf = quick_files(datadir)
-#     bkg = qf["ttbar"] + qf["Diboson"] + qf["Zjets"] + qf["MCNP"]
-#     sig = qf["tW_DR"]
-
-#     sig_df = raw_dataframe(sig, branches=necessary_branches)
-#     bkg_df = raw_dataframe(bkg, branches=necessary_branches, entrysteps="1GB")
-#     apply_weight_tptrw(bkg_df)
-
-#     for sel, query in selections.items():
-#         s_df, b_df = satisfying_selection(sig_df, bkg_df, selection=query)
-#         print(sel, s_df["weight_nominal"].sum() / b_df["weight_nominal"].sum())
-
-
 @rex.command("stacks")
 @click.argument("workspace", type=click.Path(exists=True))
 @click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")
@@ -735,6 +702,50 @@ def rex_impact(workspace, outdir):
     import tdub.rex
     tdub.rex.nuispar_impact_plot_top15(workspace)
     return 0
+
+
+@misc.command("soverb")
+@click.argument("datadir", type=click.Path(exists=True))
+@click.argument("selections", type=click.Path(exists=True))
+@click.option("-t", "--use-tptrw", is_flag=True, help="use top pt reweighting")
+def soverb(datadir, selections, use_tptrw):
+    """Get signal over background using data in DATADIR and a SELECTIONS file.
+
+    the format of the JSON entries should be "region": "numexpr selection".
+
+    Example SELECTIONS file:
+
+    \b
+    {
+        "reg1j1b" : "(mass_lep1lep2 < 150) & (mass_lep2jet1 < 150)",
+        "reg1j1b" : "(mass_jet1jet2 < 150) & (mass_lep2jet1 < 120)",
+        "reg2j2b" : "(met < 120)"
+    }
+
+    """
+    from tdub.frames import raw_dataframe, apply_weight_tptrw, satisfying_selection
+    from tdub.data import quick_files
+    from tdub.data import selection_branches
+
+    with open(selections, "r") as f:
+        selections = json.load(f)
+
+    necessary_branches = set()
+    for selection, query in selections.items():
+        necessary_branches |= selection_branches(query)
+    necessary_branches = list(necessary_branches) + ["weight_tptrw_tool"]
+
+    qf = quick_files(datadir)
+    bkg = qf["ttbar"] + qf["Diboson"] + qf["Zjets"] + qf["MCNP"]
+    sig = qf["tW_DR"]
+
+    sig_df = raw_dataframe(sig, branches=necessary_branches)
+    bkg_df = raw_dataframe(bkg, branches=necessary_branches, entrysteps="1GB")
+    apply_weight_tptrw(bkg_df)
+
+    for sel, query in selections.items():
+        s_df, b_df = satisfying_selection(sig_df, bkg_df, selection=query)
+        print(sel, s_df["weight_nominal"].sum() / b_df["weight_nominal"].sum())
 
 
 def run_cli():
