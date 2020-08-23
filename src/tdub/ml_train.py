@@ -454,7 +454,7 @@ def prepare_from_root(
     return df, y, w
 
 
-def persist_prepped_data(
+def persist_prepared_data(
     out_dir: Union[str, os.PathLike], df: pd.DataFrame, y: np.ndarray, w: np.ndarray
 ) -> None:
     """Persist prepared data to disk.
