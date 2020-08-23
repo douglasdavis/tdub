@@ -19,9 +19,143 @@ setup_logging()
 log = logging.getLogger("tdub-cli")
 
 
-@click.group(context_settings=dict(max_content_width=82))
+@click.group(context_settings=dict(max_content_width=82, help_option_names=['-h', '--help']))
 def cli():
     pass
+
+
+@cli.group("ml")
+def ml():
+    pass
+
+
+@ml.command("prep")
+@click.argument("region", type=click.Choice(["1j1b", "2j1b", "2j2b"]))
+@click.argument("datadir", type=click.Path(resolve_path=True, exists=True))
+@click.argument("outdir", type=click.Path(resolve_path=True))
+@click.option("-p", "--pre-exec", type=click.Path(resolve_path=True), help="Python code to pre-execute")
+@click.option("-n", "--nlo-method", type=str, default="DR", help="tW simluation NLO method", show_default=True)
+@click.option("-x", "--override-selection", type=str, help="override selection with contents of file")
+@click.option("-t", "--use-tptrw", is_flag=True, help="apply top pt reweighting")
+@click.option("-r", "--use-trrw", is_flag=True, help="apply top recursive reweighting")
+@click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
+@click.option("-m", "--multiple-ttbar-samples", is_flag=True, help="use multiple ttbar MC samples")
+@click.option("-f", "--bkg-sample-frac", type=float, help="use a fraction of the background")
+@click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
+def prep(
+    region,
+    datadir,
+    outdir,
+    pre_exec,
+    nlo_method,
+    override_selection,
+    use_tptrw,
+    use_trrw,
+    ignore_list,
+    multiple_ttbar_samples,
+    bkg_sample_frac,
+    use_dilep,
+):
+    """Prepare data for training."""
+
+    if pre_exec is not None:
+        exec(PosixPath(pre_exec).read_text())
+
+    from tdub.ml_train import prepare_from_root, persist_prepared_data
+    from tdub.data import avoids_for, quick_files
+    from tdub.frames import drop_cols
+
+    qf = quick_files(datadir)
+    sig_files = qf[f"tW_{nlo_method}"] if use_dilep else qf[f"tW_{nlo_method}_inc"]
+    if multiple_ttbar_samples:
+        bkg_files = qf["ttbar_inc_AFII"] + qf["ttbar_PS"]
+    else:
+        bkg_files = qf["ttbar"] if use_dilep else qf["ttbar_inc"]
+    override_sel = override_selection
+    if override_sel:
+        override_sel = PosixPath(override_sel).read_text().strip()
+    df, y, w = prepare_from_root(
+        sig_files,
+        bkg_files,
+        region,
+        weight_mean=1.0,
+        override_selection=override_sel,
+        use_tptrw=use_tptrw,
+        use_trrw=use_trrw,
+        bkg_sample_frac=bkg_sample_frac,
+    )
+    drop_cols(df, *avoids_for(region))
+    if ignore_list:
+        drops = PosixPath(ignore_list).read_text().strip().split()
+        drop_cols(df, *drops)
+    outdir = PosixPath(outdir)
+    persist_prepared_data(outdir, df, y, w)
+    (outdir / "region.txt").write_text(f"{region}\n")
+    (outdir / "nlo_method.txt").write_text(f"{nlo_method}\n")
+    (outdir / "files_sig.txt").write_text("{}\n".format(("\n".join(sig_files))))
+    (outdir / "files_bkg.txt").write_text("{}\n".format(("\n".join(bkg_files))))
+
+
+@ml.command("st")
+@click.argument("datadir", type=click.Path(resolve_path=True, exists=True))
+@click.argument("outdir", type=click.Path(resolve_path=True))
+@click.option("-s", "--test-size", type=float, default=0.40, help="training test size", show_default=True)
+@click.option("-e", "--early-stop", type=int, default=10, help="number of early stopping rounds", show_default=True)
+@click.option("-k", "--use-sklearn", is_flag=True, help="use sklearn instead of lgbm")
+@click.option("-g", "--use-xgboost", is_flag=True, help="use xgboost instead of lgbm")
+@click.option("-l", "--learning-rate", type=float, default=0.1, help="learning_rate model parameter", show_default=True)
+@click.option("-n", "--num-leaves", type=int, default=60, help="num_leaves model parameter", show_default=True)
+@click.option("-m", "--min-child-samples", type=int, default=1000, help="min_child_samples model parameter", show_default=True)
+@click.option("-d", "--max-depth", type=int, default=5, help="max_depth model parameter", show_default=True)
+@click.option("-r", "--reg-lambda", type=float, default=0, help="lambda (L2) regularization", show_default=True)
+def st(
+    datadir,
+    outdir,
+    test_size,
+    early_stop,
+    use_sklearn,
+    use_xgboost,
+    learning_rate,
+    num_leaves,
+    min_child_samples,
+    max_depth,
+    reg_lambda,
+):
+
+    from tdub.ml_train import single_training
+    import pandas as pd
+    import numpy as np
+
+    datadir = PosixPath(datadir)
+    df = pd.read_hdf(datadir / "df.h5", "df")
+    y = np.load(datadir / "labels.npy")
+    w = np.load(datadir / "weights.npy")
+    df.selection_used = (
+        datadir / "selection.txt"
+    ).read_text().strip()
+    train_axes = dict(
+        learning_rate=learning_rate,
+        num_leaves=num_leaves,
+        min_child_samples=min_child_samples,
+        max_depth=max_depth,
+        reg_lambda=reg_lambda,
+    )
+    extra_sum = {
+        "region": PosixPath(datadir / "region.txt").read_text().strip(),
+        "nlo_method": PosixPath(datadir / "nlo_method.txt").read_text().strip(),
+    }
+    single_training(
+        df,
+        y,
+        w,
+        train_axes,
+        outdir,
+        test_size=test_size,
+        early_stopping_rounds=early_stop,
+        extra_summary_entries=extra_sum,
+        use_sklearn=use_sklearn,
+        use_xgboost=use_xgboost,
+    )
 
 
 @cli.command("train-single", context_settings=dict(max_content_width=92))
@@ -46,7 +180,7 @@ def cli():
 @click.option("--min-child-samples", type=int, default=50, help="min_child_samples model parameter", show_default=True)
 @click.option("--max-depth", type=int, default=5, help="max_depth model parameter", show_default=True)
 @click.option("--reg-lambda", type=float, default=0, help="lambda (L2) regularization", show_default=True)
-def single(
+def train_single(
     datadir,
     region,
     outdir,
@@ -139,7 +273,7 @@ def single(
 @click.option("-m", "--multiple-ttbar-samples", is_flag=True, help="use multiple ttbar MC samples")
 @click.option("--overwrite", is_flag=True, help="overwrite existing workspace")
 @click.option("--and-submit", is_flag=True, help="submit the condor jobs")
-def scan(
+def train_scan(
     datadir,
     region,
     workspace,
