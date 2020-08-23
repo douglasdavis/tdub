@@ -18,6 +18,7 @@ Function Summary
 
 .. autosummary::
 
+   persist_prepared_data
    prepare_from_root
    folded_training
    lgbm_gen_classifier
@@ -37,6 +38,7 @@ Reference
 .. autoclass:: SingleTrainingSummary
    :members:
 
+.. autofunction:: persist_prepared_data
 .. autofunction:: prepare_from_root
 .. autofunction:: folded_training
 .. autofunction:: lgbm_gen_classifier

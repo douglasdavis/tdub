@@ -354,11 +354,11 @@ def prepare_from_root(
 
     Returns
     -------
-    pandas.DataFrame
+    :py:obj:`pandas.DataFrame`
        Event feature matrix.
-    numpy.ndarray
+    :py:obj:`numpy.ndarray`
        Event labels (0 for background; 1 for signal).
-    numpy.ndarray
+    :py:obj:`numpy.ndarray`
        Event weights.
 
     Examples
@@ -455,9 +455,18 @@ def prepare_from_root(
 
 
 def persist_prepared_data(
-    out_dir: Union[str, os.PathLike], df: pd.DataFrame, y: np.ndarray, w: np.ndarray
+    out_dir: Union[str, os.PathLike],
+    df: pd.DataFrame,
+    labels: np.ndarray,
+    weights: np.ndarray,
 ) -> None:
     """Persist prepared data to disk.
+
+    The product of :py:func:`tdub.ml_train.prepare_from_root` is
+    easily persistable to disk; this function performs that task. If
+    the same prepared data is going to be used for multiple training
+    executations, one can save CPU cycles by saving the prepared data
+    instead of starting higher upstream with our ROOT ntuples.
 
     Parameters
     ----------
@@ -465,17 +474,25 @@ def persist_prepared_data(
         Directory to save output to.
     df : pandas.DataFrame
         Prepared DataFrame object.
-    y : numpy.ndarray
+    labels : numpy.ndarray
         Prepared labels.
-    w : numpy.ndarray
+    weights : numpy.ndarray
         Prepared weights.
+
+    Examples
+    --------
+    >>> from tdub.data import quick_files
+    >>> from tdub.train import prepare_from_root, persist_prepared_data
+    >>> qfiles = quick_files("/path/to/data")
+    >>> df, y, w = prepare_from_root(qfiles["tW_DR"], qfiles["ttbar"], "2j2b")
+    >>> persist_prepared_data("/path/to/output/data", df, y, w)
 
     """
     out_dir = PosixPath(out_dir)
     out_dir.mkdir(exist_ok=True, parents=True)
     df.to_hdf(out_dir / "df.h5", "df", mode="w", complevel=0)
-    np.save(out_dir / "y.npy", y)
-    np.save(out_dir / "w.npy", w)
+    np.save(out_dir / "labels.npy", labels)
+    np.save(out_dir / "weights.npy", weights)
     selection_file = PosixPath(out_dir / "selection.txt")
     selection_file.write_text(f"{df.selection_used}\n")
 
