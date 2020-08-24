@@ -675,6 +675,8 @@ def lgbm_train_classifier(
 ) -> BaseEstimator:
     """Train a LGBMClassifier.
 
+    Parameters
+    ----------
     clf : lightgbm.LGBMClassifier
         The classifier
     X_train : array_like
