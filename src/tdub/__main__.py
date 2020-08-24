@@ -123,8 +123,8 @@ def train_prep(
 @click.option("-k", "--use-sklearn", is_flag=True, help="use sklearn instead of lgbm")
 @click.option("-g", "--use-xgboost", is_flag=True, help="use xgboost instead of lgbm")
 @click.option("-l", "--learning-rate", type=float, default=0.1, help="learning_rate model parameter", show_default=True)
-@click.option("-n", "--num-leaves", type=int, default=60, help="num_leaves model parameter", show_default=True)
-@click.option("-m", "--min-child-samples", type=int, default=1000, help="min_child_samples model parameter", show_default=True)
+@click.option("-n", "--num-leaves", type=int, default=16, help="num_leaves model parameter", show_default=True)
+@click.option("-m", "--min-child-samples", type=int, default=500, help="min_child_samples model parameter", show_default=True)
 @click.option("-d", "--max-depth", type=int, default=5, help="max_depth model parameter", show_default=True)
 @click.option("-r", "--reg-lambda", type=float, default=0, help="lambda (L2) regularization", show_default=True)
 def train_single(
