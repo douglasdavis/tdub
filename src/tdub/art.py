@@ -122,10 +122,10 @@ def draw_uncertainty_bands(
 
     Parameters
     ----------
-    uncertainty : uproot_methods.classes.TGraphAsymmErrors.Methods
-        ROOT TGraphAsymmErrors from uproot with full systematic uncertainty.
-    total_mc : uproot_methods.classes.TH1.Methods
-        ROOT TH1 from uproot providing the full Monte Carlo prediction.
+    uncertainty : tdub.rex.TGraphAsymmErrors
+        ROOT TGraphAsymmErrors with full systematic uncertainty.
+    total_mc : tdub.rex.TH1
+        ROOT TH1 providing the full Monte Carlo prediction.
     ax : matplotlib.axes.Axes
         Main axis (where histogram stack is painted)
     axr : matplotlib.axes.Axes
@@ -200,9 +200,9 @@ def canvas_from_counts(
         a dictionray pairing samples to bin count errors.
     bin_edges : array_like
         the histogram bin edges.
-    uncertainty : uproot_methods.base.classes.TGraphAsymmErrors.Methods, optional
+    uncertainty : tdub.rex.TGraphAsymmErrors
         Uncertainty (TGraphAsym).
-    total_mc : uproot_methods.base.classes.TH1.Methods, optional
+    total_mc : tdub.rex.TH1
         Total MC histogram (TH1D).
     subplots_kw : dict
         remaining keyword arguments passed to :py:func:`matplotlib.pyplot.subplots`.
