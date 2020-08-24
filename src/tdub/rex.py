@@ -262,7 +262,7 @@ def prefit_histogram(root_file: Any, sample: str, region: str) -> TH1:
 
     Parameters
     ----------
-    root_file : root.rootio.ROOTDirectory
+    root_file : uproot4.reading.ReadOnlyFile
         File containing the desired prefit histogram.
     sample : str
         Physics sample name.
