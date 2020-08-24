@@ -236,10 +236,10 @@ list(str): List of features to avoid specifically in 2j2b classifiers.
 
 
 DEFAULT_SCAN_PARAMETERS = {
-    "max_depth": [4, 5, 6, 7],
-    "num_leaves": [20, 31, 64],
-    "learning_rate": [0.07, 0.1, 0.2],
-    "min_child_samples": [50, 60, 80, 120, 180],
+    "max_depth": [3, 4, 5, 6, 7],
+    "num_leaves": [8, 16, 32, 64, 128],
+    "learning_rate": [0.05, 0.07, 0.1, 0.2],
+    "min_child_samples": [100, 250, 500, 1000, 2000],
     "reg_lambda": [0],
 }
 """
