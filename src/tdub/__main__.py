@@ -393,7 +393,7 @@ def train_scan(
         dag=condor_dag,
     )
     for run in runs:
-        condor_job_scan.add_arg(f"tdub train single {run}")
+        condor_job_scan.add_arg(f"train single {run}")
     condor_job_check = pycondor.Job(
         name="job_train_check",
         universe="vanilla",
@@ -407,7 +407,7 @@ def train_scan(
         log=str(ws / "log"),
         dag=condor_dag,
     )
-    condor_job_check.add_arg(f"tdub train check {ws}")
+    condor_job_check.add_arg(f"train check {ws}")
     condor_job_check.add_parent(condor_job_scan)
 
     if and_submit:
