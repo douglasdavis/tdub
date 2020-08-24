@@ -48,8 +48,8 @@ def misc():
 
 
 @train.command("prep")
-@click.argument("region", type=click.Choice(["1j1b", "2j1b", "2j2b"]))
 @click.argument("datadir", type=click.Path(resolve_path=True, exists=True))
+@click.argument("region", type=click.Choice(["1j1b", "2j1b", "2j2b"]))
 @click.argument("outdir", type=click.Path(resolve_path=True))
 @click.option("-p", "--pre-exec", type=click.Path(resolve_path=True), help="Python code to pre-execute")
 @click.option("-n", "--nlo-method", type=str, default="DR", help="tW simluation NLO method", show_default=True)
@@ -61,8 +61,8 @@ def misc():
 @click.option("-f", "--bkg-sample-frac", type=float, help="use a fraction of the background")
 @click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
 def train_prep(
-    region,
     datadir,
+    region,
     outdir,
     pre_exec,
     nlo_method,
