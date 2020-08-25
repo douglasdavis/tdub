@@ -6,7 +6,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/tdub)](https://pypi.org/project/tdub/)
 
 `tdub` is a Python project for handling some downstsream steps in the
-ATLAS Run 2 tW inclusive cross section analysis. The project provides
+ATLAS Run 2 *tW* inclusive cross section analysis. The project provides
 a simple command line interface for performing standard analysis tasks
 including:
 
