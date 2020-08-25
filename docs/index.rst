@@ -3,10 +3,10 @@ tdub
 
 |Actions Status| |Documentation Status| |PyPI| |Python Version|
 
-``tdub`` is a Python project for handling some downstsream steps in the
-ATLAS Run 2 tW inclusive cross section analysis. The project provides a
-simple command line interface for performing standard analysis tasks
-including:
+``tdub`` is a Python project for handling some downstsream steps in
+the ATLAS Run 2 :math:`tW` inclusive cross section analysis. The
+project provides a simple command line interface for performing
+standard analysis tasks including:
 
 - BDT feature selection and hyperparameter optimization.
 - Training BDT models on our Monte Carlo.
