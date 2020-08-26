@@ -466,7 +466,7 @@ def quick_files(
     - `ttbar_inc` (410470 full sim)
     - `ttbar_inc_AFII` (410470 fast sim)
     - `tW_DR` (410648, 410649 full sim)
-    - `tW_DR_AFII` (410648, 410648 fast sim)
+    - `tW_DR_AFII` (410648, 410649 fast sim)
     - `tW_DR_PS` (411038, 411039 fast sim)
     - `tW_DR_inc` (410646, 410647 full sim)
     - `tW_DR_inc_AFII` (410646, 410647 fast sim)
