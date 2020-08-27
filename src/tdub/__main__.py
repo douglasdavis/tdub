@@ -58,6 +58,7 @@ def misc():
 @click.option("-r", "--use-trrw", is_flag=True, help="apply top recursive reweighting")
 @click.option("-i", "--ignore-list", type=str, help="variable ignore list file")
 @click.option("-m", "--multiple-ttbar-samples", is_flag=True, help="use multiple ttbar MC samples")
+@click.option("-a", "--use-inc-af2", is_flag=True, help="use inclusive af2 samples")
 @click.option("-f", "--bkg-sample-frac", type=float, help="use a fraction of the background")
 @click.option("-d", "--use-dilep", is_flag=True, help="train with dilepton samples")
 def train_prep(
@@ -71,6 +72,7 @@ def train_prep(
     use_trrw,
     ignore_list,
     multiple_ttbar_samples,
+    use_inc_af2,
     bkg_sample_frac,
     use_dilep,
 ):
@@ -87,8 +89,12 @@ def train_prep(
     sig_files = qf[f"tW_{nlo_method}"] if use_dilep else qf[f"tW_{nlo_method}_inc"]
     if multiple_ttbar_samples:
         bkg_files = qf["ttbar_inc_AFII"] + qf["ttbar_PS"]
+    elif use_inc_af2:
+        sig_files = qf[f"tW_{nlo_method}_inc_AFII"]
+        bkg_files = qf["ttbar_inc_AFII"]
     else:
         bkg_files = qf["ttbar"] if use_dilep else qf["ttbar_inc"]
+
     override_sel = override_selection
     if override_sel:
         override_sel = PosixPath(override_sel).read_text().strip()
