@@ -22,7 +22,6 @@ Function Summary
    branches_from
    categorize_branches
    features_for
-   files_for_tree
    quick_files
    selection_as_numexpr
    selection_as_root
@@ -42,7 +41,6 @@ Reference
 .. autofunction:: branches_from
 .. autofunction:: categorize_branches
 .. autofunction:: features_for
-.. autofunction:: files_for_tree
 .. autofunction:: quick_files
 .. autofunction:: selection_as_numexpr
 .. autofunction:: selection_as_root

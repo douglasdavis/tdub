@@ -11,7 +11,6 @@ from tdub.data import (
     branches_from,
     categorize_branches,
     features_for,
-    files_for_tree,
     selection_for,
     selection_branches,
     selection_as_numexpr,
@@ -96,15 +95,6 @@ def test_bad_sample_info():
     with pytest.raises(ValueError) as err:
         SampleInfo(bad)
     assert str(err.value) == "tW_DR_410_bad cannot be parsed by SampleInfo regex"
-
-
-def test_bad_files_for_tree():
-    with pytest.raises(ValueError) as err:
-        files_for_tree("a", "b", "c")
-    assert (
-        str(err.value)
-        == "bad sample_prefix 'b', must be one of: ['tW_DR', 'tW_DS', 'ttbar']"
-    )
 
 
 def test_Region_from_str():

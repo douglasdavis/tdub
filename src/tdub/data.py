@@ -3,7 +3,6 @@
 # stdlib
 from dataclasses import dataclass
 from enum import Enum
-from glob import glob
 from pathlib import PosixPath
 import logging
 import os
@@ -102,18 +101,6 @@ class Region(Enum):
         return self.name[1:]
 
 
-_sample_info_extract_re = re.compile(
-    r"""(?P<phy_process>\w+)_
-    (?P<dsid>[0-9]{6})_
-    (?P<sim_type>(FS|AFII))_
-    (?P<campaign>MC16(a|d|e))_
-    (?P<tree>\w+)
-    (\.\w+|$)""",
-    re.X,
-)
-
-
-@dataclass
 class SampleInfo:
     """Describes a sample's attritubes given it's name.
 
@@ -152,11 +139,15 @@ class SampleInfo:
 
     """
 
-    phy_process: str
-    dsid: int
-    sim_type: str
-    campaign: str
-    tree: str
+    _parse: re.Pattern = re.compile(
+        r"""(?P<phy_process>\w+)_
+        (?P<dsid>[0-9]{6})_
+        (?P<sim_type>(FS|AFII))_
+        (?P<campaign>MC16(a|d|e))_
+        (?P<tree>\w+)
+        (\.\w+|$)""",
+        re.X,
+    )
 
     def __init__(self, input_file: str) -> None:
         """Class constructor."""
@@ -167,7 +158,7 @@ class SampleInfo:
             self.campaign = "Data"
             self.tree = "nominal"
         else:
-            m = _sample_info_extract_re.match(input_file)
+            m: Optional[re.Match] = SampleInfo._parse.match(input_file)
             if not m:
                 raise ValueError(f"{input_file} cannot be parsed by SampleInfo regex")
             self.phy_process = m.group("phy_process")
@@ -217,9 +208,7 @@ def avoids_for(region: Union[str, Region]) -> List[str]:
 
 
 def branches_from(
-    source: DataSource,
-    tree: str = "WtLoop_nominal",
-    ignore_weights: bool = False,
+    source: DataSource, tree: str = "WtLoop_nominal", ignore_weights: bool = False,
 ) -> List[str]:
     """Get a list of branches from a data source.
 
@@ -399,74 +388,16 @@ def features_for(region: Union[str, Region]) -> List[str]:
         raise ValueError(f"Incompatible region: {region}")
 
 
-def files_for_tree(
-    datapath: Union[str, os.PathLike],
-    sample_prefix: str,
-    tree_name: str,
-    campaign: Optional[str] = None,
-) -> List[str]:
-    """Get a list of files for the sample and desired systematic tree.
-
-    Parameters
-    ----------
-    datapath : str or os.PathLike
-        Path where ROOT files are expected to live.
-    sample_prefix : str
-        Prefix for the sample we want (`"ttbar"` or `"tW_DR"` or `"tW_DS"`).
-    tree_name : str
-        Name of the ATLAS systematic tree (e.g. `"nominal"` or `"EG_RESOLUTION_ALL__1up"`).
-    campaign : str, optional
-        Enforce a single campaign ("MC16a", "MC16d", or "MC16e").
-
-    Returns
-    -------
-    list(str)
-        Desired files (if they exist)
-
-    Examples
-    --------
-    >>> from tdub.data import files_for_tree
-    >>> files_for_tree("/data/path", "ttbar", "JET_CategoryReduction_JET_JER_EffectiveNP_4__1up")
-    ['/data/path/ttbar_410472_FS_MC16a_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root',
-     '/data/path/ttbar_410472_FS_MC16d_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root',
-     '/data/path/ttbar_410472_FS_MC16e_JET_CategoryReduction_JET_JER_EffectiveNP_4__1up.root']
-
-    """
-    if campaign is None:
-        camp = ""
-    else:
-        if campaign not in ("MC16a", "MC16d", "MC16e"):
-            raise ValueError(f"{campaign} but be either 'MC16a', 'MC16d', or 'MC16e'")
-        camp = f"_{campaign}"
-
-    path = str(PosixPath(datapath).resolve())
-    if sample_prefix == "ttbar":
-        return sorted(glob(f"{path}/ttbar_410472_FS{camp}*{tree_name}.root"))
-    elif sample_prefix == "tW_DR":
-        return sorted(glob(f"{path}/tW_DR_41064*FS{camp}*{tree_name}.root"))
-    elif sample_prefix == "tW_DS":
-        return sorted(glob(f"{path}/tW_DS_41065*FS{camp}*{tree_name}.root"))
-    else:
-        raise ValueError(
-            f"bad sample_prefix '{sample_prefix}', must be one of: ['tW_DR', 'tW_DS', 'ttbar']"
-        )
-
-
 def quick_files(
-    datapath: Union[str, os.PathLike], campaign: Optional[str] = None
+    datapath: Union[str, os.PathLike],
+    campaign: Optional[str] = None,
+    tree: str = "nominal",
 ) -> Dict[str, List[str]]:
     """Get a dictionary connecting sample processes to file lists.
 
     The lists of files are sorted alphabetically. These types of
     samples are currently tested:
 
-    - `ttbar` (410472 full sim)
-    - `ttbar_AFII` (410472 fast sim)
-    - `ttbar_PS` (410558 fast sim)
-    - `ttbar_PS713` (411234 fast sim)
-    - `ttbar_hdamp` (410482 fast sim)
-    - `ttbar_inc` (410470 full sim)
-    - `ttbar_inc_AFII` (410470 fast sim)
     - `tW_DR` (410648, 410649 full sim)
     - `tW_DR_AFII` (410648, 410649 fast sim)
     - `tW_DR_PS` (411038, 411039 fast sim)
@@ -474,6 +405,13 @@ def quick_files(
     - `tW_DR_inc_AFII` (410646, 410647 fast sim)
     - `tW_DS` (410656, 410657 full sim)
     - `tW_DS_inc` (410654, 410655 ful sim)
+    - `ttbar` (410472 full sim)
+    - `ttbar_AFII` (410472 fast sim)
+    - `ttbar_PS` (410558 fast sim)
+    - `ttbar_PS713` (411234 fast sim)
+    - `ttbar_hdamp` (410482 fast sim)
+    - `ttbar_inc` (410470 full sim)
+    - `ttbar_inc_AFII` (410470 fast sim)
     - `Diboson`
     - `Zjets`
     - `MCNP`
@@ -485,6 +423,8 @@ def quick_files(
         Path where all of the ROOT files live.
     campaign : str, optional
         Enforce a single campaign ("MC16a", "MC16d", or "MC16e").
+    tree : str
+        Upstream AnalysisTop ntuple tree.
 
     Returns
     -------
@@ -518,85 +458,48 @@ def quick_files(
         camp = f"_{campaign}"
 
     path = str(PosixPath(datapath).resolve())
+    files = os.listdir(path)
 
-    # ttbar
-    ttbar_files = sorted(glob(f"{path}/ttbar_410472_FS{camp}*nominal.root"))
-    ttbar_AFII_files = sorted(glob(f"{path}/ttbar_410472_AFII{camp}*nominal.root"))
-    ttbar_PS_files = sorted(glob(f"{path}/ttbar_410558*AFII{camp}*nominal.root"))
-    ttbar_PS713_files = sorted(glob(f"{path}/ttbar_411234*AFII{camp}*nominal.root"))
-    ttbar_hdamp_files = sorted(glob(f"{path}/ttbar_410482_AFII{camp}*nominal.root"))
-    ttbar_inc_files = sorted(glob(f"{path}/ttbar_410470_FS{camp}*nominal.root"))
-    ttbar_inc_AFII_files = sorted(glob(f"{path}/ttbar_410470_AFII{camp}*nominal.root"))
-
-    # tW
-    tW_DR_files = sorted(
-        glob(f"{path}/tW_DR_410648_FS{camp}*nominal.root")
-        + glob(f"{path}/tW_DR_410649_FS{camp}*nominal.root")
-    )
-    tW_DR_AFII_files = sorted(
-        glob(f"{path}/tW_DR_410648_AFII{camp}*nominal.root")
-        + glob(f"{path}/tW_DR_410649_AFII{camp}*nominal.root")
-    )
-    tW_DR_inc_files = sorted(
-        glob(f"{path}/tW_DR_410646_FS{camp}*nominal.root")
-        + glob(f"{path}/tW_DR_410647_FS{camp}*nominal.root")
-    )
-    tW_DR_inc_AFII_files = sorted(
-        glob(f"{path}/tW_DR_410646_AFII{camp}*nominal.root")
-        + glob(f"{path}/tW_DR_410647_AFII{camp}*nominal.root")
-    )
-    tW_DR_PS_files = sorted(
-        glob(f"{path}/tW_DR_411038_AFII{camp}*nominal.root")
-        + glob(f"{path}/tW_DR_411039_AFII{camp}*nominal.root")
-    )
-    tW_DS_files = sorted(
-        glob(f"{path}/tW_DS_410656_FS{camp}*nominal.root")
-        + glob(f"{path}/tW_DS_410657_FS{camp}*nominal.root")
-    )
-    tW_DS_inc_files = sorted(
-        glob(f"{path}/tW_DS_410654_FS{camp}*nominal.root")
-        + glob(f"{path}/tW_DS_410655_FS{camp}*nominal.root")
-    )
-
-    # Minor backgrounds
-    Diboson_files = sorted(glob(f"{path}/Diboson_*FS{camp}*nominal.root"))
-    Zjets_files = sorted(glob(f"{path}/Zjets_*FS{camp}*nominal.root"))
-    MCNP_files = sorted(glob(f"{path}/MCNP_*FS{camp}*nominal.root"))
-
-    if campaign is None:
-        Data_files = sorted(glob(f"{path}/*Data_Data_nominal.root"))
-    elif campaign == "MC16a":
-        Data_files = sorted(
-            glob(f"{path}/Data15_data15*root") + glob(f"{path}/Data16_data16*root")
-        )
-    elif campaign == "MC16d":
-        Data_files = sorted(glob(f"{path}/Data17_data17*root"))
-    elif campaign == "MC16e":
-        Data_files = sorted(glob(f"{path}/Data18_data18*root"))
-
-    file_lists = {
-        "ttbar": ttbar_files,
-        "ttbar_AFII": ttbar_AFII_files,
-        "ttbar_PS": ttbar_PS_files,
-        "ttbar_PS713": ttbar_PS713_files,
-        "ttbar_hdamp": ttbar_hdamp_files,
-        "ttbar_inc": ttbar_inc_files,
-        "ttbar_inc_AFII": ttbar_inc_AFII_files,
-        "tW_DR": tW_DR_files,
-        "tW_DR_AFII": tW_DR_AFII_files,
-        "tW_DR_PS": tW_DR_PS_files,
-        "tW_DR_inc": tW_DR_inc_files,
-        "tW_DR_inc_AFII": tW_DR_inc_AFII_files,
-        "tW_DS": tW_DS_files,
-        "tW_DS_inc": tW_DS_inc_files,
-        "Diboson": Diboson_files,
-        "Zjets": Zjets_files,
-        "MCNP": MCNP_files,
-        "Data": Data_files,
+    patterns = {
+        "tW_DR": f"tW_DR_41064(8|9)_FS_MC16(a|d|e)_{tree}.root$",
+        "tW_DR_AFII": f"tW_DR_41064(8|9)_AFII_MC16(a|d|e)_{tree}.root$",
+        "tW_DR_PS": f"tW_DR_41103(8|9)_AFII_MC16(a|d|e)_{tree}.root$",
+        "tW_DR_inc": f"tW_DR_41064(6|7)_FS_MC16(a|d|e)_{tree}.root$",
+        "tW_DR_inc_AFII": f"tW_DR_41064(6|7)_AFII_MC16(a|d|e)_{tree}.root$",
+        "tW_DS": f"tW_DS_41065(6|7)_FS_MC16(a|d|e)_{tree}.root$",
+        "tW_DS_inc": f"tW_DS_41065(4|5)_FS_MC16(a|d|e)_{tree}.root$",
+        "ttbar": f"ttbar_410472_FS_MC16(a|d|e)_{tree}.root$",
+        "ttbar_AFII": f"ttbar_410472_AFII_MC16(a|d|e)_{tree}.root$",
+        "ttbar_PS": f"ttbar_410558_AFII_MC16(a|d|e)_{tree}.root$",
+        "ttbar_PS713": f"ttbar_411234_AFII_MC16(a|d|e)_{tree}.root$",
+        "ttbar_hdamp": f"ttbar_410482_AFII_MC16(a|d|e)_{tree}.root$",
+        "ttbar_inc": f"ttbar_410470_FS_MC16(a|d|e)_{tree}.root$",
+        "ttbar_inc_AFII": f"ttbar_410470_AFII_MC16(a|d|e)_{tree}.root$",
+        "Diboson": f"Diboson_[0-9]{{6}}_FS_MC16(a|d|e)_{tree}.root$",
+        "Zjets": f"Zjets_[0-9]{{6}}_FS_MC16(a|d|e)_{tree}.root$",
+        "MCNP": f"MCNP_[0-9]{{6}}_FS_MC16(a|d|e)_{tree}.root$",
     }
-    for k, v in file_lists.items():
-        if len(v) == 0:
-            log.debug(f"we didn't find any files for {k}")
+
+    if campaign == "MC16a":
+        patterns["Data"] = f"Data1(5|6)_data1(5|6)_Data_Data_{tree}.root$"
+    elif campaign == "MC16d":
+        patterns["Data"] = f"Data17_data17_Data_Data_{tree}.root$"
+    elif campaign == "MC16e":
+        patterns["Data"] = f"Data18_data18_Data_Data_{tree}.root$"
+    else:
+        patterns["Data"] = f"Data1(5|6|7|8)_data1(5|6|7|8)_Data_Data_{tree}.root$"
+
+    patterns = {k: re.compile(v) for k, v in patterns.items()}
+    file_lists = {}
+    for k, p in patterns.items():
+        file_lists[k] = [f"{path}/{entry}" for entry in sorted(filter(p.match, files))]
+
+    if campaign is not None:
+        for k, v in file_lists.items():
+            if k == "Data":
+                continue
+            file_lists[k] = sorted(filter(lambda x: camp in PosixPath(x).name, v))
+
     return file_lists
 
 
