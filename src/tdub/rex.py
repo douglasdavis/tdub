@@ -322,7 +322,9 @@ def prefit_histograms(
 
 
 def hepdata(
-    wkspace: Union[str, os.PathLike], region: str, stage: str = "pre",
+    wkspace: Union[str, os.PathLike],
+    region: str,
+    stage: str = "pre",
 ) -> Dict[Any, Any]:
     """Parse HEPData information.
 
@@ -601,7 +603,12 @@ def stack_canvas(
             logy = True
 
     fig, ax0, ax1 = canvas_from_counts(
-        counts, errors, bin_edges, uncertainty=uncertainty, total_mc=total_mc, logy=logy,
+        counts,
+        errors,
+        bin_edges,
+        uncertainty=uncertainty,
+        total_mc=total_mc,
+        logy=logy,
     )
 
     # stack axes cosmetics

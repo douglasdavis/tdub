@@ -143,7 +143,10 @@ def chisquared_cdf_c(chi2: float, ndf: float) -> float:
 
 
 def chisquared_test(
-    h1: np.ndarray, err1: np.ndarray, h2: np.ndarray, err2: np.ndarray,
+    h1: np.ndarray,
+    err1: np.ndarray,
+    h2: np.ndarray,
+    err2: np.ndarray,
 ) -> Tuple[float, float, float]:
     r"""Perform :math:`\chi^2` test on two histograms.
 

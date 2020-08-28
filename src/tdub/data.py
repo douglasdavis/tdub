@@ -208,7 +208,9 @@ def avoids_for(region: Union[str, Region]) -> List[str]:
 
 
 def branches_from(
-    source: DataSource, tree: str = "WtLoop_nominal", ignore_weights: bool = False,
+    source: DataSource,
+    tree: str = "WtLoop_nominal",
+    ignore_weights: bool = False,
 ) -> List[str]:
     """Get a list of branches from a data source.
 

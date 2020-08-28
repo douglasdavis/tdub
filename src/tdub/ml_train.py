@@ -217,7 +217,9 @@ class ResponseHistograms:
         return round(float(self.ks_bkg[1]), 5)
 
     def draw(
-        self, ax: Optional[plt.Axes] = None, xlabel: Optional[str] = None,
+        self,
+        ax: Optional[plt.Axes] = None,
+        xlabel: Optional[str] = None,
     ) -> Tuple[plt.Figure, plt.Axes]:
         """Draw the response histograms.
 
@@ -291,7 +293,10 @@ class ResponseHistograms:
         ax.legend(handles, labels, loc="upper right", ncol=1, frameon=False, numpoints=1)
         ax.set_ylabel("Arbitrary Units")
         draw_atlas_label(
-            ax, cme_and_lumi=False, extra_lines=["$tW$ BDT Training"], follow_shift=0.22,
+            ax,
+            cme_and_lumi=False,
+            extra_lines=["$tW$ BDT Training"],
+            follow_shift=0.22,
         )
         if xlabel is None:
             if self.response_type == "proba":
@@ -597,7 +602,11 @@ def sklearn_gen_classifier(
 
 
 def sklearn_train_classifier(
-    clf: BaseEstimator, X_train: Any, y_train: Any, w_train: Any, **fit_params,
+    clf: BaseEstimator,
+    X_train: Any,
+    y_train: Any,
+    w_train: Any,
+    **fit_params,
 ) -> BaseEstimator:
     """Train a Scikit-learn classifier.
 
@@ -1408,7 +1417,10 @@ def gp_minimize_auc(
 
     @use_named_args(dimensions=dimensions)
     def afit(
-        learning_rate, num_leaves, min_child_samples, max_depth,
+        learning_rate,
+        num_leaves,
+        min_child_samples,
+        max_depth,
     ):
         global _ifit
         global _best_fit
