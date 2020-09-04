@@ -1,7 +1,6 @@
 """Module for working with datasets."""
 
 # stdlib
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import PosixPath
 import logging
