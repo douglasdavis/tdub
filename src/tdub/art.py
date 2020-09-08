@@ -1,7 +1,7 @@
 """Art creation utilities."""
 
 # stdlib
-from typing import Any, Dict, Tuple, Optional, List, Union
+from typing import Dict, Tuple, Optional, List, Union
 import logging
 
 # external
@@ -10,6 +10,7 @@ import matplotlib
 matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
 # tdub
 from tdub import setup_logging
@@ -110,8 +111,8 @@ def draw_atlas_label(
 
 
 def draw_uncertainty_bands(
-    uncertainty: Any,
-    total_mc: Any,
+    uncertainty: tdub.rex.TGraphAsymmErrors,
+    total_mc: tdub.rex.TH1,
     ax: plt.Axes,
     axr: plt.Axes,
     label: str = "Uncertainty",
@@ -172,11 +173,11 @@ def draw_uncertainty_bands(
 
 
 def canvas_from_counts(
-    counts: Dict[str, Any],
-    errors: Dict[str, Any],
+    counts: Dict[str, np.ndarray],
+    errors: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
-    uncertainty: Optional[Any] = None,
-    total_mc: Optional[Any] = None,
+    uncertainty: Optional[tdub.rex.TGraphAsymmErrors] = None,
+    total_mc: Optional[tdub.rex.TH1] = None,
     logy: bool = False,
     **subplots_kw,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
@@ -283,7 +284,7 @@ def canvas_from_counts(
 
 
 def draw_impact_barh(
-    ax: plt.Axes, df: Any, hi_color: str = "skyblue", lo_color: str = "peru"
+    ax: plt.Axes, df: pd.DataFrame, hi_color: str = "skyblue", lo_color: str = "peru"
 ) -> Tuple[plt.Axes, plt.Axes]:
     """Draw the impact plot.
 
