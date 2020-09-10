@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import uproot4 as uproot
-from uproot4.model import Model as ROOT_Model
-from uproot4.behaviors.TH1 import TH1 as ROOT_TH1
+from uproot4.model import Model as ROOTModel
+from uproot4.behaviors.TH1 import Histogram as ROOTHistogram
 
 import yaml
 
@@ -49,7 +49,7 @@ class TGraphAsymmErrors:
 
     """
 
-    def __init__(self, root_object: ROOT_Model) -> None:
+    def __init__(self, root_object: ROOTModel) -> None:
         self._root_object = root_object
         self._xlo = self._root_object.member("fEXlow")
         self._xhi = self._root_object.member("fEXhigh")
@@ -87,7 +87,7 @@ class TH1:
 
     """
 
-    def __init__(self, root_object: ROOT_TH1) -> None:
+    def __init__(self, root_object: ROOTHistogram) -> None:
         self._root_object = root_object
         self._counts, self._errors = self._root_object.values_errors()
         self._counts, self._errors = self._counts[1:-1], self._errors[1:-1]
