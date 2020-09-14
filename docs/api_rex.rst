@@ -12,8 +12,6 @@ Class Summary
 .. autosummary::
 
    NuisPar
-   TH1
-   TGraphAsymmErrors
 
 Function Summary
 ^^^^^^^^^^^^^^^^
@@ -48,10 +46,6 @@ Reference
 
 
 .. autoclass:: NuisPar
-.. autoclass:: TH1
-   :members:
-.. autoclass:: TGraphAsymmErrors
-   :members:
 .. autofunction:: available_regions
 .. autofunction:: chisq
 .. autofunction:: chisq_text

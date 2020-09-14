@@ -15,6 +15,7 @@ import pandas as pd
 # tdub
 from tdub import setup_logging
 import tdub.hist
+import tdub.root
 
 
 setup_logging()
@@ -111,8 +112,8 @@ def draw_atlas_label(
 
 
 def draw_uncertainty_bands(
-    uncertainty: tdub.rex.TGraphAsymmErrors,
-    total_mc: tdub.rex.TH1,
+    uncertainty: tdub.root.TGraphAsymmErrors,
+    total_mc: tdub.root.TH1,
     ax: plt.Axes,
     axr: plt.Axes,
     label: str = "Uncertainty",
@@ -123,9 +124,9 @@ def draw_uncertainty_bands(
 
     Parameters
     ----------
-    uncertainty : tdub.rex.TGraphAsymmErrors
+    uncertainty : tdub.root.TGraphAsymmErrors
         ROOT TGraphAsymmErrors with full systematic uncertainty.
-    total_mc : tdub.rex.TH1
+    total_mc : tdub.root.TH1
         ROOT TH1 providing the full Monte Carlo prediction.
     ax : matplotlib.axes.Axes
         Main axis (where histogram stack is painted)
@@ -176,8 +177,8 @@ def canvas_from_counts(
     counts: Dict[str, np.ndarray],
     errors: Dict[str, np.ndarray],
     bin_edges: np.ndarray,
-    uncertainty: Optional[tdub.rex.TGraphAsymmErrors] = None,
-    total_mc: Optional[tdub.rex.TH1] = None,
+    uncertainty: Optional[tdub.root.TGraphAsymmErrors] = None,
+    total_mc: Optional[tdub.root.TH1] = None,
     logy: bool = False,
     **subplots_kw,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
@@ -201,9 +202,9 @@ def canvas_from_counts(
         a dictionray pairing samples to bin count errors.
     bin_edges : array_like
         the histogram bin edges.
-    uncertainty : tdub.rex.TGraphAsymmErrors
+    uncertainty : tdub.root.TGraphAsymmErrors
         Uncertainty (TGraphAsym).
-    total_mc : tdub.rex.TH1
+    total_mc : tdub.root.TH1
         Total MC histogram (TH1D).
     subplots_kw : dict
         remaining keyword arguments passed to :py:func:`matplotlib.pyplot.subplots`.

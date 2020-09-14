@@ -55,3 +55,4 @@ datasets.
    api_ml_apply.rst
    api_ml_train.rst
    api_rex.rst
+   api_root.rst
