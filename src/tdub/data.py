@@ -79,6 +79,7 @@ class Region(Enum):
         >>> from tdub.data import Region
         >>> Region.from_str("1j1b")
         <Region.r1j1b: 0>
+
         """
         if s.startswith("reg"):
             rsuff = s.split("reg")[-1]
