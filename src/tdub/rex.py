@@ -30,7 +30,6 @@ from .art import (
     legend_last_to_first,
 )
 from .root import TGraphAsymmErrors, TH1
-from .hist import bin_centers
 import tdub.config
 
 setup_tdub_style()
