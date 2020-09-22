@@ -821,6 +821,7 @@ def single_training(
     extra_summary_entries: Optional[Dict[str, Any]] = None,
     use_sklearn: bool = False,
     use_xgboost: bool = False,
+    save_lgbm_txt: bool = False,
 ) -> None:
     """Execute a single training with some parameters.
 
@@ -849,6 +850,9 @@ def single_training(
         Use Scikit-learn's HistGradientBoostingClassifier.
     use_xgboost : bool
         Use XGBoost's XGBClassifier.
+    save_lgbm_txt : bool
+        Save fitted LGBM model to text file (ignored if either
+        ``use_sklearn`` or ``use_xgboost`` is ``True``).
 
     Returns
     -------
@@ -874,7 +878,10 @@ def single_training(
     ... )
 
     """
-    import lightgbm as lgbm
+    use_lgbm = not use_sklearn and not use_xgboost
+
+    if sum([use_sklearn, use_lgbm, use_xgboost]) != 1:
+        raise RuntimeError("BDT provider not defined properly.")
 
     starting_dir = os.getcwd()
     output_path = PosixPath(output_dir)
@@ -912,7 +919,7 @@ def single_training(
         xgb_train_classifier(
             model, X_train, y_train, w_train, early_stopping_rounds=early_stopping_rounds
         )
-    else:
+    elif use_lgbm:
         model = lgbm_gen_classifier(train_axes=train_axes)
         lgbm_train_classifier(
             model, X_train, y_train, w_train, early_stopping_rounds=early_stopping_rounds
@@ -920,6 +927,8 @@ def single_training(
 
     # Save the model
     joblib.dump(model, "model.joblib.gz", compress=("gzip", 3))
+    if use_lgbm and save_lgbm_txt:
+        model.booster_.save_model("model.txt")
 
     # ROC curve
     fig_roc, ax_roc = plt.subplots(figsize=(4.5, 4))
@@ -934,7 +943,8 @@ def single_training(
     importances_gain = {}
     importances_split = {}
     # Plot Importances
-    if not use_sklearn and not use_xgboost:
+    if use_lgbm:
+        import lightgbm as lgbm
         fig_imp, (ax_imp_gain, ax_imp_split) = plt.subplots(2, 1)
         lgbm.plot_importance(model, ax=ax_imp_gain, importance_type="gain", precision=2)
         lgbm.plot_importance(model, ax=ax_imp_split, importance_type="split", precision=2)
@@ -967,7 +977,7 @@ def single_training(
         pred_histograms = ResponseHistograms(
             "predict", model, X_train, X_test, y_train, y_test, w_train, w_test
         )
-    else:
+    elif use_lgbm:
         pred_histograms = ResponseHistograms(
             "predict", model, X_train, X_test, y_train, y_test, w_train, w_test
         )
