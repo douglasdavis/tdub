@@ -285,7 +285,10 @@ def canvas_from_counts(
 
 
 def draw_impact_barh(
-    ax: plt.Axes, df: pd.DataFrame, hi_color: str = "skyblue", lo_color: str = "peru"
+    ax: plt.Axes,
+    df: pd.DataFrame,
+    hi_color: str = "steelblue",
+    lo_color: str = "mediumturquoise",
 ) -> Tuple[plt.Axes, plt.Axes]:
     """Draw the impact plot.
 

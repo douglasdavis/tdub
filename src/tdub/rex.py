@@ -18,10 +18,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import uproot4 as uproot
+from uproot4.reading import ReadOnlyDirectory
 
 import yaml
 
 # tdub
+import tdub.config
 from .art import (
     canvas_from_counts,
     setup_tdub_style,
@@ -30,7 +32,6 @@ from .art import (
     legend_last_to_first,
 )
 from .root import TGraphAsymmErrors, TH1
-import tdub.config
 
 setup_tdub_style()
 
@@ -180,12 +181,12 @@ def chisq_text(wkspace: Union[str, os.PathLike], region: str, stage: str = "pre"
     )
 
 
-def prefit_histogram(root_file: Any, sample: str, region: str) -> TH1:
+def prefit_histogram(root_file: ReadOnlyDirectory, sample: str, region: str) -> TH1:
     """Get a prefit histogram from a file.
 
     Parameters
     ----------
-    root_file : uproot4.reading.ReadOnlyFile
+    root_file : uproot4.reading.ReadOnlyDirectory
         File containing the desired prefit histogram.
     sample : str
         Physics sample name.
@@ -313,12 +314,12 @@ def postfit_available(wkspace: Union[str, os.PathLike]) -> bool:
     return False
 
 
-def postfit_histogram(root_file: Any, sample: str) -> TH1:
+def postfit_histogram(root_file: ReadOnlyDirectory, sample: str) -> TH1:
     """Get a postfit histogram from a file.
 
     Parameters
     ----------
-    root_file : root.rootio.ROOTDirectory
+    root_file : uproot4.reading.ReadOnlyDirectory
         File containing the desired postfit histogram.
     sample : str
         Physics sample name.
