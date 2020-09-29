@@ -108,7 +108,7 @@ def draw_atlas_label(
     if extra_lines is not None:
         exlines += extra_lines
     for i, exline in enumerate(exlines):
-        ax.text(x, y - (i + 1) * 0.06, exline, transform=ax.transAxes, size=s2)
+        ax.text(x, y - (i + 1) * 0.08, exline, transform=ax.transAxes, size=s2)
 
 
 def draw_uncertainty_bands(
