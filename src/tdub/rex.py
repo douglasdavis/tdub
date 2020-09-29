@@ -1093,6 +1093,8 @@ def comparison_summary(
         Where to print results (defaults to sys.stdout).
 
     """
+    if print_to is None:
+        print_to = sys.stdout
 
     print(f"{'*' * 80}", file=print_to)
     print("Fit comparison summary", file=print_to)
