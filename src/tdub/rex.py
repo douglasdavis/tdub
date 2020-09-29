@@ -918,11 +918,11 @@ def compare_uncertainty(
     else:
         print(f"{p2} has a larger up uncertainty on {poi}", file=print_to)
         plarger = (abs(up2) - abs(up1)) / abs(up1) * 100.0
-    print(f"{p1}: {up1}", file=print_to)
-    print(f"{p2}: {up2}", file=print_to)
-    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+    print(f"{p1:<24}: {up1}", file=print_to)
+    print(f"{p2:<24}: {up2}", file=print_to)
+    print(f"{'Percent larger':<24}: {plarger:3.4f}", file=print_to)
 
-    print("----------------------------", file=print_to)
+    print(f"{'-' * 60}", file=print_to)
 
     if abs(down1) > abs(down2):
         print(f"{p1} has a larger down uncertainty on {poi}", file=print_to)
@@ -930,9 +930,9 @@ def compare_uncertainty(
     else:
         print(f"{p2} has a larger down uncertainty on {poi}", file=print_to)
         plarger = (abs(down2) - abs(down1)) / abs(down1) * 100.0
-    print(f"{p1}: {down1}", file=print_to)
-    print(f"{p2}: {down2}", file=print_to)
-    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+    print(f"{p1:<24}: {down1}", file=print_to)
+    print(f"{p2:<24}: {down2}", file=print_to)
+    print(f"{'Percent larger':<24}: {plarger:3.4f}", file=print_to)
 
 
 def compare_nuispar(
@@ -978,27 +978,27 @@ def compare_nuispar(
 
     if abs(np1.sig_lo) < abs(np2.sig_lo):
         print(f"{p1} has more aggressive sig lo {name} constraint", file=print_to)
-        a, b = 1.0 - abs(np1.sig_lo), 1.0 - abs(np2.sig_lo)
+        d = abs(np2.sig_lo) - abs(np1.sig_lo)
     else:
         print(f"{p2} has more aggresive sig lo {name} constraint", file=print_to)
-        b, a = 1.0 - abs(np1.sig_lo), 1.0 - abs(np2.sig_lo)
-    plarger = (a - b) / b * 100.0
-    print(f"{p1}: {np1.sig_lo}", file=print_to)
-    print(f"{p2}: {np2.sig_lo}", file=print_to)
-    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+        d = abs(np1.sig_lo) - abs(np2.sig_lo)
+    print(f"{p1:<24}: {np1.sig_lo}", file=print_to)
+    print(f"{p2:<24}: {np2.sig_lo}", file=print_to)
+    print(f"{'Difference':<24}: {d:3.4f}", file=print_to)
 
-    print("----------------------------", file=print_to)
+    print(f"{'-' * 60}", file=print_to)
 
     if abs(np1.sig_hi) < abs(np2.sig_hi):
-        print(f"{p1} has a larger sig hi {name} constraint", file=print_to)
-        a, b = 1.0 - abs(np1.sig_hi), 1.0 - abs(np2.sig_hi)
+        print(f"{p1} has a more aggressive sig hi {name} constraint", file=print_to)
+        d = abs(np2.sig_hi) - abs(np1.sig_hi)
     else:
-        print(f"{p2} has a larger sig hi {name} constraint", file=print_to)
-        b, a = 1.0 - abs(np1.sig_hi), 1.0 - abs(np2.sig_hi)
-    plarger = (a - b) / b * 100.0
-    print(f"{p1}: {np1.sig_hi}", file=print_to)
-    print(f"{p2}: {np2.sig_hi}", file=print_to)
-    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+        print(f"{p2} has a move aggresive sig hi {name} constraint", file=print_to)
+        d = abs(np1.sig_hi) - abs(np2.sig_hi)
+    print(f"{p1:<24}: {np1.sig_hi}", file=print_to)
+    print(f"{p2:<24}: {np2.sig_hi}", file=print_to)
+    print(f"{'Difference':<24}: {d:3.4f}", file=print_to)
+
+    print(f"{'-' * 60}", file=print_to)
 
     if abs(np1.pre_up) > abs(np2.pre_up):
         print(f"{p1} has larger prefit up variation impact from {name}", file=print_to)
@@ -1006,11 +1006,11 @@ def compare_nuispar(
     else:
         print(f"{p2} has larger prefit up variation impact from {name}", file=print_to)
         plarger = (abs(np2.pre_up) - abs(np1.pre_up)) / abs(np1.pre_up) * 100.0
-    print(f"{p1}: {np1.pre_up}", file=print_to)
-    print(f"{p2}: {np2.pre_up}", file=print_to)
-    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+    print(f"{p1:<24}: {np1.pre_up}", file=print_to)
+    print(f"{p2:<24}: {np2.pre_up}", file=print_to)
+    print(f"{'Percent larger':<24}: {plarger:3.4f}", file=print_to)
 
-    print("----------------------------", file=print_to)
+    print(f"{'-' * 60}", file=print_to)
 
     if abs(np1.pre_down) > abs(np2.pre_down):
         print(f"{p1} has larger prefit down variation impact from {name}", file=print_to)
@@ -1018,11 +1018,11 @@ def compare_nuispar(
     else:
         print(f"{p2} has larger prefit down variation impact from {name}", file=print_to)
         plarger = (abs(np2.pre_down) - abs(np1.pre_down)) / abs(np1.pre_down) * 100.0
-    print(f"{p1}: {np1.pre_down}", file=print_to)
-    print(f"{p2}: {np2.pre_down}", file=print_to)
-    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+    print(f"{p1:<24}: {np1.pre_down}", file=print_to)
+    print(f"{p2:<24}: {np2.pre_down}", file=print_to)
+    print(f"{'Percent larger':<24}: {plarger:3.4f}", file=print_to)
 
-    print("----------------------------", file=print_to)
+    print(f"{'-' * 60}", file=print_to)
 
     if abs(np1.post_up) > abs(np2.post_up):
         print(f"{p1} has larger postfit up variation impact from {name}", file=print_to)
@@ -1030,11 +1030,11 @@ def compare_nuispar(
     else:
         print(f"{p2} has larger postfit up variation impact from {name}", file=print_to)
         plarger = (abs(np2.post_up) - abs(np1.post_up)) / abs(np1.post_up) * 100.0
-    print(f"{p1}: {np1.post_up}", file=print_to)
-    print(f"{p2}: {np2.post_up}", file=print_to)
-    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+    print(f"{p1:<24}: {np1.post_up}", file=print_to)
+    print(f"{p2:<24}: {np2.post_up}", file=print_to)
+    print(f"{'Percent larger':<24}: {plarger:3.4f}", file=print_to)
 
-    print("----------------------------", file=print_to)
+    print(f"{'-' * 60}", file=print_to)
 
     if abs(np1.post_down) > abs(np2.post_down):
         print(f"{p1} has larger postfit down variation impact from {name}", file=print_to)
@@ -1042,9 +1042,9 @@ def compare_nuispar(
     else:
         print(f"{p2} has larger postfit down variation impact from {name}", file=print_to)
         plarger = (abs(np2.post_down) - abs(np1.post_down)) / abs(np1.post_down) * 100.0
-    print(f"{p1}: {np1.post_down}", file=print_to)
-    print(f"{p2}: {np2.post_down}", file=print_to)
-    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+    print(f"{p1:<24}: {np1.post_down}", file=print_to)
+    print(f"{p2:<24}: {np2.post_down}", file=print_to)
+    print(f"{'Percent larger':<24}: {plarger:3.4f}", file=print_to)
 
 
 def comparison_summary(
