@@ -945,6 +945,7 @@ def single_training(
     # Plot Importances
     if use_lgbm:
         import lightgbm as lgbm
+
         fig_imp, (ax_imp_gain, ax_imp_split) = plt.subplots(2, 1)
         lgbm.plot_importance(model, ax=ax_imp_gain, importance_type="gain", precision=2)
         lgbm.plot_importance(model, ax=ax_imp_split, importance_type="split", precision=2)
