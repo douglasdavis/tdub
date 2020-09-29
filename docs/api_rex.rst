@@ -21,6 +21,9 @@ Function Summary
    available_regions
    chisq
    chisq_text
+   compare_nuispar
+   compare_uncertainty
+   comparison_summary
    data_histogram
    delta_poi
    meta_axis_label
@@ -49,6 +52,9 @@ Reference
 .. autofunction:: available_regions
 .. autofunction:: chisq
 .. autofunction:: chisq_text
+.. autofunction:: compare_nuispar
+.. autofunction:: compare_uncertainty
+.. autofunction:: comparison_summary
 .. autofunction:: data_histogram
 .. autofunction:: delta_poi
 .. autofunction:: plot_all_regions

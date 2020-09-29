@@ -1,11 +1,13 @@
 """Utilities for parsing TRExFitter."""
 
 # stdlib
+import io
 import logging
 import math
 import multiprocessing
 import os
 import random
+import sys
 from dataclasses import dataclass
 from pathlib import PosixPath
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
@@ -246,9 +248,7 @@ def prefit_histograms(
 
 
 def hepdata(
-    wkspace: Union[str, os.PathLike],
-    region: str,
-    stage: str = "pre",
+    wkspace: Union[str, os.PathLike], region: str, stage: str = "pre",
 ) -> Dict[Any, Any]:
     """Parse HEPData information.
 
@@ -527,12 +527,7 @@ def stack_canvas(
             logy = True
 
     fig, ax0, ax1 = canvas_from_counts(
-        counts,
-        errors,
-        bin_edges,
-        uncertainty=uncertainty,
-        total_mc=total_mc,
-        logy=logy,
+        counts, errors, bin_edges, uncertainty=uncertainty, total_mc=total_mc, logy=logy,
     )
 
     # stack axes cosmetics
@@ -816,6 +811,14 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
     return 0
 
 
+def _get_param(fit_file, name):
+    with fit_file.open("r") as f:
+        for line in f.readlines():
+            if name in line:
+                n, c, u, d = line.split()
+                return n, float(c), float(u), float(d)
+
+
 def delta_poi(
     wkspace1: Union[str, os.PathLike],
     wkspace2: Union[str, os.PathLike],
@@ -852,19 +855,269 @@ def delta_poi(
         Down uncertainty on delta mu.
 
     """
-
-    def get_param(fit_file, name):
-        with fit_file.open("r") as f:
-            for line in f.readlines():
-                if name in line:
-                    n, c, u, d = tuple(line.split())
-                    return n, float(c), float(u), float(d)
-
     fit_file1 = PosixPath(wkspace1) / "Fits" / f"{fitname1}.txt"
     fit_file2 = PosixPath(wkspace2) / "Fits" / f"{fitname2}.txt"
-    mu1 = get_param(fit_file1, poi)
-    mu2 = get_param(fit_file2, poi)
+    mu1 = _get_param(fit_file1, poi)
+    mu2 = _get_param(fit_file2, poi)
     delta_mu = mu1[1] - mu2[1]
     sig_delta_mu_up = math.sqrt(mu1[2] ** 2 + mu2[2] ** 2)
     sig_delta_mu_dn = math.sqrt(mu1[3] ** 2 + mu2[3] ** 2)
     return delta_mu, sig_delta_mu_up, sig_delta_mu_dn
+
+
+def compare_uncertainty(
+    wkspace1: Union[str, os.PathLike],
+    wkspace2: Union[str, os.PathLike],
+    fitname1: str = "tW",
+    fitname2: str = "tW",
+    label1: Optional[str] = None,
+    label2: Optional[str] = None,
+    poi: str = "SigXsecOverSM",
+    print_to: Optional[io.TextIOBase] = None,
+) -> None:
+    """Compare uncertainty between two fits.
+
+    Parameters
+    ----------
+    wkspace1 : str or os.PathLike
+        Path of the first TRExFitter workspace.
+    wkspace2 : str or os.PathLike
+        Path of the second TRExFitter workspace.
+    fitname1 : str
+        Name of the first fit.
+    fitname2 : str
+        Name of the second fit.
+    label1 : str, optional
+        Define label for the first fit (defaults to workspace path).
+    label2 : str, optional
+        Define label for the second fit (defaults to workspace path).
+    poi : str
+        Name of the parameter of interest.
+    print_to : io.TextIOBase, optional
+        Where to print results (defaults to sys.stdout).
+
+    """
+    if print_to is None:
+        print_to = sys.stdout
+
+    path1 = PosixPath(wkspace1).resolve()
+    path2 = PosixPath(wkspace2).resolve()
+    p1 = path1 if label1 is None else label1
+    p2 = path2 if label2 is None else label2
+
+    fit_file1 = path1 / "Fits" / f"{fitname1}.txt"
+    fit_file2 = path2 / "Fits" / f"{fitname2}.txt"
+    mu1 = _get_param(fit_file1, poi)
+    mu2 = _get_param(fit_file2, poi)
+    up1, down1 = mu1[2], mu1[3]
+    up2, down2 = mu2[2], mu2[3]
+
+    if abs(up1) > abs(up2):
+        print(f"{p1} has a larger up uncertainty on {poi}", file=print_to)
+        plarger = (abs(up1) - abs(up2)) / abs(up2) * 100.0
+    else:
+        print(f"{p2} has a larger up uncertainty on {poi}", file=print_to)
+        plarger = (abs(up2) - abs(up1)) / abs(up1) * 100.0
+    print(f"{p1}: {up1}", file=print_to)
+    print(f"{p2}: {up2}", file=print_to)
+    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+
+    print("----------------------------", file=print_to)
+
+    if abs(down1) > abs(down2):
+        print(f"{p1} has a larger down uncertainty on {poi}", file=print_to)
+        plarger = (abs(down1) - abs(down2)) / abs(down2) * 100.0
+    else:
+        print(f"{p2} has a larger down uncertainty on {poi}", file=print_to)
+        plarger = (abs(down2) - abs(down1)) / abs(down1) * 100.0
+    print(f"{p1}: {down1}", file=print_to)
+    print(f"{p2}: {down2}", file=print_to)
+    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+
+
+def compare_nuispar(
+    name: str,
+    wkspace1: Union[str, os.PathLike],
+    wkspace2: Union[str, os.PathLike],
+    label1: Optional[str] = None,
+    label2: Optional[str] = None,
+    np_label: Optional[str] = None,
+    print_to: Optional[io.TextIOBase] = None,
+) -> None:
+    """Compare nuisance parameter info between two fits.
+
+    Parameters
+    ----------
+    name : str
+        Name of the nuisance parameter.
+    wkspace1 : str or os.PathLike
+        Path of the first TRExFitter workspace.
+    wkspace2 : str or os.PathLike
+        Path of the second TRExFitter workspace.
+    label1 : str, optional
+        Define label for the first fit (defaults to workspace path).
+    label2 : str, optional
+        Define label for the second fit (defaults to workspace path).
+    np_label : str, optional
+        Give the nuisance parameter a label other than its name.
+    print_to : io.TextIOBase, optional
+        Where to print results (defaults to sys.stdout).
+
+    """
+    if print_to is None:
+        print_to = sys.stdout
+
+    path1 = PosixPath(wkspace1).resolve()
+    path2 = PosixPath(wkspace2).resolve()
+    p1 = path1 if label1 is None else label1
+    p2 = path2 if label2 is None else label2
+    np1 = nuispar_impact(wkspace1, name=name, label=np_label)
+    np2 = nuispar_impact(wkspace2, name=name, label=np_label)
+
+    print(f"{'=' * 15} Comparison for NP: {name} {'=' * 15}", file=print_to)
+
+    if abs(np1.sig_lo) < abs(np2.sig_lo):
+        print(f"{p1} has more aggressive sig lo {name} constraint", file=print_to)
+        a, b = 1.0 - abs(np1.sig_lo), 1.0 - abs(np2.sig_lo)
+    else:
+        print(f"{p2} has more aggresive sig lo {name} constraint", file=print_to)
+        b, a = 1.0 - abs(np1.sig_lo), 1.0 - abs(np2.sig_lo)
+    plarger = (a - b) / b * 100.0
+    print(f"{p1}: {np1.sig_lo}", file=print_to)
+    print(f"{p2}: {np2.sig_lo}", file=print_to)
+    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+
+    print("----------------------------", file=print_to)
+
+    if abs(np1.sig_hi) < abs(np2.sig_hi):
+        print(f"{p1} has a larger sig hi {name} constraint", file=print_to)
+        a, b = 1.0 - abs(np1.sig_hi), 1.0 - abs(np2.sig_hi)
+    else:
+        print(f"{p2} has a larger sig hi {name} constraint", file=print_to)
+        b, a = 1.0 - abs(np1.sig_hi), 1.0 - abs(np2.sig_hi)
+    plarger = (a - b) / b * 100.0
+    print(f"{p1}: {np1.sig_hi}", file=print_to)
+    print(f"{p2}: {np2.sig_hi}", file=print_to)
+    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+
+    if abs(np1.pre_up) > abs(np2.pre_up):
+        print(f"{p1} has larger prefit up variation impact from {name}", file=print_to)
+        plarger = (abs(np1.pre_up) - abs(np2.pre_up)) / abs(np2.pre_up) * 100.0
+    else:
+        print(f"{p2} has larger prefit up variation impact from {name}", file=print_to)
+        plarger = (abs(np2.pre_up) - abs(np1.pre_up)) / abs(np1.pre_up) * 100.0
+    print(f"{p1}: {np1.pre_up}", file=print_to)
+    print(f"{p2}: {np2.pre_up}", file=print_to)
+    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+
+    print("----------------------------", file=print_to)
+
+    if abs(np1.pre_down) > abs(np2.pre_down):
+        print(f"{p1} has larger prefit down variation impact from {name}", file=print_to)
+        plarger = (abs(np1.pre_down) - abs(np2.pre_down)) / abs(np2.pre_down) * 100.0
+    else:
+        print(f"{p2} has larger prefit down variation impact from {name}", file=print_to)
+        plarger = (abs(np2.pre_down) - abs(np1.pre_down)) / abs(np1.pre_down) * 100.0
+    print(f"{p1}: {np1.pre_down}", file=print_to)
+    print(f"{p2}: {np2.pre_down}", file=print_to)
+    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+
+    print("----------------------------", file=print_to)
+
+    if abs(np1.post_up) > abs(np2.post_up):
+        print(f"{p1} has larger postfit up variation impact from {name}", file=print_to)
+        plarger = (abs(np1.post_up) - abs(np2.post_up)) / abs(np2.post_up) * 100.0
+    else:
+        print(f"{p2} has larger postfit up variation impact from {name}", file=print_to)
+        plarger = (abs(np2.post_up) - abs(np1.post_up)) / abs(np1.post_up) * 100.0
+    print(f"{p1}: {np1.post_up}", file=print_to)
+    print(f"{p2}: {np2.post_up}", file=print_to)
+    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+
+    print("----------------------------", file=print_to)
+
+    if abs(np1.post_down) > abs(np2.post_down):
+        print(f"{p1} has larger postfit down variation impact from {name}", file=print_to)
+        plarger = (abs(np1.post_down) - abs(np2.post_down)) / abs(np2.post_down) * 100.0
+    else:
+        print(f"{p2} has larger postfit down variation impact from {name}", file=print_to)
+        plarger = (abs(np2.post_down) - abs(np1.post_down)) / abs(np1.post_down) * 100.0
+    print(f"{p1}: {np1.post_down}", file=print_to)
+    print(f"{p2}: {np2.post_down}", file=print_to)
+    print(f"Percent larger: {plarger:3.4f}", file=print_to)
+
+
+def comparison_summary(
+    wkspace1,
+    wkspace2,
+    fitname1: str = "tW",
+    fitname2: str = "tW",
+    label1: Optional[str] = None,
+    label2: Optional[str] = None,
+    fit_poi: str = "SigXsecOverSM",
+    nuispars: Optional[Iterable[str]] = None,
+    nuispar_labels: Optional[Iterable[str]] = None,
+    print_to: Optional[io.TextIOBase] = None,
+) -> None:
+    """Summarize a comparison of two fits.
+
+    Parameters
+    ----------
+    wkspace1 : str or os.PathLike
+        Path of the first TRExFitter workspace.
+    wkspace2 : str or os.PathLike
+        Path of the second TRExFitter workspace.
+    fitname1 : str
+        Name of the first fit.
+    fitname2 : str
+        Name of the second fit.
+    label1 : str, optional
+        Define label for the first fit (defaults to workspace path).
+    label2 : str, optional
+        Define label for the second fit (defaults to workspace path).
+    fit_poi : str
+        Name of the parameter of interest.
+    nuispars : list(str), optional
+        Nuisance parameters to compare.
+    nuispar_labels: list(str), optional
+        Labels to give each nuisance parameter other than the default
+        name.
+    print_to : io.TextIOBase, optional
+        Where to print results (defaults to sys.stdout).
+
+    """
+
+    print(f"{'*' * 80}", file=print_to)
+    print("Fit comparison summary", file=print_to)
+    if label1 is not None and label2 is not None:
+        print(f"Fit 1: {wkspace1} as {label1}", file=print_to)
+        print(f"Fit 2: {wkspace2} as {label2}", file=print_to)
+    print(f"{'-' * 60}", file=print_to)
+
+    compare_uncertainty(
+        wkspace1,
+        wkspace2,
+        fitname1=fitname1,
+        fitname2=fitname2,
+        label1=label1,
+        label2=label2,
+        poi=fit_poi,
+        print_to=print_to,
+    )
+    if nuispars is not None:
+        if nuispar_labels is not None:
+            pairs = [(np, npl) for np, npl in zip(nuispars, nuispar_labels)]
+        else:
+            pairs = [(np, None) for np in nuispars]
+        for np_name, np_label in pairs:
+            compare_nuispar(
+                np_name,
+                wkspace1,
+                wkspace2,
+                label1=label1,
+                label2=label2,
+                np_label=np_label,
+                print_to=print_to,
+            )
+
+    print(f"{'*' * 80}", file=print_to)
