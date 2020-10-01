@@ -41,8 +41,8 @@ log = logging.getLogger(__name__)
 
 
 @dataclass
-class NuisPar:
-    """Nuisance parameter description as a dataclass.
+class FitParam:
+    """Fit parameter description as a dataclass.
 
     Attributes
     ----------
@@ -51,13 +51,13 @@ class NuisPar:
     label : str
         Pretty name for plotting.
     pre_down : float
-        Prefit down variation impact on delta mu.
+        Prefit down variation impact on mu.
     pre_up : float
-        Prefit up variation impact on delta mu.
+        Prefit up variation impact on mu.
     post_down : float
-        Postfit down variation impact on delta mu.
+        Postfit down variation impact on mu.
     post_up : float
-        Postfit up variation impact on delta mu.
+        Postfit up variation impact on mu.
     central : float
         Central value of the NP.
     sig_lo : float
@@ -83,36 +83,36 @@ class NuisPar:
         self.post_max = max(abs(self.post_down), abs(self.post_up))
 
 
-def available_regions(wkspace: Union[str, os.PathLike]) -> List[str]:
-    """Get a list of available regions from a workspace.
+def available_regions(rex_dir: Union[str, os.PathLike]) -> List[str]:
+    """Get a list of available regions from a TRExFitter result directory.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory
 
     Returns
     -------
     list(str)
-        Regions discovered in the workspace.
+        Regions discovered in the TRExFitter result directory.
 
     """
-    root_files = (PosixPath(wkspace) / "Histograms").glob("*_preFit.root")
+    root_files = (PosixPath(rex_dir) / "Histograms").glob("*_preFit.root")
     return [rf.name[:-12] for rf in root_files if "asimov" not in rf.name]
 
 
 def data_histogram(
-    wkspace: Union[str, os.PathLike], region: str, fitname: str = "tW"
+    rex_dir: Union[str, os.PathLike], region: str, fit_name: str = "tW"
 ) -> TH1:
-    """Get the histogram for the Data in a region from a workspace.
+    """Get the histogram for the Data in a region from a TRExFitter result.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory
     region : str
         TRExFitter region name.
-    fitname : str
+    fit_name : str
         Name of the Fit
 
     Returns
@@ -121,19 +121,19 @@ def data_histogram(
         Histogram for the Data sample.
 
     """
-    root_path = PosixPath(wkspace) / "Histograms" / f"{fitname}_{region}_histos.root"
+    root_path = PosixPath(rex_dir) / "Histograms" / f"{fit_name}_{region}_histos.root"
     return TH1(uproot.open(root_path).get(f"{region}_Data"))
 
 
 def chisq(
-    wkspace: Union[str, os.PathLike], region: str, stage: str = "pre"
+    rex_dir: Union[str, os.PathLike], region: str, stage: str = "pre"
 ) -> Tuple[float, int, float]:
     r"""Get prefit :math:`\chi^2` information from TRExFitter region.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory
     region : str
         TRExFitter region name.
     stage : str
@@ -151,20 +151,20 @@ def chisq(
     """
     if stage not in ("pre", "post"):
         raise ValueError("stage can only be 'pre' or 'post'")
-    txt_path = PosixPath(wkspace) / "Histograms" / f"{region}_{stage}Fit_Chi2.txt"
+    txt_path = PosixPath(rex_dir) / "Histograms" / f"{region}_{stage}Fit_Chi2.txt"
     table = yaml.full_load(txt_path.read_text())
     return table["chi2"], table["ndof"], table["probability"]
 
 
-def chisq_text(wkspace: Union[str, os.PathLike], region: str, stage: str = "pre") -> None:
+def chisq_text(rex_dir: Union[str, os.PathLike], region: str, stage: str = "pre") -> None:
     r"""Generate nicely formatted text for :math:`\chi^2` information.
 
     Deploys :py:func:`tdub.rex.chisq` for grab the info.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory
     region : str
         TRExFitter region name.
     stage : str
@@ -176,7 +176,7 @@ def chisq_text(wkspace: Union[str, os.PathLike], region: str, stage: str = "pre"
         Formatted string showing the :math:`\chi^2` information.
 
     """
-    chi2, ndof, prob = chisq(wkspace, region, stage=stage)
+    chi2, ndof, prob = chisq(rex_dir, region, stage=stage)
     return (
         f"$\\chi^2/\\mathrm{{ndf}} = {chi2:3.2f} / {ndof}$, "
         f"$\\chi^2_{{\\mathrm{{prob}}}} = {prob:3.2f}$"
@@ -212,22 +212,22 @@ def prefit_histogram(root_file: ReadOnlyDirectory, sample: str, region: str) -> 
 
 
 def prefit_histograms(
-    wkspace: Union[str, os.PathLike],
+    rex_dir: Union[str, os.PathLike],
     samples: Iterable[str],
     region: str,
-    fitname: str = "tW",
+    fit_name: str = "tW",
 ) -> Dict[str, TH1]:
     """Retrieve sample prefit histograms for a region.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory
     samples : Iterable(str)
         Physics samples of the desired histograms
     region : str
         Region to get histograms for
-    fitname : str
+    fit_name : str
         Name of the Fit
 
     Returns
@@ -236,7 +236,7 @@ def prefit_histograms(
         Prefit histograms.
 
     """
-    root_path = PosixPath(wkspace) / "Histograms" / f"{fitname}_{region}_histos.root"
+    root_path = PosixPath(rex_dir) / "Histograms" / f"{fit_name}_{region}_histos.root"
     root_file = uproot.open(root_path)
     histograms = {}
     for samp in samples:
@@ -248,7 +248,7 @@ def prefit_histograms(
 
 
 def hepdata(
-    wkspace: Union[str, os.PathLike],
+    rex_dir: Union[str, os.PathLike],
     region: str,
     stage: str = "pre",
 ) -> Dict[Any, Any]:
@@ -256,27 +256,27 @@ def hepdata(
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory
     region : str
         Region to get histograms for
     stage : str
         Fitting stage (`"pre"` or `"post"`).
 
     """
-    yaml_path = PosixPath(wkspace) / "Plots" / f"{region}_{stage}fit.yaml"
+    yaml_path = PosixPath(rex_dir) / "Plots" / f"{region}_{stage}fit.yaml"
     return yaml.full_load(yaml_path.read_text())
 
 
 def prefit_total_and_uncertainty(
-    wkspace: Union[str, os.PathLike], region: str
+    rex_dir: Union[str, os.PathLike], region: str
 ) -> Tuple[TH1, TGraphAsymmErrors]:
     """Get the prefit total MC prediction and uncertainty band for a region.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace.
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory.
     region : str
         Region to get error band for.
 
@@ -288,20 +288,20 @@ def prefit_total_and_uncertainty(
         The error TGraph.
 
     """
-    root_path = PosixPath(wkspace) / "Histograms" / f"{region}_preFit.root"
+    root_path = PosixPath(rex_dir) / "Histograms" / f"{region}_preFit.root"
     root_file = uproot.open(root_path)
     err = TGraphAsymmErrors(root_file.get("g_totErr"))
     tot = TH1(root_file.get("h_tot"))
     return tot, err
 
 
-def postfit_available(wkspace: Union[str, os.PathLike]) -> bool:
-    """Check if TRExFitter workspace contains postFit information.
+def postfit_available(rex_dir: Union[str, os.PathLike]) -> bool:
+    """Check if TRExFitter result directory contains postFit information.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory
 
     Returns
     -------
@@ -309,7 +309,7 @@ def postfit_available(wkspace: Union[str, os.PathLike]) -> bool:
         True of postFit discovered
 
     """
-    histdir = PosixPath(wkspace) / "Histograms"
+    histdir = PosixPath(rex_dir) / "Histograms"
     for f in histdir.iterdir():
         if "postFit" in f.name:
             return True
@@ -342,14 +342,14 @@ def postfit_histogram(root_file: ReadOnlyDirectory, sample: str) -> TH1:
 
 
 def postfit_histograms(
-    wkspace: Union[str, os.PathLike], samples: Iterable[str], region: str
+    rex_dir: Union[str, os.PathLike], samples: Iterable[str], region: str
 ) -> Dict[str, TH1]:
     """Retrieve sample postfit histograms for a region.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory
     region : str
         Region to get histograms for
     samples : Iterable(str)
@@ -358,10 +358,10 @@ def postfit_histograms(
     Returns
     -------
     dict(str, tdub.root.TH1)
-        Postfit histograms detected in the workspace.
+        Postfit histograms detected in the TRExFitter result directory.
 
     """
-    root_path = PosixPath(wkspace) / "Histograms" / f"{region}_postFit.root"
+    root_path = PosixPath(rex_dir) / "Histograms" / f"{region}_postFit.root"
     root_file = uproot.open(root_path)
     histograms = {}
     for samp in samples:
@@ -375,14 +375,14 @@ def postfit_histograms(
 
 
 def postfit_total_and_uncertainty(
-    wkspace: Union[str, os.PathLike], region: str
+    rex_dir: Union[str, os.PathLike], region: str
 ) -> Tuple[Any, Any]:
     """Get the postfit total MC prediction and uncertainty band for a region.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace.
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory.
     region : str
         Region to get error band for.
 
@@ -394,7 +394,7 @@ def postfit_total_and_uncertainty(
         The error TGraph.
 
     """
-    root_path = PosixPath(wkspace) / "Histograms" / f"{region}_postFit.root"
+    root_path = PosixPath(rex_dir) / "Histograms" / f"{region}_postFit.root"
     root_file = uproot.open(root_path)
     err = TGraphAsymmErrors(root_file.get("g_totErr_postFit"))
     tot = TH1(root_file.get("h_tot_postFit"))
@@ -470,10 +470,10 @@ def meta_axis_label(region: str, meta_table: Optional[Dict[str, Any]] = None) ->
 
 
 def stack_canvas(
-    wkspace: Union[str, os.PathLike],
+    rex_dir: Union[str, os.PathLike],
     region: str,
     stage: str = "pre",
-    fitname: str = "tW",
+    fit_name: str = "tW",
     show_chisq: bool = True,
     meta_table: Optional[Dict[str, Any]] = None,
     log_patterns: Optional[List[Any]] = None,
@@ -482,13 +482,13 @@ def stack_canvas(
 
     Parameters
     ---------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace.
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory.
     region : str
         Region to get error band for.
     stage : str
         Drawing fit stage, (`"pre"` or `"post"`).
-    fitname : str
+    fit_name : str
         Name of the Fit
     show_chisq : bool
         Print :math:`\chi^2` information on ratio canvas.
@@ -509,14 +509,14 @@ def stack_canvas(
     """
     samples = ("tW", "ttbar", "Zjets", "Diboson", "MCNP")
     if stage == "pre":
-        histograms = prefit_histograms(wkspace, samples, region, fitname=fitname)
-        total_mc, uncertainty = prefit_total_and_uncertainty(wkspace, region)
+        histograms = prefit_histograms(rex_dir, samples, region, fit_name=fit_name)
+        total_mc, uncertainty = prefit_total_and_uncertainty(rex_dir, region)
     elif stage == "post":
-        histograms = postfit_histograms(wkspace, samples, region)
-        total_mc, uncertainty = postfit_total_and_uncertainty(wkspace, region)
+        histograms = postfit_histograms(rex_dir, samples, region)
+        total_mc, uncertainty = postfit_total_and_uncertainty(rex_dir, region)
     else:
         raise ValueError("stage must be 'pre' or 'post'")
-    histograms["Data"] = data_histogram(wkspace, region)
+    histograms["Data"] = data_histogram(rex_dir, region)
     bin_edges = histograms["Data"].edges
     counts = {k: v.counts for k, v in histograms.items()}
     errors = {k: v.errors for k, v in histograms.items()}
@@ -550,7 +550,7 @@ def stack_canvas(
         ax1.set_yticks([0.9, 0.95, 1.0, 1.05])
     if show_chisq:
         ax1.text(
-            0.02, 0.8, chisq_text(wkspace, region, stage), transform=ax1.transAxes, size=11
+            0.02, 0.8, chisq_text(rex_dir, region, stage), transform=ax1.transAxes, size=11
         )
     ax1.legend(loc="lower left", fontsize=11)
 
@@ -572,7 +572,7 @@ def plot_region_stage_ff(args):
 
     """
     fig, ax0, ax1 = stack_canvas(
-        wkspace=args[0],
+        rex_dir=args[0],
         region=args[1],
         stage=args[3],
         show_chisq=args[4],
@@ -587,24 +587,24 @@ def plot_region_stage_ff(args):
 
 
 def plot_all_regions(
-    wkspace: Union[str, os.PathLike],
+    rex_dir: Union[str, os.PathLike],
     outdir: Union[str, os.PathLike],
     stage: str = "pre",
-    fitname: str = "tW",
+    fit_name: str = "tW",
     show_chisq: bool = True,
     n_test: int = -1,
 ) -> None:
-    r"""Plot all regions discovered in a workspace.
+    r"""Plot all regions discovered in a TRExFitter result directory.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory
     outdir : str or os.PathLike
         Path to save resulting files to
     stage : str
         Fitting stage (`"pre"` or `"post"`).
-    fitname : str
+    fit_name : str
         Name of the Fit
     show_chisq : bool
         Print :math:`\chi^2` information on ratio canvas.
@@ -613,13 +613,13 @@ def plot_all_regions(
 
     """
     PosixPath(outdir).mkdir(parents=True, exist_ok=True)
-    regions = available_regions(wkspace)
+    regions = available_regions(rex_dir)
     if n_test > 0:
         regions = random.sample(regions, n_test)
     meta_table = tdub.config.PLOTTING_META_TABLE.copy()
     log_patterns = tdub.config.PLOTTING_LOGY.copy()
     args = [
-        [wkspace, region, outdir, stage, show_chisq, meta_table, log_patterns]
+        [rex_dir, region, outdir, stage, show_chisq, meta_table, log_patterns]
         for region in regions
     ]
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
@@ -627,14 +627,14 @@ def plot_all_regions(
 
 
 def nuispar_impact(
-    wkspace: Union[str, os.PathLike], name: str, label: Optional[str] = None
-) -> NuisPar:
+    rex_dir: Union[str, os.PathLike], name: str, label: Optional[str] = None
+) -> FitParam:
     """Extract a specific nuisance parameter from a fit.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace.
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory.
     name : str
         Name of the nuisance parameter.
     label : str, optional
@@ -642,14 +642,14 @@ def nuispar_impact(
 
     Returns
     -------
-    tdub.rex.NuisPar
+    tdub.rex.FitParam
         Desired nuisance parameter summary.
 
     """
     n, c, su, sd, postup, postdn, preup, predn = (
-        (PosixPath(wkspace) / "Fits" / f"NPRanking_{name}.txt").read_text().strip().split()
+        (PosixPath(rex_dir) / "Fits" / f"NPRanking_{name}.txt").read_text().strip().split()
     )
-    npar = NuisPar(
+    npar = FitParam(
         name,
         name,
         round(float(predn), 6),
@@ -665,25 +665,25 @@ def nuispar_impact(
     return npar
 
 
-def nuispar_impacts(wkspace: Union[str, os.PathLike], sort: bool = True) -> List[NuisPar]:
+def nuispar_impacts(rex_dir: Union[str, os.PathLike], sort: bool = True) -> List[FitParam]:
     """Extract a list of nuisance parameter impacts from a fit.
 
     Parameters
     ----------
-    wkspace : str or os.PathLike
-        Path of the TRExFitter workspace.
+    rex_dir : str or os.PathLike
+        Path of the TRExFitter result directory.
 
     Returns
     -------
-    list(tdub.rex.NuisPar)
+    list(tdub.rex.FitParam)
         The nuisance parameters.
 
     """
     nuispars = []
-    np_ranking_yaml = yaml.full_load((PosixPath(wkspace) / "Ranking.yaml").read_text())
+    np_ranking_yaml = yaml.full_load((PosixPath(rex_dir) / "Ranking.yaml").read_text())
     for entry in np_ranking_yaml:
         nuispars.append(
-            NuisPar(
+            FitParam(
                 entry["Name"],
                 entry["Name"],
                 entry["POIdownPreFit"],
@@ -700,12 +700,12 @@ def nuispar_impacts(wkspace: Union[str, os.PathLike], sort: bool = True) -> List
     return nuispars
 
 
-def nuispar_impact_plot_df(nuispars: List[NuisPar]) -> pd.DataFrame:
+def nuispar_impact_plot_df(nuispars: List[FitParam]) -> pd.DataFrame:
     """Construct a DataFrame to organize impact plot ingredients.
 
     Parameters
     ----------
-    nuispars : list(NuisPar)
+    nuispars : list(FitParam)
         The nuisance parameters.
 
     Returns
@@ -748,8 +748,8 @@ def nuispar_impact_plot_df(nuispars: List[NuisPar]) -> pd.DataFrame:
     )
 
 
-def prettify_nuispar_label(label: str) -> str:
-    """Fix nuisance parameter label to look nice for plots.
+def prettify_label(label: str) -> str:
+    """Fix parameter label to look nice for plots.
 
     Replace underscores with whitespace, TeXify some stuff, remove
     unnecessary things, etc.
@@ -774,23 +774,24 @@ def prettify_nuispar_label(label: str) -> str:
         .replace("AR ", "")
         .replace("hdamp", r"$h_{\mathrm{damp}}$")
         .replace("DRDS", "DR vs DS")
+        .replace("Effective", "Eff.")
         .replace("ptreweight", r"top-$p_{\mathrm{T}}$-reweight")
         .replace("MET", r"$E_{\mathrm{T}}^{\mathrm{miss}}$")
     )
 
 
-def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
+def nuispar_impact_plot_top15(rex_dir: Union[str, os.PathLike]) -> None:
     """Plot the top 15 nuisance parameters based on impact.
 
     Parameters
     ----------
-    wkspace : str, os.PathLike
-        Path of the TRExFitter workspace.
+    rex_dir : str, os.PathLike
+        Path of the TRExFitter result directory.
 
     """
-    nuispars = nuispar_impacts(wkspace, sort=True)[-15:]
+    nuispars = nuispar_impacts(rex_dir, sort=True)[-15:]
     for npar in nuispars:
-        npar.label = prettify_nuispar_label(npar.label)
+        npar.label = prettify_label(npar.label)
     df = nuispar_impact_plot_df(nuispars)
     ys = np.array(df.ys)
     # fmt: off
@@ -807,7 +808,7 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
     ax.text(0.37, 0.95, "Internal", size=14, transform=ax.transAxes)
     ax.text(0.10, 0.91, "$\\sqrt{s}$ = 13 TeV, $L = {139}$ fb$^{-1}$", size=12, transform=ax.transAxes)
     fig.subplots_adjust(left=0.45, bottom=0.085, top=0.915, right=0.975)
-    mpl_dir = PosixPath(wkspace) / "matplotlib"
+    mpl_dir = PosixPath(rex_dir) / "matplotlib"
     mpl_dir.mkdir(exist_ok=True)
     output_file = str(mpl_dir / "Impact.pdf")
     fig.savefig(output_file)
@@ -818,22 +819,54 @@ def nuispar_impact_plot_top15(wkspace: Union[str, os.PathLike]) -> None:
     return 0
 
 
-def _get_param(fit_file, name):
+def fit_parameter(fit_file: PosixPath, name: str, prettify: bool = False) -> FitParam:
+    """Retrieve a parameter from fit result text file.
+
+    Parameters
+    ----------
+    fit_file : pathlib.PosixPath
+        Path of the TRExFitter fit result text file.
+    name : str
+        Name of desired parameter.
+    prettify : bool
+        Prettify the parameter label using
+        :py:func:`tdub.rex.prettify_label`.
+
+    Raises
+    ------
+    RuntimeError
+        If the parameter name isn't discovered.
+
+    Returns
+    -------
+    tdub.rex.FitParam
+        Fit parameter description.
+
+    """
     with fit_file.open("r") as f:
         for line in f.readlines():
             if name in line:
                 n, c, u, d = line.split()
-                return n, float(c), float(u), float(d)
+                return FitParam(
+                    name=n,
+                    label=prettify_label(name) if prettify else name,
+                    central=float(c),
+                    sig_hi=float(u),
+                    sig_lo=float(d),
+                )
+
+    # if we don't find the name, raise RuntimeError
+    raise RuntimeError("%s parameter not found in %s" % (name, str(fit_file)))
 
 
 def delta_poi(
-    wkspace1: Union[str, os.PathLike],
-    wkspace2: Union[str, os.PathLike],
-    fitname1: str = "tW",
-    fitname2: str = "tW",
+    rex_dir1: Union[str, os.PathLike],
+    rex_dir2: Union[str, os.PathLike],
+    fit_name1: str = "tW",
+    fit_name2: str = "tW",
     poi: str = "SigXsecOverSM",
-):
-    r"""Calculate difference of a POI between two workspaces.
+) -> Tuple[float, float, float]:
+    r"""Calculate difference of a POI between two results directories.
 
     The default arguments will perform a calculation of
     :math:`\Delta\mu` between two different fits. Standard error
@@ -841,13 +874,13 @@ def delta_poi(
 
     Parameters
     ----------
-    wkspace1 : str or os.PathLike
-        Path of the first TRExFitter workspace.
-    wkspace2 : str or os.PathLike
-        Path of the second TRExFitter workspace.
-    fitname1 : str
+    rex_dir1 : str or os.PathLike
+        Path of the first TRExFitter result directory.
+    rex_dir2 : str or os.PathLike
+        Path of the second TRExFitter result directory.
+    fit_name1 : str
         Name of the first fit.
-    fitname2 : str
+    fit_name2 : str
         Name of the second fit.
     poi : str
         Name of the parameter of interest.
@@ -862,21 +895,48 @@ def delta_poi(
         Down uncertainty on delta mu.
 
     """
-    fit_file1 = PosixPath(wkspace1) / "Fits" / f"{fitname1}.txt"
-    fit_file2 = PosixPath(wkspace2) / "Fits" / f"{fitname2}.txt"
-    mu1 = _get_param(fit_file1, poi)
-    mu2 = _get_param(fit_file2, poi)
-    delta_mu = mu1[1] - mu2[1]
-    sig_delta_mu_up = math.sqrt(mu1[2] ** 2 + mu2[2] ** 2)
-    sig_delta_mu_dn = math.sqrt(mu1[3] ** 2 + mu2[3] ** 2)
-    return delta_mu, sig_delta_mu_up, sig_delta_mu_dn
+    fit_file1 = PosixPath(rex_dir1) / "Fits" / f"{fit_name1}.txt"
+    fit_file2 = PosixPath(rex_dir2) / "Fits" / f"{fit_name2}.txt"
+    mu1 = fit_parameter(fit_file1, poi)
+    mu2 = fit_parameter(fit_file2, poi)
+    # delta_mu = mu1.central - mu2.central
+    # sig_delta_mu_up = math.sqrt(mu1.sig_hi ** 2 + mu2.sig_hi ** 2)
+    # sig_delta_mu_dn = math.sqrt(mu1.sig_lo ** 2 + mu2.sig_lo ** 2)
+    # return delta_mu, sig_delta_mu_up, sig_delta_mu_dn
+    return delta_param(mu1, mu2)
+
+
+def delta_param(param1: FitParam, param2: FitParam) -> Tuple[float, float, float]:
+    r"""Calculate difference between two fit parameters.
+
+    Parameters
+    ----------
+    param1 : tdub.rex.FitParam
+        First fit parameter.
+    param2 : tdub.rex.FitParam
+        Second fit parameter.
+
+    Returns
+    -------
+    :py:obj:`float`
+        Difference between the central values
+    :py:obj:`float`
+        Up uncertainty
+    :py:obj:`float`
+        Down uncertainty
+
+    """
+    del_par = param1.central - param2.central
+    sig_del_par_up = math.sqrt(param1.sig_hi ** 2 + param2.sig_hi ** 2)
+    sig_del_par_dn = math.sqrt(param1.sig_lo ** 2 + param2.sig_lo ** 2)
+    return del_par, sig_del_par_up, sig_del_par_dn
 
 
 def compare_uncertainty(
-    wkspace1: Union[str, os.PathLike],
-    wkspace2: Union[str, os.PathLike],
-    fitname1: str = "tW",
-    fitname2: str = "tW",
+    rex_dir1: Union[str, os.PathLike],
+    rex_dir2: Union[str, os.PathLike],
+    fit_name1: str = "tW",
+    fit_name2: str = "tW",
     label1: Optional[str] = None,
     label2: Optional[str] = None,
     poi: str = "SigXsecOverSM",
@@ -886,18 +946,18 @@ def compare_uncertainty(
 
     Parameters
     ----------
-    wkspace1 : str or os.PathLike
-        Path of the first TRExFitter workspace.
-    wkspace2 : str or os.PathLike
-        Path of the second TRExFitter workspace.
-    fitname1 : str
+    rex_dir1 : str or os.PathLike
+        Path of the first TRExFitter result directory.
+    rex_dir2 : str or os.PathLike
+        Path of the second TRExFitter result directory.
+    fit_name1 : str
         Name of the first fit.
-    fitname2 : str
+    fit_name2 : str
         Name of the second fit.
     label1 : str, optional
-        Define label for the first fit (defaults to workspace path).
+        Define label for the first fit (defaults to rex_dir1).
     label2 : str, optional
-        Define label for the second fit (defaults to workspace path).
+        Define label for the second fit (defaults to rex_dir2).
     poi : str
         Name of the parameter of interest.
     print_to : io.TextIOBase, optional
@@ -907,17 +967,17 @@ def compare_uncertainty(
     if print_to is None:
         print_to = sys.stdout
 
-    path1 = PosixPath(wkspace1).resolve()
-    path2 = PosixPath(wkspace2).resolve()
+    path1 = PosixPath(rex_dir1).resolve()
+    path2 = PosixPath(rex_dir2).resolve()
     p1 = path1 if label1 is None else label1
     p2 = path2 if label2 is None else label2
 
-    fit_file1 = path1 / "Fits" / f"{fitname1}.txt"
-    fit_file2 = path2 / "Fits" / f"{fitname2}.txt"
-    mu1 = _get_param(fit_file1, poi)
-    mu2 = _get_param(fit_file2, poi)
-    up1, down1 = mu1[2], mu1[3]
-    up2, down2 = mu2[2], mu2[3]
+    fit_file1 = path1 / "Fits" / f"{fit_name1}.txt"
+    fit_file2 = path2 / "Fits" / f"{fit_name2}.txt"
+    mu1 = fit_parameter(fit_file1, poi)
+    mu2 = fit_parameter(fit_file2, poi)
+    up1, down1 = mu1.sig_hi, mu1.sig_lo
+    up2, down2 = mu2.sig_hi, mu2.sig_lo
 
     if abs(up1) > abs(up2):
         print(f"{p1} has a larger up uncertainty on {poi}", file=print_to)
@@ -944,8 +1004,8 @@ def compare_uncertainty(
 
 def compare_nuispar(
     name: str,
-    wkspace1: Union[str, os.PathLike],
-    wkspace2: Union[str, os.PathLike],
+    rex_dir1: Union[str, os.PathLike],
+    rex_dir2: Union[str, os.PathLike],
     label1: Optional[str] = None,
     label2: Optional[str] = None,
     np_label: Optional[str] = None,
@@ -957,14 +1017,14 @@ def compare_nuispar(
     ----------
     name : str
         Name of the nuisance parameter.
-    wkspace1 : str or os.PathLike
-        Path of the first TRExFitter workspace.
-    wkspace2 : str or os.PathLike
-        Path of the second TRExFitter workspace.
+    rex_dir1 : str or os.PathLike
+        Path of the first TRExFitter result directory.
+    rex_dir2 : str or os.PathLike
+        Path of the second TRExFitter result directory.
     label1 : str, optional
-        Define label for the first fit (defaults to workspace path).
+        Define label for the first fit (defaults to rex_dir1).
     label2 : str, optional
-        Define label for the second fit (defaults to workspace path).
+        Define label for the second fit (defaults to rex_dir2).
     np_label : str, optional
         Give the nuisance parameter a label other than its name.
     print_to : io.TextIOBase, optional
@@ -974,12 +1034,12 @@ def compare_nuispar(
     if print_to is None:
         print_to = sys.stdout
 
-    path1 = PosixPath(wkspace1).resolve()
-    path2 = PosixPath(wkspace2).resolve()
+    path1 = PosixPath(rex_dir1).resolve()
+    path2 = PosixPath(rex_dir2).resolve()
     p1 = path1 if label1 is None else label1
     p2 = path2 if label2 is None else label2
-    np1 = nuispar_impact(wkspace1, name=name, label=np_label)
-    np2 = nuispar_impact(wkspace2, name=name, label=np_label)
+    np1 = nuispar_impact(rex_dir1, name=name, label=np_label)
+    np2 = nuispar_impact(rex_dir2, name=name, label=np_label)
 
     print(f"{'=' * 15} Comparison for NP: {name} {'=' * 15}", file=print_to)
 
@@ -1055,10 +1115,10 @@ def compare_nuispar(
 
 
 def comparison_summary(
-    wkspace1,
-    wkspace2,
-    fitname1: str = "tW",
-    fitname2: str = "tW",
+    rex_dir1,
+    rex_dir2,
+    fit_name1: str = "tW",
+    fit_name2: str = "tW",
     label1: Optional[str] = None,
     label2: Optional[str] = None,
     fit_poi: str = "SigXsecOverSM",
@@ -1070,18 +1130,18 @@ def comparison_summary(
 
     Parameters
     ----------
-    wkspace1 : str or os.PathLike
-        Path of the first TRExFitter workspace.
-    wkspace2 : str or os.PathLike
-        Path of the second TRExFitter workspace.
-    fitname1 : str
+    rex_dir1 : str or os.PathLike
+        Path of the first TRExFitter result directory.
+    rex_dir2 : str or os.PathLike
+        Path of the second TRExFitter result directory.
+    fit_name1 : str
         Name of the first fit.
-    fitname2 : str
+    fit_name2 : str
         Name of the second fit.
     label1 : str, optional
-        Define label for the first fit (defaults to workspace path).
+        Define label for the first fit (defaults to rex_dir1).
     label2 : str, optional
-        Define label for the second fit (defaults to workspace path).
+        Define label for the second fit (defaults to rex_dir2).
     fit_poi : str
         Name of the parameter of interest.
     nuispars : list(str), optional
@@ -1099,15 +1159,15 @@ def comparison_summary(
     print(f"{'*' * 80}", file=print_to)
     print("Fit comparison summary", file=print_to)
     if label1 is not None and label2 is not None:
-        print(f"Fit 1: {wkspace1} as {label1}", file=print_to)
-        print(f"Fit 2: {wkspace2} as {label2}", file=print_to)
+        print(f"Fit 1: {rex_dir1} as {label1}", file=print_to)
+        print(f"Fit 2: {rex_dir2} as {label2}", file=print_to)
     print(f"{'-' * 60}", file=print_to)
 
     compare_uncertainty(
-        wkspace1,
-        wkspace2,
-        fitname1=fitname1,
-        fitname2=fitname2,
+        rex_dir1,
+        rex_dir2,
+        fit_name1=fit_name1,
+        fit_name2=fit_name2,
         label1=label1,
         label2=label2,
         poi=fit_poi,
@@ -1121,8 +1181,8 @@ def comparison_summary(
         for np_name, np_label in pairs:
             compare_nuispar(
                 np_name,
-                wkspace1,
-                wkspace2,
+                rex_dir1,
+                rex_dir2,
                 label1=label1,
                 label2=label2,
                 np_label=np_label,

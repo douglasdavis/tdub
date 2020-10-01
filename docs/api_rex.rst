@@ -11,7 +11,7 @@ Class Summary
 
 .. autosummary::
 
-   NuisPar
+   FitParam
 
 Function Summary
 ^^^^^^^^^^^^^^^^
@@ -25,7 +25,9 @@ Function Summary
    compare_uncertainty
    comparison_summary
    data_histogram
+   delta_param
    delta_poi
+   fit_parameter
    meta_axis_label
    meta_text
    nuispar_impact
@@ -37,7 +39,7 @@ Function Summary
    prefit_total_and_uncertainty
    prefit_histogram
    prefit_histograms
-   prettify_nuispar_label
+   prettify_label
    postfit_available
    postfit_total_and_uncertainty
    postfit_histogram
@@ -47,8 +49,7 @@ Function Summary
 Reference
 ^^^^^^^^^
 
-
-.. autoclass:: NuisPar
+.. autoclass:: FitParam
 .. autofunction:: available_regions
 .. autofunction:: chisq
 .. autofunction:: chisq_text
@@ -56,7 +57,9 @@ Reference
 .. autofunction:: compare_uncertainty
 .. autofunction:: comparison_summary
 .. autofunction:: data_histogram
+.. autofunction:: delta_param
 .. autofunction:: delta_poi
+.. autofunction:: fit_parameter
 .. autofunction:: plot_all_regions
 .. autofunction:: plot_region_stage_ff
 .. autofunction:: meta_axis_label
@@ -68,7 +71,7 @@ Reference
 .. autofunction:: prefit_total_and_uncertainty
 .. autofunction:: prefit_histogram
 .. autofunction:: prefit_histograms
-.. autofunction:: prettify_nuispar_label
+.. autofunction:: prettify_label
 .. autofunction:: postfit_available
 .. autofunction:: postfit_total_and_uncertainty
 .. autofunction:: postfit_histogram

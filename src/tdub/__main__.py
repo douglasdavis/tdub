@@ -585,28 +585,28 @@ def itables(summary_file):
 
 
 @rex.command("stacks")
-@click.argument("workspace", type=click.Path(exists=True))
+@click.argument("rex-dir", type=click.Path(exists=True))
 @click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")
 @click.option("-n", "--n-test", type=int, default=-1, help="Test only n plots (for stacks).")
-def rex_stacks(workspace, chisq, n_test):
+def rex_stacks(rex_dir, chisq, n_test):
     """Generate plots from TRExFitter result."""
     import tdub.rex
     import tdub.config
-    outdir = PosixPath(workspace) / "matplotlib"
+    outdir = PosixPath(rex_dir) / "matplotlib"
     outdir.mkdir(exist_ok=True)
     tdub.config.init_meta_table()
     tdub.config.init_meta_logy()
-    tdub.rex.plot_all_regions(workspace, outdir, stage="pre", show_chisq=chisq, n_test=n_test)
-    tdub.rex.plot_all_regions(workspace, outdir, stage="post", show_chisq=chisq, n_test=n_test)
+    tdub.rex.plot_all_regions(rex_dir, outdir, stage="pre", show_chisq=chisq, n_test=n_test)
+    tdub.rex.plot_all_regions(rex_dir, outdir, stage="post", show_chisq=chisq, n_test=n_test)
     return 0
 
 
 @rex.command("impact")
-@click.argument("workspace", type=click.Path(exists=True))
-def rex_impact(workspace):
+@click.argument("rex-dir", type=click.Path(exists=True))
+def rex_impact(rex_dir):
     """Generate impact plot from TRExFitter result."""
     import tdub.rex
-    tdub.rex.nuispar_impact_plot_top15(workspace)
+    tdub.rex.nuispar_impact_plot_top15(rex_dir)
     return 0
 
 
