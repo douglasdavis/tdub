@@ -603,7 +603,7 @@ def rex_stacks(workspace, chisq, n_test):
 
 @rex.command("impact")
 @click.argument("workspace", type=click.Path(exists=True))
-def rex_impact(workspace, outdir):
+def rex_impact(workspace):
     """Generate impact plot from TRExFitter result."""
     import tdub.rex
     tdub.rex.nuispar_impact_plot_top15(workspace)
