@@ -45,6 +45,7 @@ Function Summary
    postfit_histogram
    postfit_histograms
    stack_canvas
+   standard_stability_tests
 
 Reference
 ^^^^^^^^^
@@ -77,3 +78,4 @@ Reference
 .. autofunction:: postfit_histogram
 .. autofunction:: postfit_histograms
 .. autofunction:: stack_canvas
+.. autofunction:: standard_stability_tests

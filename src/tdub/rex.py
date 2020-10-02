@@ -1192,3 +1192,202 @@ def comparison_summary(
             )
 
     print(f"{'*' * 80}", file=print_to)
+
+
+def _excluded_systematics_delta_mu_summary(rex_dir: PosixPath, poi: str = "SigXsecOverSM"):
+    """Generate a summary of delta mu's for left out systematics vs complete fit."""
+    rex_dir = PosixPath(rex_dir)
+    fit_dir = rex_dir / "Fits"
+    fit_name = str(rex_dir.name)
+
+    nominal_result = fit_parameter(fit_dir / f"{fit_name}.txt", name=poi)
+
+    fits = []
+    for f in fit_dir.glob(f"{fit_name}_exclude-*.txt"):
+        par_name = f.stem.split(f"{fit_name}_exclude-")[-1]
+        if "saturatedModel" in par_name:
+            continue
+        fits.append(par_name)
+    fits = sorted(fits, key=str.lower)
+
+    tests = {}
+    for pn in fits:
+        par_file = rex_dir / "Fits" / f"{fit_name}_exclude-{pn}.txt"
+        res = fit_parameter(par_file, name="SigXsecOverSM")
+        res.label = prettify_label(pn)
+        tests[pn] = res
+
+    names, labels, vals = [], [], []
+    for name, res in tests.items():
+        names.append(name)
+        labels.append(res.label)
+        vals.append(delta_param(nominal_result, res))
+
+    vals = np.array(vals, dtype=[("c", np.float64), ("u", np.float64), ("d", np.float64)])
+
+    return nominal_result, names, labels, vals
+
+
+def _region_delta_mu_summary(umbrella: PosixPath, fit_name: str = "tW"):
+    """Generate a summary of delta mu's for different region setups vs complete fit."""
+    nominal = umbrella / f"main.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_1j1b = umbrella / f"main_1j1b.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_1j1b2j1b = umbrella / f"main_1j1b2j1b.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_1j1b2j2b = umbrella / f"main_1j1b2j2b.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    fit_n = fit_parameter(nominal, name="SigXsecOverSM")
+    fit_1j1b = fit_parameter(only_1j1b, name="SigXsecOverSM")
+    fit_1j1b2j1b = fit_parameter(only_1j1b2j1b, name="SigXsecOverSM")
+    fit_1j1b2j2b = fit_parameter(only_1j1b2j2b, name="SigXsecOverSM")
+
+    labels = ["1j1b only", "1j1b + 2j1b", "1j1b + 2j2b"]
+    deltas = [delta_param(fit_n, f) for f in (fit_1j1b, fit_1j1b2j1b, fit_1j1b2j2b)]
+    vals = np.array(
+        deltas,
+        dtype=[
+            ("c", np.float64),
+            ("u", np.float64),
+            ("d", np.float64)
+        ]
+    )
+
+    return fit_n, labels, labels, vals
+
+
+def _indiv_camp_delta_mu_summary(umbrella: PosixPath, fit_name: str = "tW"):
+    """Generate a summary of delta mu's for individual campaign vs complete fit."""
+    nominal = umbrella / f"main.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_a = umbrella / f"main_only1516.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_d = umbrella / f"main_only17.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_e = umbrella / f"main_only18.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    fit_n = fit_parameter(nominal, name="SigXsecOverSM")
+    fit_a = fit_parameter(only_a, name="SigXsecOverSM")
+    fit_d = fit_parameter(only_d, name="SigXsecOverSM")
+    fit_e = fit_parameter(only_e, name="SigXsecOverSM")
+
+    labels = ["2015/2016", "2017", "2018"]
+    deltas = [delta_param(fit_n, f) for f in (fit_a, fit_d, fit_e)]
+    vals = np.array(deltas, dtype=[("c", np.float64), ("u", np.float64), ("d", np.float64)])
+
+    return fit_n, labels, labels, vals
+
+
+def _b0_by_year_fig_and_ax(umbrella: PosixPath, fit_name: str = "tW"):
+    nominal = umbrella / f"main.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_a = umbrella / f"main_only1516.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_d = umbrella / f"main_only17.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_e = umbrella / f"main_only18.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    fit_n = fit_parameter(nominal, name="B_ev_B_0")
+    fit_a = fit_parameter(only_a, name="B_ev_B_0")
+    fit_d = fit_parameter(only_d, name="B_ev_B_0")
+    fit_e = fit_parameter(only_e, name="B_ev_B_0")
+    vals = np.array(
+        [(v.central, v.sig_hi, v.sig_lo) for v in [fit_e, fit_d, fit_a, fit_n]],
+        dtype=[
+            ("c", np.float64),
+            ("u", np.float64),
+            ("d", np.float64),
+        ]
+    )
+    ylabs = ["2015/2016", "2017", "2018", "Complete"]
+    yvals = np.arange(1, len(ylabs) + 1)
+    fig, ax = plt.subplots(figsize=(5.2, 1.5 + len(ylabs) * 0.315))
+    ax.set_title(r"Zeroth $b$-tagging B eigenvector NP")
+    ax.set_xlim([-2.25, 2.25])
+    ax.fill_betweenx([-50, 500], -2, 2, color="yellow", alpha=0.8)
+    ax.fill_betweenx([-50, 500], -1, 1, color="green", alpha=0.8)
+    ax.set_xlabel(r"$(\hat{\theta} - \theta_0)/\Delta\theta$")
+    ax.set_yticks(yvals)
+    ax.set_yticklabels(ylabs)
+    ax.set_ylim([0.0, len(yvals) + 1])
+    ax.errorbar(vals["c"], yvals, xerr=[abs(vals["d"]), vals["u"]], fmt="ko", lw=2, elinewidth=2.25, capsize=3.5)
+    for xv, yv in zip(vals["c"], yvals):
+        t = f"{xv:1.3f}"
+        ax.text(xv, yv + 0.075, t, ha="center", va="bottom", size=10)
+    ax.grid(color="black", alpha=0.15)
+
+    return fig, ax
+
+
+def standard_stability_tests(
+    umbrella: PosixPath,
+    outdir: Optional[PosixPath] = None,
+    tests: Union[str, List[str]] = "all",
+) -> None:
+    """Perform a battery of standard stability tests.
+
+    This function expects a rigid `umbrella` directory structure,
+    based on the output of results that are generated by rexpy_.
+
+    .. _rexpy: https://github.com/douglasdavis/rexpy
+
+    Parameters
+    ----------
+    umbrella : pathlib.PosixPath
+        Umbrella directory containing all fits run via rexpy's
+        standard fits.
+    outdir : pathlib.PosixPath
+        Directory to save results.
+    tests : str or list(str)
+        Which tests to execute. (default is "all"). The possible tests
+        include:
+
+        * ``"sys-drops"``, which shows the stability test for dropping
+          some systematics.
+        * ``"indiv-camps"``, which shows the stability test for
+          limiting the fit to individual campaigns.
+        * ``"regions"``, which shows the stability test for limiting
+          the fit to subsets of the analysis regions.
+        * ``"b0-check"``, which shows the stability test for limiting
+          the fit to individual analysis regions and checking the B0
+          eigenvector uncertainty.
+
+    """
+    import tdub.internal.stab_tests as tist
+
+    curdir = PosixPath.cwd()
+    if outdir is None:
+        outdir = curdir
+    else:
+        outdir.mkdir(parents=True, exist_ok=True)
+
+    if tests == "all":
+        tests = ["sys-drops", "indiv-camps", "regions", "b0-check"]
+
+    os.chdir(outdir)
+
+    if "sys-drops" in tests:
+        nom, names, labels, vals = _excluded_systematics_delta_mu_summary(
+            umbrella / "main.force-data.d" / "tW"
+        )
+        fig, ax = plt.subplots(figsize=(5.2, 1.5 + len(names) * 0.315))
+        fig.subplots_adjust(left=0.50, right=0.925)
+        tist.make_delta_mu_plot(
+            ax, nom.sig_hi, nom.sig_lo, vals["c"], vals["d"], vals["u"], labels
+        )
+        fig.savefig("stability-tests-sys-drops.pdf")
+
+    if "indiv-camps" in tests:
+        nom, names, labels, vals = _indiv_camp_delta_mu_summary(umbrella)
+        fig, ax = plt.subplots(figsize=(5.2, 1.5 + len(names) * 0.315))
+        fig.subplots_adjust(left=0.350, right=0.925, bottom=0.3, top=0.99)
+        tist.make_delta_mu_plot(
+            ax, nom.sig_hi, nom.sig_lo, vals["c"], vals["d"], vals["u"], labels
+        )
+        fig.savefig("stability-tests-indiv-camps.pdf")
+
+    if "regions" in tests:
+        nom, names, labels, vals = _region_delta_mu_summary(umbrella)
+        fig, ax = plt.subplots(figsize=(5.2, 1.5 + len(names) * 0.315))
+        fig.subplots_adjust(left=0.350, right=0.925, bottom=0.3, top=0.99)
+        tist.make_delta_mu_plot(
+            ax, nom.sig_hi, nom.sig_lo, vals["c"], vals["d"], vals["u"], labels
+        )
+        fig.savefig("stability-tests-regions.pdf")
+
+    if "b0-check" in tests:
+        fig, ax = _b0_by_year_fig_and_ax(umbrella)
+        fig.subplots_adjust(left=0.350, right=0.925, bottom=0.3, top=0.8)
+        fig.savefig("stability-tests-b0-check.pdf")
+
+    os.chdir(curdir)
+    return None
