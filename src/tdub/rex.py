@@ -836,7 +836,7 @@ def fit_parameter(fit_file: PosixPath, name: str, prettify: bool = False) -> Fit
 
     Raises
     ------
-    RuntimeError
+    ValueError
         If the parameter name isn't discovered.
 
     Returns
@@ -857,8 +857,8 @@ def fit_parameter(fit_file: PosixPath, name: str, prettify: bool = False) -> Fit
                     sig_lo=float(d),
                 )
 
-    # if we don't find the name, raise RuntimeError
-    raise RuntimeError("%s parameter not found in %s" % (name, str(fit_file)))
+    # if we don't find the name, raise ValueError
+    raise ValueError("%s parameter not found in %s" % (name, str(fit_file)))
 
 
 def delta_poi(
