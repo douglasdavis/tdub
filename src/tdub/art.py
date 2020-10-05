@@ -372,7 +372,7 @@ def draw_impact_barh(
 
 
 def setup_tdub_style() -> None:
-    """Modifies matplotlib's rcParams to our preference."""
+    """Modify matplotlib's rcParams to our preference."""
     matplotlib.rcParams["font.sans-serif"] = [
         "Helvetica",
         "helvetica",

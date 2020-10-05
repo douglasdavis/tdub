@@ -20,6 +20,7 @@ class TGraphAsymmErrors:
     """
 
     def __init__(self, root_object: ROOTModel) -> None:
+        """Initialize from the ROOT object."""
         self._root_object = root_object
         self._xlo = self._root_object.member("fEXlow")
         self._xhi = self._root_object.member("fEXhigh")
@@ -58,6 +59,7 @@ class TH1:
     """
 
     def __init__(self, root_object: ROOTHistogram) -> None:
+        """Initialize from the ROOT object."""
         self._root_object = root_object
         self._counts, self._errors = self._root_object.values_errors()
         self._counts, self._errors = self._counts[1:-1], self._errors[1:-1]
