@@ -207,7 +207,7 @@ def prefit_histogram(root_file: ReadOnlyDirectory, sample: str, region: str) -> 
         h = TH1(root_file.get(histname))
         return h
     except KeyError:
-        log.fatal("%s histogram not found in %s" % (histname, root_file))
+        log.fatal(f"{histname} histogram not found in {root_file}")
         exit(1)
 
 
@@ -242,7 +242,7 @@ def prefit_histograms(
     for samp in samples:
         h = prefit_histogram(root_file, samp, region)
         if h is None:
-            log.warn("Histogram for sample %s in region: %s not found" % (samp, region))
+            log.warn(f"Histogram for sample {samp} in region: {region} not found")
         histograms[samp] = h
     return histograms
 
@@ -337,7 +337,7 @@ def postfit_histogram(root_file: ReadOnlyDirectory, sample: str) -> TH1:
         h = TH1(root_file.get(histname))
         return h
     except KeyError:
-        log.fatal("%s histogram not found in %s" % (histname, root_file))
+        log.fatal(f"{histname} histogram not found in {root_file}")
         exit(1)
 
 
@@ -369,7 +369,7 @@ def postfit_histograms(
             continue
         h = postfit_histogram(root_file, samp)
         if h is None:
-            log.warn("Histogram for sample %s in region %s not found" % (samp, region))
+            log.warn(f"Histogram for sample {samp} in region {region} not found")
         histograms[samp] = h
     return histograms
 
@@ -858,7 +858,7 @@ def fit_parameter(fit_file: PosixPath, name: str, prettify: bool = False) -> Fit
                 )
 
     # if we don't find the name, raise ValueError
-    raise ValueError("%s parameter not found in %s" % (name, str(fit_file)))
+    raise ValueError("{} parameter not found in {}".format(name, str(fit_file)))
 
 
 def delta_poi(

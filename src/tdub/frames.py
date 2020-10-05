@@ -71,7 +71,7 @@ def raw_dataframe(
 
     """
     if branches is not None:
-        branches = sorted(set(branches) | set([weight_name]), key=str.lower)
+        branches = sorted(set(branches) | {weight_name}, key=str.lower)
     else:
         branches = branches_from(files, tree)
     if weight_name not in branches:
@@ -176,7 +176,7 @@ def iterative_selection(
     # determine which branches will be used for selection only and
     # which branches we need for weights
     sel_branches = selection_branches(selection)
-    weights_to_grab = set([weight_name])
+    weights_to_grab = {weight_name}
     if use_campaign_weight:
         weights_to_grab.add("weight_campaign")
         log.info("applying the campaign weight")

@@ -387,7 +387,7 @@ def prepare_from_root(
 
     if override_selection is not None:
         selection = override_selection
-        log.info("Overriding selection (in region %s) to %s" % (region, override_selection))
+        log.info(f"Overriding selection (in region {region}) to {override_selection}")
     else:
         selection = selection_for(region)
     selection = selection_as_numexpr(selection)
@@ -1132,7 +1132,7 @@ def folded_training(
 
     tprs = []
     aucs = []
-    importances = np.zeros((len(df.columns)))
+    importances = np.zeros(len(df.columns))
     mean_fpr = np.linspace(0, 1, 100)
     folder = KFold(**kfold_kw, random_state=tdub.config.RANDOM_STATE)
     fold_number = 0

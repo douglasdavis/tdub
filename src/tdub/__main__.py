@@ -116,8 +116,8 @@ def train_prep(
     persist_prepared_data(outdir, df, y, w)
     (outdir / "region.txt").write_text(f"{region}\n")
     (outdir / "nlo_method.txt").write_text(f"{nlo_method}\n")
-    (outdir / "files_sig.txt").write_text("{}\n".format(("\n".join(sig_files))))
-    (outdir / "files_bkg.txt").write_text("{}\n".format(("\n".join(bkg_files))))
+    (outdir / "files_sig.txt").write_text("{}\n".format("\n".join(sig_files)))
+    (outdir / "files_bkg.txt").write_text("{}\n".format("\n".join(bkg_files)))
 
 
 @train.command("single")
@@ -633,7 +633,7 @@ def soverb(datadir, selections, use_tptrw):
     from tdub.data import quick_files
     from tdub.data import selection_branches
 
-    with open(selections, "r") as f:
+    with open(selections) as f:
         selections = json.load(f)
 
     necessary_branches = set()
