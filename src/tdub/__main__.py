@@ -1,6 +1,4 @@
-"""
-tdub command line interface
-"""
+"""tdub command line interface."""
 
 # stdlib
 import json
@@ -21,6 +19,7 @@ log = logging.getLogger("tdub-cli")
 
 @click.group(context_settings=dict(max_content_width=82, help_option_names=['-h', '--help']))
 def cli():
+    """Top Level CLI function."""
     pass
 
 
@@ -77,7 +76,6 @@ def train_prep(
     use_dilep,
 ):
     """Prepare data for training."""
-
     if pre_exec is not None:
         exec(PosixPath(pre_exec).read_text())
 
@@ -148,7 +146,6 @@ def train_single(
     reg_lambda,
 ):
     """Execute single training round."""
-
     if pre_exec is not None:
         exec(PosixPath(pre_exec).read_text())
 
@@ -213,7 +210,6 @@ def train_scan(
     $ tdub train scan /data/path 2j2b scan_2j2b
 
     """
-
     if pre_exec is not None:
         exec(PosixPath(pre_exec).read_text())
 
@@ -503,7 +499,7 @@ def apply_all(
     single_results=None,
     and_submit=False,
 ):
-    """Generate BDT response arrays for all ROOT files in DATAIR"""
+    """Generate BDT response arrays for all ROOT files in DATADIR."""
     import glob
     import shutil
     import pycondor
@@ -610,6 +606,20 @@ def rex_impact(rex_dir):
     return 0
 
 
+@rex.command("stabs")
+@click.argument("umbrella", type=click.Path(exists=True))
+@click.option("-o", "--outdir", type=click.Path(), help="Output directory.")
+@click.option("-t", "--tests", type=str, multiple=True, help="Tests to run.")
+def rex_stabs(umbrella, outdir, tests):
+    """Generate stability tests based on rexpy output."""
+    import tdub.rex
+    if outdir is not None:
+        outdir = PosixPath(outdir)
+    if len(tests) == 0 or list(tests) == ["all"]:
+        tests = "all"
+    tdub.rex.standard_stability_tests(PosixPath(umbrella), outdir=outdir, tests=tests)
+
+
 @misc.command("soverb")
 @click.argument("datadir", type=click.Path(exists=True))
 @click.argument("selections", type=click.Path(exists=True))
@@ -618,15 +628,6 @@ def soverb(datadir, selections, use_tptrw):
     """Get signal over background using data in DATADIR and a SELECTIONS file.
 
     the format of the JSON entries should be "region": "numexpr selection".
-
-    Example SELECTIONS file:
-
-    \b
-    {
-        "reg1j1b" : "(mass_lep1lep2 < 150) & (mass_lep2jet1 < 150)",
-        "reg1j1b" : "(mass_jet1jet2 < 150) & (mass_lep2jet1 < 120)",
-        "reg2j2b" : "(met < 120)"
-    }
 
     """
     from tdub.frames import raw_dataframe, apply_weight_tptrw, satisfying_selection
@@ -655,6 +656,7 @@ def soverb(datadir, selections, use_tptrw):
 
 
 def run_cli():
+    """Run main CLI."""
     import tdub.config
     tdub.config.AVOID_IN_CLF_1j1b = []
     tdub.config.AVOID_IN_CLF_2j1b = []

@@ -1344,7 +1344,8 @@ def standard_stability_tests(
     """
     import tdub.internal.stab_tests as tist
 
-    curdir = PosixPath.cwd()
+    umbrella = umbrella.resolve()
+    curdir = PosixPath.cwd().resolve()
     if outdir is None:
         outdir = curdir
     else:
