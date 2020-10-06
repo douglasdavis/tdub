@@ -615,9 +615,25 @@ def rex_stabs(umbrella, outdir, tests):
     import tdub.rex
     if outdir is not None:
         outdir = PosixPath(outdir)
-    if len(tests) == 0 or list(tests) == ["all"]:
+    if len(tests) == 0 or "all" in tests:
         tests = "all"
-    tdub.rex.standard_stability_tests(PosixPath(umbrella), outdir=outdir, tests=tests)
+    tdub.rex.stability_test_standard(PosixPath(umbrella), outdir=outdir, tests=tests)
+
+
+@rex.command("impstabs")
+@click.argument("herwig704", type=click.Path(exists=True))
+@click.argument("herwig713", type=click.Path(exists=True))
+@click.option("-o", "--outdir", type=click.Path(), help="Output directory.")
+def rex_impstabs(herwig704, herwig713, outdir):
+    """Generate impact stability tests based on rexpy output."""
+    import tdub.rex
+    if outdir is not None:
+        outdir = PosixPath(outdir)
+    tdub.rex.stability_test_parton_shower_impacts(
+        PosixPath(herwig704),
+        PosixPath(herwig713),
+        outdir=outdir,
+    )
 
 
 @misc.command("soverb")

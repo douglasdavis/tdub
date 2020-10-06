@@ -289,6 +289,8 @@ def draw_impact_barh(
     df: pd.DataFrame,
     hi_color: str = "steelblue",
     lo_color: str = "mediumturquoise",
+    height_fill: float = 0.8,
+    height_line: float = 0.8,
 ) -> Tuple[plt.Axes, plt.Axes]:
     """Draw the impact plot.
 
@@ -302,6 +304,10 @@ def draw_impact_barh(
         Up variation color.
     lo_color : str
         Down variation color.
+    height_fill : float
+        Height for the filled bars (post-fit).
+    height_line : float
+        Height for the line (unfilled) bars (pre-fit).
 
     Returns
     -------
@@ -315,6 +321,7 @@ def draw_impact_barh(
     ax.barh(
         ys,
         df.pre_down.abs(),
+        height=height_line,
         left=df.pre_down_lefts,
         fill=False,
         edgecolor=lo_color,
@@ -324,6 +331,7 @@ def draw_impact_barh(
     ax.barh(
         ys,
         df.pre_up.abs(),
+        height=height_line,
         left=df.pre_up_lefts,
         fill=False,
         edgecolor=hi_color,
@@ -333,6 +341,7 @@ def draw_impact_barh(
     ax.barh(
         ys,
         df.post_down.abs(),
+        height=height_fill,
         left=df.post_down_lefts,
         fill=True,
         color=lo_color,
@@ -342,6 +351,7 @@ def draw_impact_barh(
     ax.barh(
         ys,
         df.post_up.abs(),
+        height=height_fill,
         left=df.post_up_lefts,
         fill=True,
         color=hi_color,

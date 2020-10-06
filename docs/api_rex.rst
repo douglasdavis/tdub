@@ -44,8 +44,9 @@ Function Summary
    postfit_total_and_uncertainty
    postfit_histogram
    postfit_histograms
+   stability_test_standard
+   stability_test_parton_shower_impacts
    stack_canvas
-   standard_stability_tests
 
 Reference
 ^^^^^^^^^
@@ -77,5 +78,6 @@ Reference
 .. autofunction:: postfit_total_and_uncertainty
 .. autofunction:: postfit_histogram
 .. autofunction:: postfit_histograms
+.. autofunction:: stability_test_standard
+.. autofunction:: stability_test_parton_shower_impacts
 .. autofunction:: stack_canvas
-.. autofunction:: standard_stability_tests
