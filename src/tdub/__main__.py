@@ -640,7 +640,7 @@ def rex_impstabs(herwig704, herwig713, outdir):
 @click.argument("datadir", type=click.Path(exists=True))
 @click.argument("selections", type=click.Path(exists=True))
 @click.option("-t", "--use-tptrw", is_flag=True, help="use top pt reweighting")
-def soverb(datadir, selections, use_tptrw):
+def misc_soverb(datadir, selections, use_tptrw):
     """Get signal over background using data in DATADIR and a SELECTIONS file.
 
     the format of the JSON entries should be "region": "numexpr selection".
@@ -669,6 +669,24 @@ def soverb(datadir, selections, use_tptrw):
     for sel, query in selections.items():
         s_df, b_df = satisfying_selection(sig_df, bkg_df, selection=query)
         print(sel, s_df["weight_nominal"].sum() / b_df["weight_nominal"].sum())
+
+
+@misc.command("drdscomps")
+@click.argument("datadir", type=click.Path(exists=True))
+@click.option("-o", "--outdir", type=click.Path(), help="Output directory.")
+def misc_drdscomps(datadir, outdir):
+    """Generate plots comparing DR and DS (with BDT cuts shown)."""
+    import tdub.internal.drds as tdid
+
+    curdir = PosixPath.cwd().resolve()
+    if outdir is not None:
+        outdir = PosixPath(outdir).resolve()
+    else:
+        outdir = curdir
+    outdir.mkdir(exist_ok=True, parents=True)
+    os.chdir(outdir)
+    tdid.bdt_cut_plots(datadir)
+    os.chdir(curdir)
 
 
 def run_cli():
