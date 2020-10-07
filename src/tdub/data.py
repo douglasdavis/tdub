@@ -1,5 +1,7 @@
 """Module for working with datasets."""
 
+from __future__ import annotations
+
 # stdlib
 from enum import Enum
 from pathlib import PosixPath
@@ -53,7 +55,7 @@ class Region(Enum):
     rUnkn = 9
 
     @staticmethod
-    def from_str(s: str) -> "Region":
+    def from_str(s: str) -> Region:
         """Get enum value for the given string.
 
         This function supports three ways to define a region; prefixed
