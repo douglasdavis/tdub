@@ -13,12 +13,11 @@ import numpy as np
 import pandas as pd
 
 # tdub
-from tdub import setup_logging
 import tdub.hist
 import tdub.root
+from tdub.hist import SystematicComparison, bin_centers
 
 
-setup_logging()
 log = logging.getLogger(__name__)
 
 
@@ -379,6 +378,82 @@ def draw_impact_barh(
     ax.yaxis.set_ticks_position("none")
     ax.xaxis.set_ticks_position("top")
     return ax, ax2
+
+
+def one_sided_comparison_plot(
+    nominal: np.ndarray,
+    one_up: np.ndarray,
+    edges: np.ndarray,
+) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
+    r"""Create plot for one sided systematic comparison.
+
+    Parameters
+    ----------
+    nominal : numpy.ndarray
+        Nominal histogram bin counts.
+    one_up : numpy.ndarray
+        One :math:`\sigma` up variation.
+    edges : numpy.ndarray
+        Array defining bin edges.
+
+    Returns
+    -------
+    :py:obj:`matplotlib.figure.Figure`
+        Matplotlib figure.
+    :py:obj:`matplotlib.axes.Axes`
+        Matplotlib axes for the histograms.
+    :py:obj:`matplotlib.axes.Axes`
+        Matplotlib axes for the percent difference comparison.
+
+    """
+    c = SystematicComparison.one_sided(nominal, one_up)
+    centers = bin_centers(edges)
+    fig, (ax, axr) = plt.subplots(
+        2, 1, sharex=True, gridspec_kw=dict(height_ratios=[3.25, 1], hspace=0.025)
+    )
+
+    ax.hist(
+        centers,
+        bins=edges,
+        weights=c.up,
+        color="red",
+        histtype="step",
+        label=r"$+1\sigma$ Variation",
+    )
+    ax.hist(
+        centers,
+        bins=edges,
+        weights=c.down,
+        color="blue",
+        histtype="step",
+        label=r"$-1\sigma$ Variation",
+    )
+    ax.hist(
+        centers,
+        bins=edges,
+        weights=c.nominal,
+        color="black",
+        histtype="step",
+        label="Nominal",
+    )
+    ymax = c.template_max * 1.6
+    ax.set_ylim([0, ymax])
+    ax.set_ylabel("Number of Events", horizontalalignment="right", y=1.0)
+    ax.legend()
+
+    axr.hist(centers, bins=edges, weights=c.percent_diff_up, color="red", histtype="step")
+    axr.hist(
+        centers, bins=edges, weights=c.percent_diff_down, color="blue", histtype="step"
+    )
+    axr.set_ylim([c.percent_diff_min * 1.25, c.percent_diff_max * 1.25])
+    axr.set_xlim([edges[0], edges[-1]])
+    axr.plot(edges, np.zeros_like(edges), ls="-", lw=1.5, c="black")
+    axr.set_ylabel(r"$\frac{\mathrm{Sys.} - \mathrm{Nom.}}{\mathrm{Sys.}}$ [%]")
+    axr.set_xlabel("BDT Response", horizontalalignment="right", x=1.0)
+
+    fig.subplots_adjust(left=0.15)
+    draw_atlas_label(ax, follow="Simulation Internal", follow_shift=0.17)
+    return fig, ax, axr
 
 
 def setup_tdub_style() -> None:
