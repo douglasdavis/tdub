@@ -16,6 +16,7 @@ import numpy as np
 def bdt_cut_plots(
     source: PosixPath,
     branch: str = "bdtres03",
+    lumi: float = 139.0,
     lo_1j1b: float = 0.35,
     hi_2j1b: float = 0.70,
     lo_2j2b: float = 0.45,
@@ -43,14 +44,14 @@ def bdt_cut_plots(
             dr_df[branch].to_numpy(),
             bins=nbins,
             range=(xmin, xmax),
-            weights=dr_df[weight_branch].to_numpy() * 139.0,
+            weights=dr_df[weight_branch].to_numpy() * lumi,
             flow=True,
         )
         ds_hist, err = fix1d(
             ds_df[branch].to_numpy(),
             bins=nbins,
             range=(xmin, xmax),
-            weights=ds_df[weight_branch].to_numpy() * 139.0,
+            weights=ds_df[weight_branch].to_numpy() * lumi,
             flow=True,
         )
         return dr_hist, ds_hist
