@@ -1,6 +1,9 @@
 """A module to aid working with histograms."""
 
+from __future__ import annotations
+
 # stdlib
+import logging
 from typing import Tuple, Optional, Union, List, Dict, Any, Iterable
 
 # ext
@@ -8,6 +11,76 @@ import numpy as np
 import pandas as pd
 from uproot_methods.classes import TH1
 from pygram11 import fix1dmw
+
+log = logging.getLogger(__name__)
+
+
+class SystematicComparison:
+    """Systematic template histogram comparison.
+
+    Attributes
+    ----------
+    nominal : numpy.ndarray
+        Nominal histogram bin counts.
+    up : numpy.ndarray
+        Up variation histogram bin counts.
+    down : numpy.ndarray
+        Down variation histogram bin counts.
+    percent_diff_up : numpy.ndarray
+        Perecent difference between nominal and up varation.
+    percent_diff_down : numpy.ndaray
+        Percent difference between nominald and down variation.
+
+    """
+
+    def __init__(
+        self,
+        nominal: np.ndaray,
+        up: np.ndarray,
+        down: np.ndarray,
+    ) -> None:
+        """Class constructor."""
+        self.nominal = nominal
+        self.up = up
+        self.down = down
+        self.percent_diff_up = (up - nominal) / nominal * 100.0
+        self.percent_diff_down = (down - nominal) / nominal * 100.0
+
+    @property
+    def percent_diff_min(self):
+        """float: minimum for percent difference."""
+        return np.amin([self.percent_diff_up, self.percent_diff_down])
+
+    @property
+    def percent_diff_max(self):
+        """float: maximum for percent difference."""
+        return np.amax([self.percent_diff_up, self.percent_diff_down])
+
+    @property
+    def template_max(self):
+        """float: maximum height of a variation."""
+        return np.amax([self.up, self.down])
+
+    @staticmethod
+    def one_sided(nominal: np.ndarray, up: np.ndarray) -> SystematicComparison:
+        """Generate components of a systematic comparion plot.
+
+        Paramters
+        ---------
+        nominal : numpy.ndarray
+            Histogram bin counts for the nominal template.
+        up : numpy.ndarray
+            Histogram bin counts for the "up" variation.
+
+        Returns
+        -------
+        SystematicComparison
+            The complete description of the comparison
+
+        """
+        diffs = nominal - up
+        down = nominal + diffs
+        return SystematicComparison(nominal, up, down)
 
 
 class CustomTH1(TH1.Methods, list):
