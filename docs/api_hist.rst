@@ -5,6 +5,13 @@ A module for histogramming
 
 .. currentmodule:: tdub.hist
 
+Class Summary
+^^^^^^^^^^^^^
+
+.. autosummary::
+
+   SystematicComparison
+
 Function Summary
 ^^^^^^^^^^^^^^^^
 
@@ -20,6 +27,9 @@ Function Summary
 
 Reference
 ^^^^^^^^^
+
+.. autoclass:: SystematicComparison
+   :members:
 
 .. autofunction:: arrays_to_th1
 .. autofunction:: bin_centers

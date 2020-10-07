@@ -27,7 +27,7 @@ class SystematicComparison:
     down : numpy.ndarray
         Down variation histogram bin counts.
     percent_diff_up : numpy.ndarray
-        Perecent difference between nominal and up varation.
+        Percent difference between nominal and up varation.
     percent_diff_down : numpy.ndaray
         Percent difference between nominald and down variation.
 
@@ -47,17 +47,17 @@ class SystematicComparison:
         self.percent_diff_down = (down - nominal) / nominal * 100.0
 
     @property
-    def percent_diff_min(self):
+    def percent_diff_min(self) -> float:
         """float: minimum for percent difference."""
         return np.amin([self.percent_diff_up, self.percent_diff_down])
 
     @property
-    def percent_diff_max(self):
+    def percent_diff_max(self) -> float:
         """float: maximum for percent difference."""
         return np.amax([self.percent_diff_up, self.percent_diff_down])
 
     @property
-    def template_max(self):
+    def template_max(self) -> float:
         """float: maximum height of a variation."""
         return np.amax([self.up, self.down])
 
@@ -65,8 +65,8 @@ class SystematicComparison:
     def one_sided(nominal: np.ndarray, up: np.ndarray) -> SystematicComparison:
         """Generate components of a systematic comparion plot.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         nominal : numpy.ndarray
             Histogram bin counts for the nominal template.
         up : numpy.ndarray
