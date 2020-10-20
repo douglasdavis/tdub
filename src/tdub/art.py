@@ -43,7 +43,8 @@ def legend_last_to_first(ax: plt.Axes, **kwargs):
         Arguments passed to :py:obj:`matplotlib.axes.Axes.legend`.
 
     """
-    ax.legend()
+    if ax.get_legend() is None:
+        ax.legend()
     handles, labels = ax.get_legend_handles_labels()
     handles.insert(0, handles.pop())
     labels.insert(0, labels.pop())
