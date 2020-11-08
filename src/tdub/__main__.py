@@ -606,10 +606,11 @@ def rex_stacks(rex_dir, chisq, n_test, thesis):
 
 @rex.command("impact")
 @click.argument("rex-dir", type=click.Path(exists=True))
-def rex_impact(rex_dir):
+@click.option("--thesis", is_flag=True, help="Flat to use thesis label.")
+def rex_impact(rex_dir, thesis):
     """Generate impact plot from TRExFitter result."""
     import tdub.rex
-    tdub.rex.nuispar_impact_plot_top15(rex_dir)
+    tdub.rex.nuispar_impact_plot_top20(rex_dir, thesis=thesis)
     return 0
 
 

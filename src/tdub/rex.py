@@ -789,22 +789,24 @@ def prettify_label(label: str) -> str:
     )
 
 
-def nuispar_impact_plot_top15(rex_dir: Union[str, os.PathLike]) -> None:
-    """Plot the top 15 nuisance parameters based on impact.
+def nuispar_impact_plot_top20(rex_dir: Union[str, os.PathLike], thesis: bool = False) -> None:
+    """Plot the top 20 nuisance parameters based on impact.
 
     Parameters
     ----------
     rex_dir : str, os.PathLike
         Path of the TRExFitter result directory.
+    thesis: : bool
+        Flag for thesis label.
 
     """
-    nuispars = nuispar_impacts(rex_dir, sort=True)[-15:]
+    nuispars = nuispar_impacts(rex_dir, sort=True)[-20:]
     for npar in nuispars:
         npar.label = prettify_label(npar.label)
     df = nuispar_impact_plot_df(nuispars)
     ys = np.array(df.ys)
     # fmt: off
-    fig, ax = plt.subplots(figsize=(5, 7.5))
+    fig, ax = plt.subplots(figsize=(5, 8))
     ax, ax2 = draw_impact_barh(ax, df)
     ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(-0.75, 1.11))
     ax.set_xticks([-0.2, -0.1, 0.0, 0.1, 0.2])
@@ -813,9 +815,26 @@ def nuispar_impact_plot_top15(rex_dir: Union[str, os.PathLike]) -> None:
     ax2.legend(loc="lower left", bbox_to_anchor=(-0.75, -0.09))
     ax2.set_xlabel(r"$\Delta\mu$", labelpad=25)
     ax.set_xlabel(r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=20)
-    ax.text(0.10, 0.95, "ATLAS", fontstyle="italic", fontweight="bold", size=14, transform=ax.transAxes)
-    ax.text(0.37, 0.95, "Internal", size=14, transform=ax.transAxes)
-    ax.text(0.10, 0.91, "$\\sqrt{s}$ = 13 TeV, $L = {139}$ fb$^{-1}$", size=12, transform=ax.transAxes)
+    if thesis:
+        ax.text(
+            0.10,
+            0.95,
+            "D. Davis Thesis",
+            fontstyle="italic",
+            fontweight="bold",
+            size=14,
+            transform=ax.transAxes
+        )
+    else:
+        ax.text(
+            0.10, 0.95, "ATLAS", fontstyle="italic", fontweight="bold", size=14, transform=ax.transAxes
+        )
+        ax.text(
+            0.37, 0.95, "Internal", size=14, transform=ax.transAxes
+        )
+    ax.text(
+        0.10, 0.92, "$\\sqrt{s}$ = 13 TeV, $L = {139}$ fb$^{-1}$", size=12, transform=ax.transAxes
+    )
     fig.subplots_adjust(left=0.45, bottom=0.085, top=0.915, right=0.975)
     mpl_dir = PosixPath(rex_dir) / "matplotlib"
     mpl_dir.mkdir(exist_ok=True)

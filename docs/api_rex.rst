@@ -33,7 +33,7 @@ Function Summary
    nuispar_impact
    nuispar_impacts
    nuispar_impact_plot_df
-   nuispar_impact_plot_top15
+   nuispar_impact_plot_top20
    plot_all_regions
    plot_region_stage_ff
    prefit_total_and_uncertainty
@@ -69,7 +69,7 @@ Reference
 .. autofunction:: nuispar_impact
 .. autofunction:: nuispar_impacts
 .. autofunction:: nuispar_impact_plot_df
-.. autofunction:: nuispar_impact_plot_top15
+.. autofunction:: nuispar_impact_plot_top20
 .. autofunction:: prefit_total_and_uncertainty
 .. autofunction:: prefit_histogram
 .. autofunction:: prefit_histograms
