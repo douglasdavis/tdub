@@ -477,6 +477,7 @@ def stack_canvas(
     show_chisq: bool = True,
     meta_table: Optional[Dict[str, Any]] = None,
     log_patterns: Optional[List[Any]] = None,
+    thesis: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
     r"""Create a pre- or post-fit plot canvas for a TRExFitter region.
 
@@ -496,6 +497,8 @@ def stack_canvas(
         Table of metadata for labeling plotting axes.
     log_patterns : list, optional
         List of region patterns to use a log scale on y-axis.
+    thesis: bool
+        Flag for thesis label.
 
     Returns
     -------
@@ -539,7 +542,7 @@ def stack_canvas(
 
     # stack axes cosmetics
     ax0.set_ylabel("Events", horizontalalignment="right", y=1.0)
-    draw_atlas_label(ax0, extra_lines=[meta_text(region, stage)])
+    draw_atlas_label(ax0, extra_lines=[meta_text(region, stage)], thesis=thesis)
     legend_last_to_first(ax0, ncol=2, loc="upper right")
 
     # ratio axes cosmetics
@@ -578,6 +581,7 @@ def plot_region_stage_ff(args):
         show_chisq=args[4],
         meta_table=args[5],
         log_patterns=args[6],
+        thesis=args[7],
     )
     output_file = f"{args[2]}/{args[1]}_{args[3]}Fit.pdf"
     fig.savefig(output_file)
@@ -593,6 +597,7 @@ def plot_all_regions(
     fit_name: str = "tW",
     show_chisq: bool = True,
     n_test: int = -1,
+    thesis: bool = False,
 ) -> None:
     r"""Plot all regions discovered in a TRExFitter result directory.
 
@@ -610,6 +615,8 @@ def plot_all_regions(
         Print :math:`\chi^2` information on ratio canvas.
     n_test : int
         Maximum number of regions to plot (for quick tests).
+    thesis : bool
+        Flag for thesis label.
 
     """
     PosixPath(outdir).mkdir(parents=True, exist_ok=True)
@@ -619,7 +626,7 @@ def plot_all_regions(
     meta_table = tdub.config.PLOTTING_META_TABLE.copy()
     log_patterns = tdub.config.PLOTTING_LOGY.copy()
     args = [
-        [rex_dir, region, outdir, stage, show_chisq, meta_table, log_patterns]
+        [rex_dir, region, outdir, stage, show_chisq, meta_table, log_patterns, thesis]
         for region in regions
     ]
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())

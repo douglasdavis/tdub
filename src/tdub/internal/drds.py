@@ -24,6 +24,7 @@ def bdt_cut_plots(
     bins_1j1b: Tuple[int, float, float] = (18, 0.2, 0.75),
     bins_2j1b: Tuple[int, float, float] = (18, 0.2, 0.85),
     bins_2j2b: Tuple[int, float, float] = (18, 0.2, 0.90),
+    thesis: bool = False,
 ) -> None:
     """Geneate plots showing BDT cuts."""
     setup_tdub_style()
@@ -72,7 +73,10 @@ def bdt_cut_plots(
         xmax=bins_1j1b[2],
     )
     fig, ax, axr = one_sided_comparison_plot(
-        dr, ds, np.linspace(bins_1j1b[1], bins_1j1b[2], bins_1j1b[0] + 1)
+        dr,
+        ds,
+        np.linspace(bins_1j1b[1], bins_1j1b[2], bins_1j1b[0] + 1),
+        thesis=thesis,
     )
     ymid = ax.get_ylim()[1] * 0.69
     xmid = (lo_1j1b - ax.get_xlim()[0]) * 0.5 + ax.get_xlim()[0]
@@ -94,7 +98,10 @@ def bdt_cut_plots(
         xmax=bins_2j1b[2],
     )
     fig, ax, axr = one_sided_comparison_plot(
-        dr, ds, np.linspace(bins_2j1b[1], bins_2j1b[2], bins_2j1b[0] + 1)
+        dr,
+        ds,
+        np.linspace(bins_2j1b[1], bins_2j1b[2], bins_2j1b[0] + 1),
+        thesis=thesis,
     )
     ax.fill_betweenx([-1, 1.0e5], hi_2j1b, 1.0, color="gray", alpha=0.55)
     axr.fill_betweenx([-200, 200], hi_2j1b, 1.0, color="gray", alpha=0.55)
@@ -116,7 +123,10 @@ def bdt_cut_plots(
         xmax=bins_2j2b[2],
     )
     fig, ax, axr = one_sided_comparison_plot(
-        dr, ds, np.linspace(bins_2j2b[1], bins_2j2b[2], bins_2j2b[0] + 1)
+        dr,
+        ds,
+        np.linspace(bins_2j2b[1], bins_2j2b[2], bins_2j2b[0] + 1),
+        thesis=thesis,
     )
     ax.fill_betweenx([-1, 1.0e5], -1.0, lo_2j2b, color="gray", alpha=0.55)
     axr.fill_betweenx([-200, 200], -1.0, lo_2j2b, color="gray", alpha=0.55)

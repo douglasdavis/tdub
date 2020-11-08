@@ -584,7 +584,8 @@ def itables(summary_file):
 @click.argument("rex-dir", type=click.Path(exists=True))
 @click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")
 @click.option("-n", "--n-test", type=int, default=-1, help="Test only n plots (for stacks).")
-def rex_stacks(rex_dir, chisq, n_test):
+@click.option("--thesis", is_flag=True, help="Use thesis label")
+def rex_stacks(rex_dir, chisq, n_test, thesis):
     """Generate plots from TRExFitter result."""
     import tdub.rex
     import tdub.config
@@ -592,8 +593,14 @@ def rex_stacks(rex_dir, chisq, n_test):
     outdir.mkdir(exist_ok=True)
     tdub.config.init_meta_table()
     tdub.config.init_meta_logy()
-    tdub.rex.plot_all_regions(rex_dir, outdir, stage="pre", show_chisq=chisq, n_test=n_test)
-    tdub.rex.plot_all_regions(rex_dir, outdir, stage="post", show_chisq=chisq, n_test=n_test)
+    if thesis:
+        tdub.config.IS_THESIS = True
+    tdub.rex.plot_all_regions(
+        rex_dir, outdir, stage="pre", show_chisq=chisq, n_test=n_test, thesis=thesis
+    )
+    tdub.rex.plot_all_regions(
+        rex_dir, outdir, stage="post", show_chisq=chisq, n_test=n_test, thesis=thesis
+    )
     return 0
 
 
@@ -674,7 +681,8 @@ def misc_soverb(datadir, selections, use_tptrw):
 @misc.command("drdscomps")
 @click.argument("datadir", type=click.Path(exists=True))
 @click.option("-o", "--outdir", type=click.Path(), help="Output directory.")
-def misc_drdscomps(datadir, outdir):
+@click.option("--thesis", is_flag=True, help="Flag for thesis label.")
+def misc_drdscomps(datadir, outdir, thesis):
     """Generate plots comparing DR and DS (with BDT cuts shown)."""
     import tdub.internal.drds as tdid
 
@@ -685,7 +693,7 @@ def misc_drdscomps(datadir, outdir):
         outdir = curdir
     outdir.mkdir(exist_ok=True, parents=True)
     os.chdir(outdir)
-    tdid.bdt_cut_plots(datadir)
+    tdid.bdt_cut_plots(datadir, thesis=thesis)
     os.chdir(curdir)
 
 

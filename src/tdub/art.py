@@ -13,6 +13,7 @@ import numpy as np
 import pandas as pd
 
 # tdub
+import tdub.config
 import tdub.hist
 import tdub.root
 from tdub.hist import SystematicComparison, bin_centers
@@ -63,6 +64,7 @@ def draw_atlas_label(
     follow_shift: float = 0.16,
     s1: int = 18,
     s2: int = 16,
+    thesis: bool = False,
 ) -> None:
     """Draw the ATLAS label text, with extra lines if desired.
 
@@ -88,19 +90,32 @@ def draw_atlas_label(
         Size of the main label.
     s2 : int
         Size of the extra text
+    thesis : bool
+        Flag for is thesis
 
     """
-    ax.text(
-        x,
-        y,
-        "ATLAS",
-        fontstyle="italic",
-        fontweight="bold",
-        transform=ax.transAxes,
-        size=s1,
-    )
-    if follow:
-        ax.text(x + follow_shift, y, follow, transform=ax.transAxes, size=s1)
+    if thesis:
+        ax.text(
+            x,
+            y,
+            "D. Davis Thesis",
+            fontstyle="italic",
+            fontweight="bold",
+            transform=ax.transAxes,
+            size=s1,
+        )
+    else:
+        ax.text(
+            x,
+            y,
+            "ATLAS",
+            fontstyle="italic",
+            fontweight="bold",
+            transform=ax.transAxes,
+            size=s1,
+        )
+        if follow:
+            ax.text(x + follow_shift, y, follow, transform=ax.transAxes, size=s1)
     if cme_and_lumi:
         exlines = [f"$\\sqrt{{s}}$ = {cme} TeV, $L = {lumi}$ fb$^{{-1}}$"]
     else:
@@ -385,6 +400,7 @@ def one_sided_comparison_plot(
     nominal: np.ndarray,
     one_up: np.ndarray,
     edges: np.ndarray,
+    thesis: bool = False,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
     r"""Create plot for one sided systematic comparison.
 
@@ -396,6 +412,8 @@ def one_sided_comparison_plot(
         One :math:`\sigma` up variation.
     edges : numpy.ndarray
         Array defining bin edges.
+    thesis : bool
+        Label for thesis figure.
 
     Returns
     -------
@@ -453,7 +471,7 @@ def one_sided_comparison_plot(
     axr.set_xlabel("BDT Response", horizontalalignment="right", x=1.0)
 
     fig.subplots_adjust(left=0.15)
-    draw_atlas_label(ax, follow="Simulation Internal", follow_shift=0.17)
+    draw_atlas_label(ax, follow="Simulation Internal", follow_shift=0.17, thesis=thesis)
     return fig, ax, axr
 
 
