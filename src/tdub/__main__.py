@@ -580,6 +580,30 @@ def itables(summary_file):
     """))
 
 
+@train.command("shapes")
+@click.argument("datadir", type=click.Path(exists=True))
+@click.option("-o", "--outdir", type=click.Path(), help="Directory to save output.")
+def train_shapes(datadir, outdir):
+    """Generate shape comparion plots."""
+    if outdir is None:
+        outdir = PosixPath.cwd()
+    else:
+        outdir = PosixPath(outdir)
+        outdir.mkdir(exist_ok=True, parents=True)
+
+    import tdub.internal.shapecomps as tdisc
+    import tdub.ml_train as tdmlt
+    import tdub.config
+    tdub.config.init_meta_table()
+    meta_table = tdub.config.PLOTTING_META_TABLE
+    datadir = PosixPath(datadir)
+    region = (datadir / "region.txt").read_text().strip()
+    df, y, w = tdmlt.load_prepped(datadir)
+    var_region_binning = tdmlt.var_and_binning_for_region(df, region, meta_table)
+    for v, r, b in var_region_binning:
+        tdisc.dist_comparison_plot(v, r, b, df, y, w, meta_table, outdir=outdir)
+
+
 @rex.command("stacks")
 @click.argument("rex-dir", type=click.Path(exists=True))
 @click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")

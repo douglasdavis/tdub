@@ -1601,3 +1601,56 @@ def gp_minimize_auc(
 
     os.chdir(run_from_dir)
     return 0
+
+
+def load_prepped(datadir: PosixPath) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
+    """Load prepped training data.
+
+    Parameters
+    ----------
+    datadir : pathlib.PosixPath
+        Path to the preppared output.
+
+    Returns
+    -------
+    :py:obj:`pandas.DataFrame`
+        DataFrame containing training variables
+    :py:obj:`numpy.ndarray`
+        Labels for each event.
+    :py:obj:`numpy.ndarray`
+        Weights for each event.
+
+    """
+    df = pd.read_hdf(datadir / "df.h5", "df")
+    y = np.load(datadir / "labels.npy")
+    w = np.load(datadir / "weights.npy")
+    return df, y, w
+
+
+def var_and_binning_for_region(
+    df: pd.DataFrame, region: Union[str, Region], meta_table: Any
+) -> Any:
+    """Create list of training variables associated with a region.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame containg training variables
+    region : str
+        String representation of region.
+    meta_table : dict(str, Any)
+        Variable meta data table.
+
+    Returns
+    -------
+    list
+        List of variables with associated region and binning.
+    """
+    results = []
+    cols = list(df.columns)
+    for entry in meta_table["regions"][f"r{str(Region.from_str(str(region)))}"]:
+        if entry["var"] in cols:
+            results.append(
+                (entry["var"], region, (entry["nbins"], entry["xmin"], entry["xmax"]))
+            )
+    return results
