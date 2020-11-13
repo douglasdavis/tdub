@@ -44,8 +44,8 @@ def dist_comparison_plot(
         gridspec_kw=dict(height_ratios=[3.25, 1], hspace=0.025),
     )
 
-    n1, e1 = histogram(tW_dist, weights=w_tW, bins=bins, density=True)
-    n2, e2 = histogram(tt_dist, weights=w_tt, bins=bins, density=True)
+    n1, e1 = histogram(tW_dist, weights=w_tW, bins=bins, density=True, flow=True)
+    n2, e2 = histogram(tt_dist, weights=w_tt, bins=bins, density=True, flow=True)
     r = n1 / n2
     ax.hist(centers, weights=n1, bins=bins, label=r"$tW$", histtype="step")
     ax.hist(centers, weights=n2, bins=bins, label=r"$t\bar{t}$", histtype="step")
