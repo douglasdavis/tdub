@@ -36,6 +36,7 @@ def dist_comparison_plot(
     tt_dist = df[var][is_tt].to_numpy()
     bins = np.linspace(binning[1], binning[2], binning[0] + 1)
     centers = bin_centers(bins)
+    bw = bins[1] - bins[0]
 
     fig, (ax, axr) = plt.subplots(
         2,
@@ -51,7 +52,8 @@ def dist_comparison_plot(
     ax.hist(centers, weights=n2, bins=bins, label=r"$t\bar{t}$", histtype="step")
     axr.hist(centers, bins=bins, weights=r, histtype="step", color="black")
     ax.set_ylabel("Arb. Units", ha="right", y=1.0)
-    axr.set_xlabel(meta_axis_label(var, meta_table), ha="right", x=1.0)
+    xl, yl = meta_axis_label(var, bw, meta_table)
+    axr.set_xlabel(xl, ha="right", x=1.0)
     axr.set_xlim([binning[1], binning[2]])
     axr.set_ylabel(r"$tW/t\bar{t}$")
     ax.set_ylim([ax.get_ylim()[0], ax.get_ylim()[1] * 1.35])

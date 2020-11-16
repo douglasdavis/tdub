@@ -434,13 +434,17 @@ def meta_text(region: str, stage: str) -> str:
     return f"$tW$ Dilepton, {region}, {stage}"
 
 
-def meta_axis_label(region: str, meta_table: Optional[Dict[str, Any]] = None) -> str:
+def meta_axis_label(
+    region: str, bin_width: float, meta_table: Optional[Dict[str, Any]] = None
+) -> Tuple[str, str]:
     """Construct an axis label from metadata table.
 
     Parameters
     ----------
     region : str
         TRExFitter region to use.
+    bin_width : float
+        Bin width for y-axis label.
     meta_table : dict, optional
         Table of metadata for labeling plotting axes. If ``None``
         (default), the definition stored in the variable
@@ -449,7 +453,9 @@ def meta_axis_label(region: str, meta_table: Optional[Dict[str, Any]] = None) ->
     Returns
     -------
     str
-        Axis label for the region.
+        x-axis label for the region.
+    str
+        y-axis label for the region.
 
     """
     if "VRP" in region:
@@ -463,10 +469,20 @@ def meta_axis_label(region: str, meta_table: Optional[Dict[str, Any]] = None) ->
         meta_region = meta_table["titles"][region]
     main_label = meta_region["mpl"]
     unit_label = meta_region["unit"]
-    if not unit_label:
-        return main_label
+    if unit_label:
+        xunit_label = f" [{unit_label}]"
+        yunit_label = f" {unit_label}"
     else:
-        return f"{main_label} [{unit_label}]"
+        xunit_label = ""
+        yunit_label = ""
+
+    xl = f"{main_label}{xunit_label}"
+    if bin_width.is_integer():
+        yl = f"Events/{int(bin_width)}{yunit_label}"
+    else:
+        yl = f"Events/{bin_width:.2f}{yunit_label}"
+
+    return xl, yl
 
 
 def stack_canvas(
@@ -540,13 +556,16 @@ def stack_canvas(
         logy=logy,
     )
 
+    bw = histograms["Data"].bin_width
+    xlab, ylab = meta_axis_label(region, bw, meta_table)
+
     # stack axes cosmetics
-    ax0.set_ylabel("Events", horizontalalignment="right", y=1.0)
+    ax0.set_ylabel(ylab, horizontalalignment="right", y=1.0)
     draw_atlas_label(ax0, extra_lines=[meta_text(region, stage)], thesis=thesis)
     legend_last_to_first(ax0, ncol=2, loc="upper right")
 
     # ratio axes cosmetics
-    ax1.set_xlabel(meta_axis_label(region, meta_table), horizontalalignment="right", x=1.0)
+    ax1.set_xlabel(xlab, horizontalalignment="right", x=1.0)
     ax1.set_ylabel("Data/MC")
     if stage == "post":
         ax1.set_ylim([0.9, 1.1])
@@ -789,7 +808,9 @@ def prettify_label(label: str) -> str:
     )
 
 
-def nuispar_impact_plot_top20(rex_dir: Union[str, os.PathLike], thesis: bool = False) -> None:
+def nuispar_impact_plot_top20(
+    rex_dir: Union[str, os.PathLike], thesis: bool = False
+) -> None:
     """Plot the top 20 nuisance parameters based on impact.
 
     Parameters

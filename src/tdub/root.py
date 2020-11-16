@@ -84,3 +84,8 @@ class TH1:
     def centers(self) -> np.ndarray:
         """:py:obj:`numpy.ndarray`: Histogram bin centers."""
         return bin_centers(self.edges)
+
+    @property
+    def bin_width(self) -> float:
+        """float: Width of a bin."""
+        return (self._edges[1] - self._edges[0])
