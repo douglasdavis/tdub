@@ -61,9 +61,9 @@ def draw_atlas_label(
     lumi: float = 139,
     x: float = 0.040,
     y: float = 0.905,
-    follow_shift: float = 0.16,
+    follow_shift: float = 0.17,
     s1: int = 18,
-    s2: int = 16,
+    s2: int = 14,
     thesis: bool = False,
 ) -> None:
     """Draw the ATLAS label text, with extra lines if desired.
@@ -486,24 +486,24 @@ def setup_tdub_style() -> None:
     matplotlib.rcParams["axes.formatter.limits"] = [-4, 4]
     matplotlib.rcParams["axes.formatter.use_mathtext"] = True
     matplotlib.rcParams["axes.labelsize"] = 16
-    matplotlib.rcParams["figure.figsize"] = (6.7, 6.1)
+    matplotlib.rcParams["figure.figsize"] = (6.5, 6.0)
     matplotlib.rcParams["figure.facecolor"] = "white"
     matplotlib.rcParams["figure.subplot.left"] = 0.12
     matplotlib.rcParams["figure.subplot.bottom"] = 0.1
     matplotlib.rcParams["figure.subplot.right"] = 0.965
     matplotlib.rcParams["figure.subplot.top"] = 0.95
-    matplotlib.rcParams["font.size"] = 14
+    matplotlib.rcParams["font.size"] = 12
     matplotlib.rcParams["legend.frameon"] = False
     matplotlib.rcParams["legend.numpoints"] = 1
-    matplotlib.rcParams["legend.fontsize"] = 12
+    matplotlib.rcParams["legend.fontsize"] = 13
     matplotlib.rcParams["legend.handlelength"] = 1.5
     matplotlib.rcParams["lines.linewidth"] = 1
     matplotlib.rcParams["xtick.top"] = True
     matplotlib.rcParams["ytick.right"] = True
     matplotlib.rcParams["xtick.direction"] = "in"
     matplotlib.rcParams["ytick.direction"] = "in"
-    matplotlib.rcParams["xtick.labelsize"] = 13
-    matplotlib.rcParams["ytick.labelsize"] = 13
+    matplotlib.rcParams["xtick.labelsize"] = 14
+    matplotlib.rcParams["ytick.labelsize"] = 14
     matplotlib.rcParams["xtick.minor.visible"] = True
     matplotlib.rcParams["ytick.minor.visible"] = True
     matplotlib.rcParams["xtick.major.width"] = 0.8
