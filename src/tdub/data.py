@@ -103,6 +103,35 @@ class Region(Enum):
         return self.name[1:]
 
 
+def as_region(region: Union[str, Region]) -> Region:
+    """Convert input to :py:obj:`~Region`.
+
+    Meant to be similar to :py:func:`numpy.asarray` function.
+
+    Parameters
+    ----------
+    region : str or Region
+        Region already as a Region or as a str
+
+    Returns
+    -------
+    Region
+        Region representation.
+
+    Examples
+    --------
+    >>> from tdub.data import as_region, Region
+    >>> as_region("r2j1b")
+    <Region.r2j1b: 1>
+    >>> as_region(Region.r2j2b)
+    <Region.r2j2b: 2>
+
+    """
+    if isinstance(region, str):
+        return Region.from_str(region)
+    return region
+
+
 class SampleInfo:
     """Describes a sample's attritubes given it's name.
 
@@ -197,8 +226,7 @@ def avoids_for(region: Union[str, Region]) -> List[str]:
     ['deltaR_jet1_jet2']
 
     """
-    if isinstance(region, str):
-        region = Region.from_str(region)
+    region = as_region(region)
     if region == Region.r1j1b:
         return tdub.config.AVOID_IN_CLF_1j1b
     elif region == Region.r2j1b:
@@ -379,9 +407,7 @@ def features_for(region: Union[str, Region]) -> List[str]:
             key=str.lower,
         )
 
-    # if not "ALL" grab from a dict constructed from config
-    if isinstance(region, str):
-        region = Region.from_str(region)
+    region = as_region(region)
     if region == Region.r1j1b:
         return tdub.config.FEATURESET_1j1b
     if region == Region.r2j1b:
@@ -618,9 +644,7 @@ def selection_for(region: Union[str, Region], additional: Optional[str] = None) 
     '((reg1j1b == True) & (OS == True)) & ((mass_lep1jetb < 155) & (mass_lep2jetb < 155))'
 
     """
-    if isinstance(region, str):
-        region = Region.from_str(region)
-
+    region = as_region(region)
     if region == Region.r1j1b:
         selection = "(reg1j1b == True) & (OS == True)"
     elif region == Region.r2j1b:

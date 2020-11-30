@@ -18,6 +18,7 @@ Function Summary
 
 .. autosummary::
 
+   as_region
    avoids_for
    branches_from
    categorize_branches
@@ -37,6 +38,7 @@ Reference
 .. autoclass:: SampleInfo
    :members:
 
+.. autofunction:: as_region
 .. autofunction:: avoids_for
 .. autofunction:: branches_from
 .. autofunction:: categorize_branches
