@@ -2,7 +2,7 @@ import pytest
 
 import pathlib
 
-import uproot4
+import uproot
 
 from tdub.data import (
     SampleInfo,
@@ -137,7 +137,7 @@ def test_avoids_for():
 
 
 def test_branches_from():
-    f1 = uproot4.open("tests/test_data/testfile1.root")
+    f1 = uproot.open("tests/test_data/testfile1.root")
     f2 = "tests/test_data/testfile1.root"
     f3 = ["tests/test_data/testfile1.root"]
     b1 = sorted(branches_from(f1))

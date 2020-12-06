@@ -12,9 +12,9 @@ from typing import Union, Set, Dict, Iterable, List, Optional
 
 # external
 import formulate
-import uproot4 as uproot
-from uproot4.reading import ReadOnlyDirectory
-from uproot4.behaviors.TTree import TTree
+import uproot
+from uproot.reading import ReadOnlyDirectory
+from uproot.behaviors.TTree import TTree
 
 # tdub
 import tdub.config

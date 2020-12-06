@@ -1,8 +1,8 @@
 """Module to work with ROOT-like objects."""
 
 # external
-from uproot4.model import Model as ROOTModel
-from uproot4.behaviors.TH1 import Histogram as ROOTHistogram
+from uproot.model import Model as ROOTModel
+from uproot.behaviors.TH1 import Histogram as ROOTHistogram
 import numpy as np
 
 # tdub
@@ -14,7 +14,7 @@ class TGraphAsymmErrors:
 
     Parameters
     ----------
-    root_object : uproot4.model.Model
+    root_object : uproot.model.Model
         Object from reading ROOT file with uproot.
 
     """
@@ -51,9 +51,13 @@ class TGraphAsymmErrors:
 class TH1:
     """Wrapper around uproot's interpretation of ROOT's TH1.
 
+    This class interprets the histogram in a way that *ignores* under
+    and overflow bins. We expect the treatment of those values to
+    already be accounted for.
+
     Parameters
     ----------
-    root_object : uproot4.behaviors.TH1.Histogram
+    root_object : uproot.behaviors.TH1.Histogram
         Object from reading ROOT file with uproot.
 
     """
@@ -61,9 +65,9 @@ class TH1:
     def __init__(self, root_object: ROOTHistogram) -> None:
         """Initialize from the ROOT object."""
         self._root_object = root_object
-        self._counts, self._errors = self._root_object.values_errors()
-        self._counts, self._errors = self._counts[1:-1], self._errors[1:-1]
-        self._edges = self._root_object.edges()[1:-1]
+        self._counts = self._root_object.values(flow=False)
+        self._errors = self._root_object.errors(flow=False)
+        self._edges = self._root_object.axis(0).edges(flow=False)
 
     @property
     def counts(self) -> np.ndarray:

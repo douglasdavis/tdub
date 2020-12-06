@@ -19,8 +19,8 @@ matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import uproot4 as uproot
-from uproot4.reading import ReadOnlyDirectory
+import uproot
+from uproot.reading import ReadOnlyDirectory
 
 import yaml
 
@@ -188,7 +188,7 @@ def prefit_histogram(root_file: ReadOnlyDirectory, sample: str, region: str) -> 
 
     Parameters
     ----------
-    root_file : uproot4.reading.ReadOnlyDirectory
+    root_file : uproot.reading.ReadOnlyDirectory
         File containing the desired prefit histogram.
     sample : str
         Physics sample name.
@@ -321,7 +321,7 @@ def postfit_histogram(root_file: ReadOnlyDirectory, sample: str) -> TH1:
 
     Parameters
     ----------
-    root_file : uproot4.reading.ReadOnlyDirectory
+    root_file : uproot.reading.ReadOnlyDirectory
         File containing the desired postfit histogram.
     sample : str
         Physics sample name.

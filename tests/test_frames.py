@@ -1,6 +1,6 @@
 from pathlib import PosixPath
 
-import uproot4 as uproot
+import uproot
 import numpy as np
 
 from tdub.config import AVOID_IN_CLF

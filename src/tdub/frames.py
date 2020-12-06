@@ -8,7 +8,7 @@ from typing import Optional, Union, List, Iterable
 
 # externals
 import pandas as pd
-import uproot4
+import uproot
 
 # tdub
 import tdub.config
@@ -84,7 +84,7 @@ def raw_dataframe(
     if isinstance(files, str):
         files = [files]
     result = pd.concat(
-        [uproot4.open(f).get(tree).arrays(branches, library="pd", **kwargs) for f in files]
+        [uproot.open(f).get(tree).arrays(branches, library="pd", **kwargs) for f in files]
     )
     result.selection_used = None
     return result
@@ -222,7 +222,7 @@ def iterative_selection(
     numexpr_sel = selection_as_numexpr(selection)
     dfs = []
     for i, f in enumerate(files):
-        df = uproot4.open(f).get(tree).arrays(read_branches, library="pd", **kwargs)
+        df = uproot.open(f).get(tree).arrays(read_branches, library="pd", **kwargs)
         if sample_frac is not None:
             df = df.sample(frac=sample_frac, random_state=tdub.config.RANDOM_STATE)
         if use_campaign_weight:
