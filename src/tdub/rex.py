@@ -605,7 +605,6 @@ def plot_region_stage_ff(args):
     output_file = f"{args[2]}/{args[1]}_{args[3]}Fit.pdf"
     fig.savefig(output_file)
     plt.close(fig)
-    del fig, ax0, ax1
     log.info("Created %s" % output_file)
 
 
