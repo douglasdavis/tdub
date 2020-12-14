@@ -604,8 +604,6 @@ def plot_region_stage_ff(args):
     )
     output_file = f"{args[2]}/{args[1]}_{args[3]}Fit.pdf"
     fig.savefig(output_file)
-    plt.close(fig)
-    log.info("Created %s" % output_file)
 
 
 def plot_all_regions(
@@ -649,6 +647,8 @@ def plot_all_regions(
     ]
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
     pool.map(plot_region_stage_ff, args)
+    plt.close("all")
+    log.info("Done creating %s-fit plots in %s." % (stage, outdir))
 
 
 def nuispar_impact(
@@ -862,7 +862,6 @@ def nuispar_impact_plot_top20(
     fig.savefig(output_file)
     log.info("Created %s" % output_file)
     plt.close(fig)
-    del fig, ax, ax2
     # fmt: on
     return 0
 

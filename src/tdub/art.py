@@ -290,11 +290,13 @@ def canvas_from_counts(
         draw_uncertainty_bands(uncertainty, total_mc, ax, axr)
 
     axr.set_xlim([bin_edges[0], bin_edges[-1]])
+
+    max_data = np.amax(counts["Data"])
     if logy:
         ax.set_yscale("log")
-        ax.set_ylim([5, ax.get_ylim()[1] * 100])
+        ax.set_ylim([5, max_data * 100])
     else:
-        ax.set_ylim([0, ax.get_ylim()[1] * 1.375])
+        ax.set_ylim([0, max_data * 1.70])
 
     return fig, ax, axr
 
@@ -492,6 +494,7 @@ def setup_tdub_style() -> None:
     matplotlib.rcParams["figure.subplot.bottom"] = 0.1
     matplotlib.rcParams["figure.subplot.right"] = 0.965
     matplotlib.rcParams["figure.subplot.top"] = 0.95
+    matplotlib.rcParams["figure.max_open_warning"] = 500
     matplotlib.rcParams["font.size"] = 12
     matplotlib.rcParams["legend.frameon"] = False
     matplotlib.rcParams["legend.numpoints"] = 1
