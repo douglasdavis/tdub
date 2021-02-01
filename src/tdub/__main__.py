@@ -686,11 +686,12 @@ def rex_impstabs(herwig704, herwig713, outdir):
 
 @rex.command("grimpacts")
 @click.argument("rex-dir", type=click.Path(exists=True))
+@click.option("--tablefmt", type=str, default="orgtbl", help="Format passed to tabulate.")
 @click.option("--include-total", is_flag=True, help="Include FullSyst entry")
-def rex_grimpacts(rex_dir, include_total):
+def rex_grimpacts(rex_dir, tablefmt, include_total):
     """Print summary of grouped impacts."""
     from tdub.rex import grouped_impacts_table
-    print(grouped_impacts_table(rex_dir, include_total=include_total))
+    print(grouped_impacts_table(rex_dir, tablefmt=tablefmt, include_total=include_total))
 
 
 @misc.command("soverb")

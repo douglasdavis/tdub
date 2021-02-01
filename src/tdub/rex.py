@@ -1530,7 +1530,9 @@ def grouped_impacts(
             )
 
 
-def grouped_impacts_table(rex_dir: Union[str, Path], **kwargs) -> None:
+def grouped_impacts_table(
+    rex_dir: Union[str, Path], tablefmt: str = "orgtbl", **kwargs
+) -> str:
     """Construct a table of grouped impacts.
 
     Uses the https://pypi.org/project/tabulate project.
@@ -1539,6 +1541,8 @@ def grouped_impacts_table(rex_dir: Union[str, Path], **kwargs) -> None:
     ----------
     rex_dir : str or pathlib.Path
         Path of the TRExFitter result directory
+    tablefmt : str
+        Format passed to tabulate.
     **kwargs : dict
         Passed to :py:func:`grouped_impacts`
 
@@ -1554,4 +1558,5 @@ def grouped_impacts_table(rex_dir: Union[str, Path], **kwargs) -> None:
             for entry in grouped_impacts(rex_dir, **kwargs)
         ],
         headers=[r"Name", r"Impact (%)"],
+        tablefmt=tablefmt,
     )
