@@ -413,8 +413,6 @@ class FeatureSelector:
             if f in n_top:
                 n_top.remove(f)
 
-        # use dict to ensure we drop duplicates while preserving
-        # order (python3.7 insertion order is preserved).
         temp_dict = {f: None for f in n_top}
         self._candidates = list(temp_dict.keys())
 
