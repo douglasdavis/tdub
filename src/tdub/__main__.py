@@ -681,6 +681,20 @@ def rex_impstabs(herwig704, herwig713, outdir):
     )
 
 
+@rex.command("grimpacts")
+@click.argument("rex-dir", type=click.Path(exists=True))
+@click.option("--raw/--no-raw", default=False, help="Print rounded numbers.")
+def rex_grimpacts(rex_dir, raw):
+    """Print summary of grouped impacts."""
+    import tdub.rex
+    if raw:
+        entries = [g.org_entry_raw for g in tdub.rex.grouped_impacts(rex_dir)]
+    else:
+        entries = [g.org_entry for g in tdub.rex.grouped_impacts(rex_dir)]
+    for entry in entries:
+        print(entry)
+
+
 @misc.command("soverb")
 @click.argument("datadir", type=click.Path(exists=True))
 @click.argument("selections", type=click.Path(exists=True))
