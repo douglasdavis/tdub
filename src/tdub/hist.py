@@ -32,7 +32,7 @@ class SystematicComparison:
 
     def __init__(
         self,
-        nominal: np.ndaray,
+        nominal: np.ndarray,
         up: np.ndarray,
         down: np.ndarray,
     ) -> None:
@@ -46,17 +46,17 @@ class SystematicComparison:
     @property
     def percent_diff_min(self) -> float:
         """float: minimum for percent difference."""
-        return np.amin([self.percent_diff_up, self.percent_diff_down])
+        return float(np.amin([self.percent_diff_up, self.percent_diff_down]))
 
     @property
     def percent_diff_max(self) -> float:
         """float: maximum for percent difference."""
-        return np.amax([self.percent_diff_up, self.percent_diff_down])
+        return float(np.amax([self.percent_diff_up, self.percent_diff_down]))
 
     @property
     def template_max(self) -> float:
         """float: maximum height of a variation."""
-        return np.amax([self.up, self.down])
+        return float(np.amax(np.concatenate([self.up, self.down])))
 
     @staticmethod
     def one_sided(nominal: np.ndarray, up: np.ndarray) -> SystematicComparison:
@@ -139,7 +139,7 @@ def to_uniform_bins(bin_edges: np.ndarray):
 
 def edges_and_centers(
     bins: Union[int, Iterable], range: Optional[Tuple[float, float]] = None
-) -> np.array:
+) -> Tuple[np.ndarray, np.ndarray]:
     """Create arrays for edges and bin centers.
 
     Parameters

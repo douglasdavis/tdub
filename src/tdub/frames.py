@@ -95,7 +95,7 @@ def iterative_selection(
     selection: str,
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
-    branches: Optional[List[str]] = None,
+    branches: Optional[Iterable[str]] = None,
     keep_category: Optional[str] = None,
     exclude_avoids: bool = False,
     use_campaign_weight: bool = False,
@@ -197,7 +197,7 @@ def iterative_selection(
     # are necessary during reading.
     if keep_category is not None:
         branches_cated = categorize_branches(list(branches))
-        keep_cat = set(branches_cated.get(keep_category))
+        keep_cat = set(branches_cated[keep_category])
         keep = keep_cat & branches
         read_branches = list(keep | weights_to_grab | sel_branches)
     else:
@@ -214,7 +214,7 @@ def iterative_selection(
     # always keep the requested weight (enforce here just in
     # case). sort into a list and move on to dataframes
     keep.add(weight_name)
-    keep = sorted(keep, key=str.lower)
+    keep_cols = sorted(keep, key=str.lower)
 
     if isinstance(files, str):
         files = [files]
@@ -232,7 +232,7 @@ def iterative_selection(
         if use_trrw:
             apply_weight_trrw(df)
         idf = df.query(numexpr_sel)
-        idf = idf[keep]
+        idf = idf[keep_cols]
         dfs.append(idf)
         log.debug(f"finished iteration {i}")
 

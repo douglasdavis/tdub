@@ -183,7 +183,7 @@ def condor_submit(workspace: Union[str, os.PathLike]) -> None:
     )
     out, err = proc.communicate()
     try:
-        out = out.decode("utf-8")
+        log_out = out.decode("utf-8")
     except AttributeError:
         pass
-    log.info(out)
+    log.info(log_out)

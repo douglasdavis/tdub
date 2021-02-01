@@ -80,7 +80,7 @@ class FitParam:
 
     def __post_init__(self):
         """Execute after init."""
-        self.post_max = max(abs(self.post_down), abs(self.post_up))
+        self.post_max: float = max(abs(self.post_down), abs(self.post_up))
 
 
 def available_regions(rex_dir: Union[str, os.PathLike]) -> List[str]:

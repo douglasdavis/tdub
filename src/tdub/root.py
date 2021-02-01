@@ -6,7 +6,7 @@ from uproot.behaviors.TH1 import Histogram as ROOTHistogram
 import numpy as np
 
 # tdub
-from .hist import bin_centers
+from tdub.hist import bin_centers
 
 
 class TGraphAsymmErrors:

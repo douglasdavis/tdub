@@ -375,7 +375,7 @@ def draw_impact_barh(
         zorder=6,
         label=r"Postfit $\theta=\hat{\theta}+\Delta\theta$",
     )
-    xlims = np.amax([np.abs(df.pre_down), np.abs(df.pre_up)]) * 1.25
+    xlims = float(np.amax([np.abs(df.pre_down), np.abs(df.pre_up)]) * 1.25)
     if xlims > 0.25:
         xlims = 0.24
     ax.set_xlim([-xlims, xlims])

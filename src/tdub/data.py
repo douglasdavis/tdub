@@ -275,7 +275,7 @@ def branches_from(
     ["pT_lep1", "pT_lep2", "weight_nominal", "weight_tptrw"]
 
     """
-    if isinstance(source, (str, os.PathLike)):
+    if isinstance(source, (str, PosixPath)):
         t = uproot.open(source).get(tree)
     elif isinstance(source, list):
         t = uproot.open(source[0]).get(tree)
