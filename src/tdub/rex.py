@@ -19,6 +19,7 @@ matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import tabulate
 import uproot
 from uproot.reading import ReadOnlyDirectory
 
@@ -644,10 +645,9 @@ def plot_region_stage_ff(args):
         internal=args[7],
         thesis=args[8],
     )
-    output_file = f"{args[2]}/{args[1]}_{args[3]}Fit.pdf"
-    fig.savefig(output_file)
-    output_file = f"{args[2]}/{args[1]}_{args[3]}Fit.png"
-    fig.savefig(output_file)
+    fig.savefig(f"{args[2]}/{args[1]}_{args[3]}Fit.pdf")
+    if args[9]:
+        fig.savefig(f"{args[2]}/{args[1]}_{args[3]}Fit.png")
 
 
 def plot_all_regions(
@@ -659,6 +659,7 @@ def plot_all_regions(
     n_test: int = -1,
     internal: bool = True,
     thesis: bool = False,
+    save_png: bool = False,
 ) -> None:
     r"""Plot all regions discovered in a TRExFitter result directory.
 
@@ -680,6 +681,8 @@ def plot_all_regions(
         Flag for internal label.
     thesis : bool
         Flag for thesis label.
+    save_png : bool
+        Save png versions along with the pdf versions of plots.
 
     """
     Path(outdir).mkdir(parents=True, exist_ok=True)
@@ -699,6 +702,7 @@ def plot_all_regions(
             log_patterns,
             internal,
             thesis,
+            save_png,
         ]
         for region in regions
     ]
@@ -1493,27 +1497,61 @@ def stability_test_parton_shower_impacts(
     return 0
 
 
-def grouped_impacts(rex_dir: Union[str, Path]) -> Iterator[GroupedImpact]:
+def grouped_impacts(
+    rex_dir: Union[str, Path], include_total: bool = False
+) -> Iterator[GroupedImpact]:
     """Grab grouped impacts from a fit workspace.
 
     Parameters
     ----------
     rex_dir : str or pathlib.Path
+        Path of the TRExFitter result directory.
+    include_total : bool
+        Include the FullSyst entry.
 
     Yields
     ------
-    tdub.rex.GroupedImpact
-        Fit grouped impacts.
+    :py:class:`GroupedImpact`
+        Iterator of grouped impacts in the fit.
 
     """
     imp_file = Path(rex_dir) / "Fits" / "GroupedImpact.txt"
-    assert imp_file.exists(), "Grouped Impact file doesn't exist."
+    assert imp_file.exists(), f"{imp_file} doesn't exist."
     with imp_file.open("r") as f:
         for line in f:
             n, a, _1, u, d, _2 = line.split()
+            if (not include_total) and n == "FullSyst":
+                continue
             yield GroupedImpact(
                 name=n,
                 avg=float(a),
                 sig_lo=float(d),
                 sig_hi=float(u[:-1]),
             )
+
+
+def grouped_impacts_table(rex_dir: Union[str, Path], **kwargs) -> None:
+    """Construct a table of grouped impacts.
+
+    Uses the https://pypi.org/project/tabulate project.
+
+    Parameters
+    ----------
+    rex_dir : str or pathlib.Path
+        Path of the TRExFitter result directory
+    **kwargs : dict
+        Passed to :py:func:`grouped_impacts`
+
+    Returns
+    -------
+    str
+        Table representation.
+
+    """
+    return tabulate.tabulate(
+        [
+            [entry.name, f"{100 * round(entry.avg, 3):2.3f}"]
+            for entry in grouped_impacts(rex_dir, **kwargs)
+        ],
+        headers=[r"Name", r"Impact (%)"],
+    )

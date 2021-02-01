@@ -609,8 +609,9 @@ def train_shapes(datadir, outdir):
 @click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")
 @click.option("--internal/--no-internal", default=True, help="Do or don't include internal label.")
 @click.option("--thesis/--no-thesis", default=False, help="Use thesis label")
+@click.option("--png/--no-png", default=False, help="Also save PNG version of plots.")
 @click.option("-n", "--n-test", type=int, default=-1, help="Test only n plots (for stacks).")
-def rex_stacks(rex_dir, chisq, internal, thesis, n_test):
+def rex_stacks(rex_dir, chisq, internal, thesis, png, n_test):
     """Generate plots from TRExFitter result."""
     import tdub.rex
     import tdub.config
@@ -627,7 +628,8 @@ def rex_stacks(rex_dir, chisq, internal, thesis, n_test):
         show_chisq=chisq,
         n_test=n_test,
         internal=internal,
-        thesis=thesis
+        thesis=thesis,
+        save_png=png,
     )
     tdub.rex.plot_all_regions(
         rex_dir,
@@ -636,7 +638,8 @@ def rex_stacks(rex_dir, chisq, internal, thesis, n_test):
         show_chisq=chisq,
         n_test=n_test,
         internal=internal,
-        thesis=thesis
+        thesis=thesis,
+        save_png=png,
     )
     return 0
 
@@ -683,16 +686,11 @@ def rex_impstabs(herwig704, herwig713, outdir):
 
 @rex.command("grimpacts")
 @click.argument("rex-dir", type=click.Path(exists=True))
-@click.option("--raw/--no-raw", default=False, help="Print rounded numbers.")
-def rex_grimpacts(rex_dir, raw):
+@click.option("--include-total", is_flag=True, help="Include FullSyst entry")
+def rex_grimpacts(rex_dir, include_total):
     """Print summary of grouped impacts."""
-    import tdub.rex
-    if raw:
-        entries = [g.org_entry_raw for g in tdub.rex.grouped_impacts(rex_dir)]
-    else:
-        entries = [g.org_entry for g in tdub.rex.grouped_impacts(rex_dir)]
-    for entry in entries:
-        print(entry)
+    from tdub.rex import grouped_impacts_table
+    print(grouped_impacts_table(rex_dir, include_total=include_total))
 
 
 @misc.command("soverb")

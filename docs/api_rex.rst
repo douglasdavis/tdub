@@ -30,6 +30,7 @@ Function Summary
    delta_poi
    fit_parameter
    grouped_impacts
+   grouped_impacts_table
    meta_axis_label
    meta_text
    nuispar_impact
@@ -67,6 +68,7 @@ Reference
 .. autofunction:: delta_poi
 .. autofunction:: fit_parameter
 .. autofunction:: grouped_impacts
+.. autofunction:: grouped_impacts_table
 .. autofunction:: plot_all_regions
 .. autofunction:: plot_region_stage_ff
 .. autofunction:: meta_axis_label
