@@ -607,9 +607,10 @@ def train_shapes(datadir, outdir):
 @rex.command("stacks")
 @click.argument("rex-dir", type=click.Path(exists=True))
 @click.option("--chisq/--no-chisq", default=True, help="Do or don't print chi-square information.")
+@click.option("--internal/--no-internal", default=True, help="Do or don't include internal label.")
+@click.option("--thesis/--no-thesis", default=False, help="Use thesis label")
 @click.option("-n", "--n-test", type=int, default=-1, help="Test only n plots (for stacks).")
-@click.option("--thesis", is_flag=True, help="Use thesis label")
-def rex_stacks(rex_dir, chisq, n_test, thesis):
+def rex_stacks(rex_dir, chisq, internal, thesis, n_test):
     """Generate plots from TRExFitter result."""
     import tdub.rex
     import tdub.config
@@ -620,10 +621,22 @@ def rex_stacks(rex_dir, chisq, n_test, thesis):
     if thesis:
         tdub.config.IS_THESIS = True
     tdub.rex.plot_all_regions(
-        rex_dir, outdir, stage="pre", show_chisq=chisq, n_test=n_test, thesis=thesis
+        rex_dir,
+        outdir,
+        stage="pre",
+        show_chisq=chisq,
+        n_test=n_test,
+        internal=internal,
+        thesis=thesis
     )
     tdub.rex.plot_all_regions(
-        rex_dir, outdir, stage="post", show_chisq=chisq, n_test=n_test, thesis=thesis
+        rex_dir,
+        outdir,
+        stage="post",
+        show_chisq=chisq,
+        n_test=n_test,
+        internal=internal,
+        thesis=thesis
     )
     return 0
 

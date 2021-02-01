@@ -12,6 +12,7 @@ Class Summary
 .. autosummary::
 
    FitParam
+   GroupedImpact
 
 Function Summary
 ^^^^^^^^^^^^^^^^
@@ -28,6 +29,7 @@ Function Summary
    delta_param
    delta_poi
    fit_parameter
+   grouped_impacts
    meta_axis_label
    meta_text
    nuispar_impact
@@ -52,6 +54,8 @@ Reference
 ^^^^^^^^^
 
 .. autoclass:: FitParam
+.. autoclass:: GroupedImpact
+   :members:
 .. autofunction:: available_regions
 .. autofunction:: chisq
 .. autofunction:: chisq_text
@@ -62,6 +66,7 @@ Reference
 .. autofunction:: delta_param
 .. autofunction:: delta_poi
 .. autofunction:: fit_parameter
+.. autofunction:: grouped_impacts
 .. autofunction:: plot_all_regions
 .. autofunction:: plot_region_stage_ff
 .. autofunction:: meta_axis_label

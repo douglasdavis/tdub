@@ -1,4 +1,4 @@
-from pathlib import PosixPath
+from pathlib import Path
 from typing import  Tuple
 
 import tdub.art
@@ -25,7 +25,7 @@ def dist_comparison_plot(
     y: np.ndarray,
     w: np.ndarray,
     meta_table,
-    outdir: PosixPath,
+    outdir: Path,
 ) -> None:
     """Compare shapes of BDT variable. """
     is_tW = y == 1

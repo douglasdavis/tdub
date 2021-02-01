@@ -4,7 +4,7 @@
 # stdlib
 import functools
 import os
-from pathlib import PosixPath
+from pathlib import Path
 
 # third party
 import numpy as np
@@ -63,9 +63,9 @@ def make_delta_mu_plot(ax: plt.Axes, nom_down, nom_up, xvals, xerlo, xerhi, ylab
     return ax
 
 
-def excluded_systematics_delta_mu_summary(rex_dir: PosixPath, poi: str = "SigXsecOverSM"):
+def excluded_systematics_delta_mu_summary(rex_dir: Path, poi: str = "SigXsecOverSM"):
     """Generate a summary of delta mu's for left out systematics vs complete fit."""
-    rex_dir = PosixPath(rex_dir)
+    rex_dir = Path(rex_dir)
     fit_dir = rex_dir / "Fits"
     fit_name = str(rex_dir.name)
 
@@ -97,7 +97,7 @@ def excluded_systematics_delta_mu_summary(rex_dir: PosixPath, poi: str = "SigXse
     return nominal_result, names, labels, vals
 
 
-def region_delta_mu_summary(umbrella: PosixPath, fit_name: str = "tW"):
+def region_delta_mu_summary(umbrella: Path, fit_name: str = "tW"):
     """Generate a summary of delta mu's for different region setups vs complete fit."""
     nominal = umbrella / f"main.force-data.d/{fit_name}/Fits/{fit_name}.txt"
     only_1j1b = umbrella / f"main_1j1b.force-data.d/{fit_name}/Fits/{fit_name}.txt"
@@ -122,7 +122,7 @@ def region_delta_mu_summary(umbrella: PosixPath, fit_name: str = "tW"):
     return fit_n, labels, labels, vals
 
 
-def indiv_camp_delta_mu_summary(umbrella: PosixPath, fit_name: str = "tW"):
+def indiv_camp_delta_mu_summary(umbrella: Path, fit_name: str = "tW"):
     """Generate a summary of delta mu's for individual campaign vs complete fit."""
     nominal = umbrella / f"main.force-data.d/{fit_name}/Fits/{fit_name}.txt"
     only_a = umbrella / f"main_only1516.force-data.d/{fit_name}/Fits/{fit_name}.txt"
@@ -140,7 +140,7 @@ def indiv_camp_delta_mu_summary(umbrella: PosixPath, fit_name: str = "tW"):
     return fit_n, labels, labels, vals
 
 
-def b0_by_year_fig_and_ax(umbrella: PosixPath, fit_name: str = "tW"):
+def b0_by_year_fig_and_ax(umbrella: Path, fit_name: str = "tW"):
     """Generate a summary of b0 pulls."""
     nominal = umbrella / f"main.force-data.d/{fit_name}/Fits/{fit_name}.txt"
     only_a = umbrella / f"main_only1516.force-data.d/{fit_name}/Fits/{fit_name}.txt"
@@ -240,7 +240,7 @@ def ps_impact_h704_vs_h713(herwig704, herwig713, sort=False):
 
 
 @restore_cwd
-def ps_impact_r1j1b(h7v_dir: PosixPath, poi: str):
+def ps_impact_r1j1b(h7v_dir: Path, poi: str):
     """1j1b comparisons."""
     os.chdir(h7v_dir)
     if "704" in str(h7v_dir):
@@ -285,7 +285,7 @@ def ps_impact_r1j1b(h7v_dir: PosixPath, poi: str):
 
 
 @restore_cwd
-def ps_impact_r2j1b(h7v_dir: PosixPath, poi: str):
+def ps_impact_r2j1b(h7v_dir: Path, poi: str):
     """2j1b comparisons."""
     os.chdir(h7v_dir)
     if "704" in str(h7v_dir):
@@ -329,7 +329,7 @@ def ps_impact_r2j1b(h7v_dir: PosixPath, poi: str):
 
 
 @restore_cwd
-def ps_impact_r2j2b(h7v_dir: PosixPath, poi: str):
+def ps_impact_r2j2b(h7v_dir: Path, poi: str):
     """2j2b comparisons."""
     os.chdir(h7v_dir)
     if "704" in str(h7v_dir):
@@ -373,7 +373,7 @@ def ps_impact_r2j2b(h7v_dir: PosixPath, poi: str):
 
 
 @restore_cwd
-def ps_impact_norm_mig(h7v_dir: PosixPath, poi: str):
+def ps_impact_norm_mig(h7v_dir: Path, poi: str):
     """Norm/migration comparisons."""
     os.chdir(h7v_dir)
     if "704" in str(h7v_dir):
