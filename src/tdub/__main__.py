@@ -694,6 +694,14 @@ def rex_grimpacts(rex_dir, tablefmt, include_total):
     print(grouped_impacts_table(rex_dir, tablefmt=tablefmt, include_total=include_total))
 
 
+@rex.command("index")
+@click.argument("rex-dir", type=click.Path(exists=True))
+def rex_index(rex_dir):
+    """Generate index.html file for the workspace."""
+    from tdub.internal.rexindex import index_dot_html
+    index_dot_html(rex_dir)
+
+
 @misc.command("soverb")
 @click.argument("datadir", type=click.Path(exists=True))
 @click.argument("selections", type=click.Path(exists=True))
