@@ -76,6 +76,8 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
     with doc:
         h1("Latest tW Fit")
         p("Generated {}".format(datetime.now().strftime("%b-%d-%Y %H:%M:%S")))
+        with p():
+            a("INT note link", href="https://cds.cern.ch/record/2667560")
         h2("Main Plots")
         p("Click images for PDF versions.")
         with div(cls="row"):
