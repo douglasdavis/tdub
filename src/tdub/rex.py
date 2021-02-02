@@ -7,6 +7,7 @@ import math
 import multiprocessing
 import os
 import random
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -105,6 +106,12 @@ class GroupedImpact:
     avg: float = 0.0
     sig_lo: float = 0.0
     sig_hi: float = 0.0
+
+    def __post_init__(self) -> None:
+        """Clean up after init."""
+        if self.name == "Gammas":
+            self.name = "Statistics"
+        self.name = self.name.replace("_", " ")
 
     @property
     def org_entry(self) -> str:
@@ -1531,7 +1538,10 @@ def grouped_impacts(
 
 
 def grouped_impacts_table(
-    rex_dir: Union[str, Path], tablefmt: str = "orgtbl", **kwargs
+    rex_dir: Union[str, Path],
+    tablefmt: str = "orgtbl",
+    descending: bool = False,
+    **kwargs,
 ) -> str:
     """Construct a table of grouped impacts.
 
@@ -1543,6 +1553,8 @@ def grouped_impacts_table(
         Path of the TRExFitter result directory
     tablefmt : str
         Format passed to tabulate.
+    descending: bool
+        Sort by descending order
     **kwargs : dict
         Passed to :py:func:`grouped_impacts`
 
@@ -1552,10 +1564,15 @@ def grouped_impacts_table(
         Table representation.
 
     """
+    grimps = grouped_impacts(rex_dir, **kwargs)
+    if descending:
+        grimps = sorted(grimps, key=lambda g: -g.avg)
+    else:
+        grimps = sorted(grimps, key=lambda g: str.lower(g.name))
     return tabulate.tabulate(
         [
             [entry.name, f"{100 * round(entry.avg, 3):2.3f}"]
-            for entry in grouped_impacts(rex_dir, **kwargs)
+            for entry in grimps
         ],
         headers=[r"Name", r"Impact (%)"],
         tablefmt=tablefmt,
