@@ -7,7 +7,6 @@ import math
 import multiprocessing
 import os
 import random
-import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
