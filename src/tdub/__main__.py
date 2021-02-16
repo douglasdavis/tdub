@@ -584,7 +584,7 @@ def itables(summary_file):
 @click.argument("datadir", type=click.Path(exists=True))
 @click.option("-o", "--outdir", type=click.Path(), help="Directory to save output.")
 def train_shapes(datadir, outdir):
-    """Generate shape comparion plots."""
+    """Generate shape comparison plots."""
     if outdir is None:
         outdir = PosixPath.cwd()
     else:
