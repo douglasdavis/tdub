@@ -99,9 +99,8 @@ intersphinx_mapping = {
     "uproot": ("https://uproot.readthedocs.io/en/latest", None),
     "python": ("https://docs.python.org/3", None),
     "numpy": ("https://docs.scipy.org/doc/numpy", None),
-    "dask": ("https://docs.dask.org/en/latest", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "sklearn": ("https://scikit-learn.org/stable", None),
     "lightgbm": ("https://lightgbm.readthedocs.io/en/latest", None),
-    "matplotlib": ("https://matplotlib.org", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
 }
