@@ -633,6 +633,7 @@ def stack_canvas(
         uncertainty=uncertainty,
         total_mc=total_mc,
         logy=logy,
+        combine_minor=False,
     )
 
     bw = datagram.bin_width

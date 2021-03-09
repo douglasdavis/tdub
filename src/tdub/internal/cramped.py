@@ -33,6 +33,7 @@ if __name__ == "__main__":
         uncertainty=uncertainty,
         total_mc=total_mc,
         mpl_triplet=(fig, axs[0][0], axs[1][0]),
+        combine_minor=True,
     )
 
     counts, errors, datagram, total_mc, uncertainty = region_plot_raw_material(
@@ -49,6 +50,7 @@ if __name__ == "__main__":
         uncertainty=uncertainty,
         total_mc=total_mc,
         mpl_triplet=(fig, axs[0][1], axs[1][1]),
+        combine_minor=True,
     )
 
     counts, errors, datagram, total_mc, uncertainty = region_plot_raw_material(
@@ -65,9 +67,10 @@ if __name__ == "__main__":
         uncertainty=uncertainty,
         total_mc=total_mc,
         mpl_triplet=(fig, axs[0][2], axs[1][2]),
+        combine_minor=True,
     )
 
-    legend_last_to_first(axs[0][2], ncol=2, loc="upper right")
+    legend_last_to_first(axs[0][2], ncol=1, loc="upper right")
     draw_atlas_label(
         axs[0][0],
         follow_shift=0.25,
@@ -89,6 +92,5 @@ if __name__ == "__main__":
     axs[0][2].set_yticklabels([])
     axs[1][1].set_yticklabels([])
     axs[1][2].set_yticklabels([])
-
 
     fig.savefig("cramped.pdf")
