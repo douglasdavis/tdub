@@ -1,7 +1,7 @@
 """Art creation utilities."""
 
 # stdlib
-from typing import Dict, Tuple, Optional, List, Union
+from typing import Any, Dict, Tuple, Optional, List, Union
 import logging
 
 # external
@@ -195,6 +195,7 @@ def canvas_from_counts(
     uncertainty: Optional[tdub.root.TGraphAsymmErrors] = None,
     total_mc: Optional[tdub.root.TH1] = None,
     logy: bool = False,
+    mpl_triplet: Optional[Any] = None,
     **subplots_kw,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
     """Create a plot canvas given a dictionary of counts and bin edges.
@@ -221,6 +222,10 @@ def canvas_from_counts(
         Uncertainty (TGraphAsym).
     total_mc : tdub.root.TH1
         Total MC histogram (TH1D).
+    logy : bool
+        Use log scale on y-axis.
+    mpl_triplet : (plt.Figure, plt.Axes, plt.Axes), optional
+        Existing matplotlib triplet.
     subplots_kw : dict
         remaining keyword arguments passed to :py:func:`matplotlib.pyplot.subplots`.
 
@@ -251,13 +256,18 @@ def canvas_from_counts(
         counts["Data"] / (mc_counts ** 2)
         + np.power(counts["Data"] * mc_errs / (mc_counts ** 2), 2)
     )
-    fig, (ax, axr) = plt.subplots(
-        2,
-        1,
-        sharex=True,
-        gridspec_kw=dict(height_ratios=[3.25, 1], hspace=0.025),
-        **subplots_kw,
-    )
+
+    if mpl_triplet is None:
+        fig, (ax, axr) = plt.subplots(
+            2,
+            1,
+            sharex=True,
+            gridspec_kw=dict(height_ratios=[3.25, 1], hspace=0.025),
+            **subplots_kw,
+        )
+    else:
+        fig, ax, axr = mpl_triplet
+
     ax.errorbar(
         centers, counts["Data"], yerr=errors["Data"], label="Data", fmt="ko", zorder=999
     )
@@ -290,6 +300,7 @@ def canvas_from_counts(
         draw_uncertainty_bands(uncertainty, total_mc, ax, axr)
 
     axr.set_xlim([bin_edges[0], bin_edges[-1]])
+    ax.set_xlim([bin_edges[0], bin_edges[-1]])
 
     max_data = np.amax(counts["Data"])
     if logy:

@@ -523,6 +523,45 @@ def meta_axis_label(
     return xl, yl
 
 
+def region_plot_raw_material(
+    rex_dir: Union[str, Path],
+    region: str,
+    stage: str = "pre",
+    fit_name: str = "tW",
+) -> Any:
+    """Raw materials for a plot in a region.
+
+    Parameters
+    ----------
+    rex_dir : str or pathlib.Path
+        Path of the TRExFitter result directory.
+    region : str
+        Region to get error band for.
+    stage : str
+        Drawing fit stage, (`"pre"` or `"post"`).
+    fit_name : str
+        Name of the Fit
+
+    Returns
+    -------
+    Stuff
+
+    """
+    samples = ("tW", "ttbar", "Zjets", "Diboson", "MCNP")
+    if stage == "pre":
+        histograms = prefit_histograms(rex_dir, samples, region, fit_name=fit_name)
+        total_mc, uncertainty = prefit_total_and_uncertainty(rex_dir, region)
+    elif stage == "post":
+        histograms = postfit_histograms(rex_dir, samples, region)
+        total_mc, uncertainty = postfit_total_and_uncertainty(rex_dir, region)
+    else:
+        raise ValueError("stage must be 'pre' or 'post'")
+    histograms["Data"] = data_histogram(rex_dir, region)
+    counts = {k: v.counts for k, v in histograms.items()}
+    errors = {k: v.errors for k, v in histograms.items()}
+    return counts, errors, histograms["Data"], total_mc, uncertainty
+
+
 def stack_canvas(
     rex_dir: Union[str, Path],
     region: str,
@@ -554,7 +593,7 @@ def stack_canvas(
         List of region patterns to use a log scale on y-axis.
     internal : bool
         Flag for internal label.
-    thesis: bool
+    thesis : bool
         Flag for thesis label.
 
     Returns
@@ -569,19 +608,16 @@ def stack_canvas(
     """
     if internal and thesis:
         raise ValueError("internal and thesis cannot be true together")
-    samples = ("tW", "ttbar", "Zjets", "Diboson", "MCNP")
-    if stage == "pre":
-        histograms = prefit_histograms(rex_dir, samples, region, fit_name=fit_name)
-        total_mc, uncertainty = prefit_total_and_uncertainty(rex_dir, region)
-    elif stage == "post":
-        histograms = postfit_histograms(rex_dir, samples, region)
-        total_mc, uncertainty = postfit_total_and_uncertainty(rex_dir, region)
-    else:
-        raise ValueError("stage must be 'pre' or 'post'")
-    histograms["Data"] = data_histogram(rex_dir, region)
-    bin_edges = histograms["Data"].edges
-    counts = {k: v.counts for k, v in histograms.items()}
-    errors = {k: v.errors for k, v in histograms.items()}
+
+    (
+        counts,
+        errors,
+        datagram,
+        total_mc,
+        uncertainty,
+    ) = region_plot_raw_material(rex_dir, region, stage=stage, fit_name=fit_name)
+
+    bin_edges = datagram.edges
 
     if log_patterns is None:
         log_patterns = tdub.config.PLOTTING_LOGY
@@ -599,7 +635,7 @@ def stack_canvas(
         logy=logy,
     )
 
-    bw = histograms["Data"].bin_width
+    bw = datagram.bin_width
     xlab, ylab = meta_axis_label(region, bw, meta_table)
 
     # stack axes cosmetics
@@ -1569,10 +1605,7 @@ def grouped_impacts_table(
     else:
         grimps = sorted(grimps, key=lambda g: str.lower(g.name))
     return tabulate.tabulate(
-        [
-            [entry.name, f"{100 * round(entry.avg, 3):2.3f}"]
-            for entry in grimps
-        ],
+        [[entry.name, f"{100 * round(entry.avg, 3):2.3f}"] for entry in grimps],
         headers=[r"Name", r"Impact (%)"],
         tablefmt=tablefmt,
     )
