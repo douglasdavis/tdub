@@ -33,6 +33,11 @@ pre {
 hr {
   margin-top: 2rem;
 }
+.marginauto {
+  margin-left: auto;
+  margin-right: auto;
+  width: 60%;
+}
 </style>
 """
 
@@ -59,6 +64,7 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
         subprocess.Popen(
             f"tdub rex stacks --no-chisq --no-internal --png {rex_dir}", shell=True
         ).wait()
+        subprocess.Popen(f"python3 -m tdub.internal.cramped {rex_dir}", shell=True).wait()
 
     img_pairs = []
     for entry in mpl_dir.glob("*.png"):
@@ -66,9 +72,11 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
             pair = (mpl_dir / f"{entry.stem}.pdf", mpl_dir / f"{entry.stem}.png")
             img_pairs.append(pair)
 
+    allrs_png_pair = ("matplotlib/allregions_pre.png", "matplotlib/allregions_post.png")
     r1j1b_png_pair = ("matplotlib/reg1j1b_preFit.png", "matplotlib/reg1j1b_postFit.png")
     r2j1b_png_pair = ("matplotlib/reg2j1b_preFit.png", "matplotlib/reg2j1b_postFit.png")
     r2j2b_png_pair = ("matplotlib/reg2j2b_preFit.png", "matplotlib/reg2j2b_postFit.png")
+    allrs_pdf_pair = ("matplotlib/allregions_pre.pdf", "matplotlib/allregions_post.pdf")
     r1j1b_pdf_pair = ("matplotlib/reg1j1b_preFit.pdf", "matplotlib/reg1j1b_postFit.pdf")
     r2j1b_pdf_pair = ("matplotlib/reg2j1b_preFit.pdf", "matplotlib/reg2j1b_postFit.pdf")
     r2j2b_pdf_pair = ("matplotlib/reg2j2b_preFit.pdf", "matplotlib/reg2j2b_postFit.pdf")
@@ -80,6 +88,7 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
             a("INT note link", href="https://cds.cern.ch/record/2667560")
         h2("Main Plots")
         p("Click images for PDF versions.")
+        p("Prefit individuals")
         with div(cls="row"):
             with a(href=str(r1j1b_pdf_pair[0])):
                 img(src=str(r1j1b_png_pair[0]), width=r"250px")
@@ -87,6 +96,11 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
                 img(src=str(r2j1b_png_pair[0]), width=r"250px")
             with a(href=str(r2j2b_pdf_pair[0])):
                 img(src=str(r2j2b_png_pair[0]), width=r"250px")
+        p("Prefit combined")
+        with div(cls="row"):
+            with a(href=str(allrs_png_pair[0])):
+                   img(src=str(allrs_png_pair[0]), cls="marginauto")
+        p("Postfit individuals")
         with div(cls="row"):
             with a(href=str(r1j1b_pdf_pair[1])):
                 img(src=str(r1j1b_png_pair[1]), width=r"250px")
@@ -94,6 +108,11 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
                 img(src=str(r2j1b_png_pair[1]), width=r"250px")
             with a(href=str(r2j2b_pdf_pair[1])):
                 img(src=str(r2j2b_png_pair[1]), width=r"250px")
+        p("Postfit combined")
+        with div(cls="row"):
+            with a(href=str(allrs_png_pair[1])):
+                   img(src=str(allrs_png_pair[1]), cls="marginauto")
+
 
         h2("Grouped Uncertainty Impacts (alphabetical then descending)")
         with div():
