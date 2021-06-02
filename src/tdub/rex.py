@@ -572,6 +572,7 @@ def stack_canvas(
     log_patterns: Optional[List[Any]] = None,
     internal: bool = True,
     thesis: bool = False,
+    combine_minor: bool = True,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
     r"""Create a pre- or post-fit plot canvas for a TRExFitter region.
 
@@ -595,6 +596,9 @@ def stack_canvas(
         Flag for internal label.
     thesis : bool
         Flag for thesis label.
+    combine_minor : bool
+        Combine minor backgrounds into a single contribution (Zjets,
+        Diboson, and MCNP will be labeled "Minor Backgrounds").
 
     Returns
     -------
@@ -633,7 +637,7 @@ def stack_canvas(
         uncertainty=uncertainty,
         total_mc=total_mc,
         logy=logy,
-        combine_minor=False,
+        combine_minor=combine_minor,
     )
 
     bw = datagram.bin_width
@@ -647,7 +651,8 @@ def stack_canvas(
         follow="Internal" if internal else "",
         thesis=thesis,
     )
-    legend_last_to_first(ax0, ncol=2, loc="upper right")
+    ncol = 1 if combine_minor else 2
+    legend_last_to_first(ax0, ncol=ncol, loc="upper right")
 
     # ratio axes cosmetics
     ax1.set_xlabel(xlab, horizontalalignment="right", x=1.0)

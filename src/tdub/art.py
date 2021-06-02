@@ -196,7 +196,7 @@ def canvas_from_counts(
     total_mc: Optional[tdub.root.TH1] = None,
     logy: bool = False,
     mpl_triplet: Optional[Any] = None,
-    combine_minor: bool = False,
+    combine_minor: bool = True,
     **subplots_kw,
 ) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
     """Create a plot canvas given a dictionary of counts and bin edges.
@@ -279,7 +279,7 @@ def canvas_from_counts(
     # colors = ["#9467bd", "#2ca02c", "#ff7f0e", "#d62728", "#1f77b4"]
     if combine_minor:
         colors = ["#ff7f0e", "#9d0000", "#1f77b4"]
-        labels = ["Minor Bkg", "$t\\bar{t}$", "$tW$"]
+        labels = ["Minor Backgrounds", "$t\\bar{t}$", "$tW$"]
         weights = [
             np.sum([counts[b] for b in ["Zjets", "Diboson", "MCNP"]], axis=0),
             counts["ttbar"],
