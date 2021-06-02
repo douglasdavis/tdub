@@ -528,7 +528,7 @@ def region_plot_raw_material(
     region: str,
     stage: str = "pre",
     fit_name: str = "tW",
-) -> Any:
+) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], TH1, TH1, TGraphAsymmErrors]:
     """Raw materials for a plot in a region.
 
     Parameters
@@ -544,7 +544,16 @@ def region_plot_raw_material(
 
     Returns
     -------
-    Stuff
+    dict(str, np.ndarray)
+        Counts for each category
+    dict(str, np.ndarray)
+        Uncertainties for each category
+    tdub.root.TH1
+        Data histogram
+    tdub.root.TH1
+        Total MC histogram
+    tdub.root.TGraphAsymmErrors
+        Total uncertainties
 
     """
     samples = ("tW", "ttbar", "Zjets", "Diboson", "MCNP")

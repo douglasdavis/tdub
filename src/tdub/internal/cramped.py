@@ -1,6 +1,10 @@
+"""Cramped plot."""
+
 import os
 import pathlib
 import sys
+
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 
@@ -10,6 +14,9 @@ from tdub.rex import region_plot_raw_material
 
 
 def cramped(rex_dir, stage="pre"):
+    """Generate a crampted plot."""
+    fig: plt.Figure
+    ax: Tuple[Tuple[plt.Axes, ...], ...]
     heights = [3.25, 1]
     fig, ax = plt.subplots(
         2,
@@ -99,11 +106,24 @@ def cramped(rex_dir, stage="pre"):
 
     ax[0][0].set_ylabel("Events", ha="right", y=1.0)
     ax[1][2].set_xlabel("BDT Response", ha="right", x=1.0)
+    ax[1][0].set_ylabel("Data/MC")
+
+    # ax[1][0].set_xticks([0.4, 0.5, 0.6, 0.7])
+    ax[1][0].set_xticks([0.3, 0.4, 0.5, 0.6, 0.7])
+    ax[1][1].set_xticks([0.2, 0.3, 0.4, 0.5, 0.6])
+    # ax[1][1].set_xticks([0.25, 0.35, 0.45, 0.55, 0.65])
+    ax[1][2].set_xticks([0.5, 0.6, 0.7])
+    # ax[1][2].set_xticks([0.5, 0.55, 0.6, 0.65, 0.7])
+    # ax[1][2].set_xticks([0.5, 0.55, 0.6, 0.65, 0.7, 0.75])
 
     ax[0][1].text(0.05, 0.925, "2j1b", transform=ax[0][1].transAxes, fontsize=14)
     ax[0][2].text(0.05, 0.925, "2j2b", transform=ax[0][2].transAxes, fontsize=14)
 
-    ax[1][0].set_ylabel("Data/MC")
+    ax[1][0].set_xlim([0.3, ax[1][0].get_xlim()[1]])
+    ax[0][0].set_xlim([0.3, ax[1][0].get_xlim()[1]])
+
+    ax[1][1].set_xlim([0.15, ax[1][1].get_xlim()[1]])
+    ax[0][1].set_xlim([0.15, ax[1][1].get_xlim()[1]])
 
     fig.subplots_adjust(left=0.075)
 
