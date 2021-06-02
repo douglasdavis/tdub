@@ -1,4 +1,4 @@
-from tdub.art import canvas_from_counts, legend_last_to_first, draw_atlas_label
+from tdub.art import canvas_from_counts, legend_last_to_first, draw_atlas_label, adjust_figure
 from tdub.rex import meta_text
 from tdub.rex import region_plot_raw_material
 
@@ -73,7 +73,7 @@ def cramped():
     legend_last_to_first(ax[0][2], ncol=1, loc="upper right")
     draw_atlas_label(
         ax[0][0],
-        follow_shift=0.25,
+        follow_shift=0.280,
         extra_lines=[meta_text("reg1j1b", "pre")],
         follow="Internal",
     )
@@ -93,8 +93,14 @@ def cramped():
     ax[1][1].set_yticklabels([])
     ax[1][2].set_yticklabels([])
 
-    ax[0][0].set_ylabel("Events", ha="right", x=1.0)
+    ax[0][0].set_ylabel("Events", ha="right", y=1.0)
     ax[1][2].set_xlabel("BDT Response", ha="right", x=1.0)
+
+
+    ax[0][1].text(0.05, 0.925, "2j1b", transform=ax[0][1].transAxes, fontsize=14)
+    ax[0][2].text(0.05, 0.925, "2j2b", transform=ax[0][2].transAxes, fontsize=14)
+
+    fig.subplots_adjust(left=0.075)
 
     fig.savefig("cramped.pdf")
 
