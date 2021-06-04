@@ -98,7 +98,7 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
                 img(src=str(r2j2b_png_pair[0]), width=r"250px")
         p("Prefit combined")
         with div(cls="row"):
-            with a(href=str(allrs_png_pair[0])):
+            with a(href=str(allrs_pdf_pair[0])):
                    img(src=str(allrs_png_pair[0]), cls="marginauto")
         p("Postfit individuals")
         with div(cls="row"):
@@ -110,7 +110,7 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
                 img(src=str(r2j2b_png_pair[1]), width=r"250px")
         p("Postfit combined")
         with div(cls="row"):
-            with a(href=str(allrs_png_pair[1])):
+            with a(href=str(allrs_pdf_pair[1])):
                    img(src=str(allrs_png_pair[1]), cls="marginauto")
 
 
