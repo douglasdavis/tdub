@@ -6,15 +6,38 @@ import sys
 
 from typing import Tuple
 
+import click
 import matplotlib.pyplot as plt
 
 from tdub.art import canvas_from_counts, legend_last_to_first, draw_atlas_label
 from tdub.rex import meta_text
 from tdub.rex import region_plot_raw_material
 
+helps = ["-h", "--help"]
 
-def cramped(rex_dir, stage="pre"):
+
+@click.group(context_settings=dict(max_content_width=82, help_option_names=helps))
+def cli():
+    """Top Level CLI function."""
+    pass
+
+
+@cli.command("bdt")
+def bdt(train_dir):
+    pass
+
+
+@cli.command("stack")
+@click.argument("rex-dir", type=click.Path(resolve_path=True))
+@click.option("-s", "--stage", type=str, default="both")
+def stack(rex_dir, stage="both"):
     """Generate a crampted plot."""
+
+    if stage == "both":
+        stack(rex_dir, "pre")
+        stack(rex_dir, "post")
+        return 0
+
     fig: plt.Figure
     ax: Tuple[Tuple[plt.Axes, ...], ...]
     heights = [3.25, 1]
@@ -135,6 +158,4 @@ def cramped(rex_dir, stage="pre"):
 
 
 if __name__ == "__main__":
-    rd = pathlib.Path(sys.argv[1])
-    cramped(rd, stage="pre")
-    cramped(rd, stage="post")
+    cli()

@@ -131,6 +131,7 @@ def train_prep(
 @click.option("-m", "--min-child-samples", type=int, default=500, help="min_child_samples model parameter", show_default=True)
 @click.option("-d", "--max-depth", type=int, default=5, help="max_depth model parameter", show_default=True)
 @click.option("-r", "--reg-lambda", type=float, default=0, help="lambda (L2) regularization", show_default=True)
+@click.option("-a", "--auto-region", is_flag=True, help="Use parameters associated with region", show_default=True)
 def train_single(
     datadir,
     outdir,
@@ -144,6 +145,7 @@ def train_single(
     min_child_samples,
     max_depth,
     reg_lambda,
+    auto_region,
 ):
     """Execute single training round."""
     if pre_exec is not None:
@@ -160,6 +162,11 @@ def train_single(
     df.selection_used = (
         datadir / "selection.txt"
     ).read_text().strip()
+    extra_sum = {
+        "region": PosixPath(datadir / "region.txt").read_text().strip(),
+        "nlo_method": PosixPath(datadir / "nlo_method.txt").read_text().strip(),
+    }
+
     train_axes = dict(
         learning_rate=learning_rate,
         num_leaves=num_leaves,
@@ -167,10 +174,19 @@ def train_single(
         max_depth=max_depth,
         reg_lambda=reg_lambda,
     )
-    extra_sum = {
-        "region": PosixPath(datadir / "region.txt").read_text().strip(),
-        "nlo_method": PosixPath(datadir / "nlo_method.txt").read_text().strip(),
-    }
+
+    if auto_region:
+        from tdub.ml_train import default_bdt_parameters
+        train_axes = default_bdt_parameters(extra_sum["region"])
+    else:
+        train_axes = dict(
+            learning_rate=learning_rate,
+            num_leaves=num_leaves,
+            min_child_samples=min_child_samples,
+            max_depth=max_depth,
+            reg_lambda=reg_lambda,
+        )
+
     single_training(
         df,
         y,

@@ -26,7 +26,14 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 
 # tdub
 from tdub.art import setup_tdub_style, draw_atlas_label
-from tdub.data import Region, features_for, quick_files, selection_for, selection_as_numexpr
+from tdub.data import (
+    Region,
+    as_region,
+    features_for,
+    quick_files,
+    selection_for,
+    selection_as_numexpr,
+)
 from tdub.frames import iterative_selection, drop_cols
 from tdub.hist import bin_centers
 from tdub.math import ks_twosample_binned
@@ -1654,3 +1661,32 @@ def var_and_binning_for_region(
                 (entry["var"], region, (entry["nbins"], entry["xmin"], entry["xmax"]))
             )
     return results
+
+
+def default_bdt_parameters(region: Union[str, Region]) -> Region:
+    r = as_region(region)
+    if r == Region.r1j1b:
+        return dict(
+            learning_rate=0.2,
+            num_leaves=20,
+            min_child_samples=50,
+            max_depth=4,
+            reg_lambda=0,
+        )
+    if r == Region.r2j1b:
+        return dict(
+            learning_rate=0.1,
+            num_leaves=20,
+            min_child_samples=120,
+            max_depth=7,
+            reg_lambda=0,
+        )
+    if r == Region.r2j2b:
+        return dict(
+            learning_rate=0.2,
+            num_leaves=20,
+            min_child_samples=50,
+            max_depth=4,
+            reg_lambda=0,
+        )
+    raise ValueError(f"Region {region} unknown")
