@@ -223,6 +223,16 @@ class ResponseHistograms:
         """float: Two sample binned KS p-value for background."""
         return round(float(self.ks_bkg[1]), 5)
 
+    def as_dict(self) -> Dict[str, np.ndarray]:
+        """dict: The histogram information as a dictionary."""
+        return {
+            "train_sig": list(self.train_sig_h),
+            "train_bkg": list(self.train_bkg_h),
+            "test_sig": list(self.test_sig_h),
+            "test_bkg": list(self.test_bkg_h),
+            "bins": list(self.bins),
+        }
+
     def draw(
         self,
         ax: Optional[plt.Axes] = None,
@@ -1018,6 +1028,8 @@ def single_training(
     summary["best_iteration"] = -1
     summary["importances_gain"] = importances_gain
     summary["importances_split"] = importances_split
+    summary["proba_histograms"] = proba_histograms.as_dict()
+    summary["pred_histograms"] = pred_histograms.as_dict()
 
     if early_stopping_rounds is not None:
         if hasattr(model, "n_iter_"):

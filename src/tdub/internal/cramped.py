@@ -1,5 +1,6 @@
 """Cramped plot."""
 
+import json
 import os
 import pathlib
 import sys
@@ -8,6 +9,7 @@ from typing import Tuple
 
 import click
 import matplotlib.pyplot as plt
+import numpy as np
 
 from tdub.art import canvas_from_counts, legend_last_to_first, draw_atlas_label
 from tdub.rex import meta_text
@@ -23,8 +25,55 @@ def cli():
 
 
 @cli.command("bdt")
-def bdt(train_dir):
-    pass
+@click.argument("td1j1b", type=click.Path(resolve_path=True))
+@click.argument("td2j1b", type=click.Path(resolve_path=True))
+@click.argument("td2j2b", type=click.Path(resolve_path=True))
+@click.option("-s", "--style", type=str, default="proba")
+def bdt(td1j1b, td2j1b, td2j2b, style):
+    """Generate cramped BDT distributions plot."""
+    fig: plt.Figure
+    ax: Tuple[plt.Axes, ...]
+    fig, ax = plt.subplots(1, 3, figsize=(11.5, 5.5))
+
+    sf1j1b = pathlib.Path(td1j1b) / "summary.json"
+    sf2j1b = pathlib.Path(td2j1b) / "summary.json"
+    sf2j2b = pathlib.Path(td2j2b) / "summary.json"
+
+    with sf1j1b.open("r") as f:
+        s1j1b = json.load(f)
+    with sf2j1b.open("r") as f:
+        s2j1b = json.load(f)
+    with sf2j2b.open("r") as f:
+        s2j2b = json.load(f)
+
+    probs1j1b = {k: np.array(v) for k, v in s1j1b["proba_histograms"].items()}
+    preds1j1b = {k: np.array(v) for k, v in s1j1b["pred_histograms"].items()}
+    probs2j1b = {k: np.array(v) for k, v in s2j1b["proba_histograms"].items()}
+    preds2j1b = {k: np.array(v) for k, v in s2j1b["pred_histograms"].items()}
+    probs2j2b = {k: np.array(v) for k, v in s2j2b["proba_histograms"].items()}
+    preds2j2b = {k: np.array(v) for k, v in s2j2b["pred_histograms"].items()}
+
+    d1j1b = probs1j1b if style == "proba" else preds1j1b
+    d2j1b = probs2j1b if style == "proba" else preds2j1b
+    d2j2b = probs2j2b if style == "proba" else preds2j2b
+
+    train_sig1j1b = d1j1b["train_sig"]
+    train_bkg1j1b = d1j1b["train_bkg"]
+    test_sig1j1b = d1j1b["test_sig"]
+    test_bkg1j1b = d1j1b["test_pkg"]
+    bins1j1b = d1j1b["bins"]
+
+    train_sig2j1b = d2j1b["train_sig"]
+    train_bkg2j1b = d2j1b["train_bkg"]
+    test_sig2j1b = d2j1b["test_sig"]
+    test_bkg2j1b = d2j1b["test_pkg"]
+    bins2j1b = d2j1b["bins"]
+
+    train_sig2j2b = d2j2b["train_sig"]
+    train_bkg2j2b = d2j2b["train_bkg"]
+    test_sig2j2b = d2j2b["test_sig"]
+    test_bkg2j2b = d2j2b["test_pkg"]
+    bins2j2b = d2j2b["bins"]
 
 
 @cli.command("stack")
