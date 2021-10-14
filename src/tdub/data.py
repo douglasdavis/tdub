@@ -103,7 +103,7 @@ class Region(Enum):
         return self.name[1:]
 
 
-def as_region(region: Union[str, Region]) -> Region:
+def as_region(region: str | Region) -> Region:
     """Convert input to :py:obj:`~Region`.
 
     Meant to be similar to :py:func:`numpy.asarray` function.
@@ -189,7 +189,7 @@ class SampleInfo:
             self.campaign = "Data"
             self.tree = "nominal"
         else:
-            m: Optional[re.Match] = SampleInfo._parse.match(input_file)
+            m: re.Match | None = SampleInfo._parse.match(input_file)
             if not m:
                 raise ValueError(f"{input_file} cannot be parsed by SampleInfo regex")
             self.phy_process = m.group("phy_process")
@@ -201,7 +201,7 @@ class SampleInfo:
             self.tree = m.group("tree")
 
 
-def avoids_for(region: Union[str, Region]) -> List[str]:
+def avoids_for(region: str | Region) -> list[str]:
     """Get the features to avoid for the given region.
 
     See the :py:mod:`tdub.config` module for definition of the
@@ -241,7 +241,7 @@ def branches_from(
     source: DataSource,
     tree: str = "WtLoop_nominal",
     ignore_weights: bool = False,
-) -> List[str]:
+) -> list[str]:
     """Get a list of branches from a data source.
 
     If the `source` is a list of files, the first file is the only
@@ -294,7 +294,7 @@ def branches_from(
     return list(sorted(branches, key=str.lower))
 
 
-def categorize_branches(source: List[str]) -> Dict[str, List[str]]:
+def categorize_branches(source: list[str]) -> dict[str, list[str]]:
     """Categorize branches into a separated lists.
 
     The categories:
@@ -366,7 +366,7 @@ def categorize_branches(source: List[str]) -> Dict[str, List[str]]:
     }
 
 
-def features_for(region: Union[str, Region]) -> List[str]:
+def features_for(region: str | Region) -> list[str]:
     """Get the feature list for a region.
 
     See the :py:mod:`tdub.config` module for the definitions of the
@@ -419,10 +419,10 @@ def features_for(region: Union[str, Region]) -> List[str]:
 
 
 def quick_files(
-    datapath: Union[str, os.PathLike],
-    campaign: Optional[str] = None,
+    datapath: str | os.PathLike,
+    campaign: str | None = None,
     tree: str = "nominal",
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """Get a dictionary connecting sample processes to file lists.
 
     The lists of files are sorted alphabetically. These types of
@@ -581,7 +581,7 @@ def selection_as_root(selection: str) -> str:
     return formulate.from_auto(selection).to_root()
 
 
-def selection_branches(selection: str) -> Set[str]:
+def selection_branches(selection: str) -> set[str]:
     """Construct the minimal set of branches required for a selection.
 
     Parameters
@@ -608,7 +608,7 @@ def selection_branches(selection: str) -> Set[str]:
     return formulate.from_auto(selection).variables
 
 
-def selection_for(region: Union[str, Region], additional: Optional[str] = None) -> str:
+def selection_for(region: str | Region, additional: str | None = None) -> str:
     """Get the selection for a given region.
 
     We have three regions with a default selection (`1j1b`, `2j1b`,

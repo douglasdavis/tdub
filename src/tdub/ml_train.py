@@ -307,7 +307,9 @@ class ResponseHistograms:
         handles, labels = ax.get_legend_handles_labels()
         handles = [handles[0], handles[2], handles[1], handles[3]]
         labels = [labels[0], labels[2], labels[1], labels[3]]
-        ax.legend(handles, labels, loc="upper right", ncol=1, frameon=False, numpoints=1)
+        ax.legend(
+            handles, labels, loc="upper right", ncol=1, frameon=False, numpoints=1
+        )
         ax.set_ylabel("Arbitrary Units")
         draw_atlas_label(
             ax,
@@ -653,7 +655,9 @@ def sklearn_train_classifier(
     return clf.fit(X_train, y_train, sample_weight=w_train)
 
 
-def lgbm_gen_classifier(train_axes: Dict[str, Any] = None, **clf_params) -> BaseEstimator:
+def lgbm_gen_classifier(
+    train_axes: Dict[str, Any] = None, **clf_params
+) -> BaseEstimator:
     """Create a classifier using LightGBM.
 
     Parameters
@@ -743,7 +747,9 @@ def lgbm_train_classifier(
     )
 
 
-def xgb_gen_classifier(train_axes: Dict[str, Any] = None, **clf_params) -> BaseEstimator:
+def xgb_gen_classifier(
+    train_axes: Dict[str, Any] = None, **clf_params
+) -> BaseEstimator:
     """Create a classifier using XGBoost.
 
     Parameters
@@ -934,12 +940,20 @@ def single_training(
     elif use_xgboost:
         model = xgb_gen_classifier(train_axes=train_axes)
         xgb_train_classifier(
-            model, X_train, y_train, w_train, early_stopping_rounds=early_stopping_rounds
+            model,
+            X_train,
+            y_train,
+            w_train,
+            early_stopping_rounds=early_stopping_rounds,
         )
     elif use_lgbm:
         model = lgbm_gen_classifier(train_axes=train_axes)
         lgbm_train_classifier(
-            model, X_train, y_train, w_train, early_stopping_rounds=early_stopping_rounds
+            model,
+            X_train,
+            y_train,
+            w_train,
+            early_stopping_rounds=early_stopping_rounds,
         )
 
     # Save the model
@@ -965,7 +979,9 @@ def single_training(
 
         fig_imp, (ax_imp_gain, ax_imp_split) = plt.subplots(2, 1)
         lgbm.plot_importance(model, ax=ax_imp_gain, importance_type="gain", precision=2)
-        lgbm.plot_importance(model, ax=ax_imp_split, importance_type="split", precision=2)
+        lgbm.plot_importance(
+            model, ax=ax_imp_split, importance_type="split", precision=2
+        )
         ax_imp_gain.set_xlabel("Importance (gain)")
         ax_imp_split.set_xlabel("Importance (split)")
         ax_imp_gain.set_title("")
@@ -989,7 +1005,14 @@ def single_training(
     )
     if use_sklearn:
         pred_histograms = ResponseHistograms(
-            "decision_function", model, X_train, X_test, y_train, y_test, w_train, w_test
+            "decision_function",
+            model,
+            X_train,
+            X_test,
+            y_train,
+            y_test,
+            w_train,
+            w_test,
         )
     elif use_xgboost:
         pred_histograms = ResponseHistograms(

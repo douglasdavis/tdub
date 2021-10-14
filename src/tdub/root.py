@@ -92,4 +92,4 @@ class TH1:
     @property
     def bin_width(self) -> float:
         """float: Width of a bin."""
-        return (self._edges[1] - self._edges[0])
+        return self._edges[1] - self._edges[0]

@@ -84,7 +84,10 @@ def raw_dataframe(
     if isinstance(files, str):
         files = [files]
     result = pd.concat(
-        [uproot.open(f).get(tree).arrays(branches, library="pd", **kwargs) for f in files]
+        [
+            uproot.open(f).get(tree).arrays(branches, library="pd", **kwargs)
+            for f in files
+        ]
     )
     result.selection_used = None
     return result
@@ -466,7 +469,9 @@ def apply_weight_inverse(
     df.loc[:, cols] = df.loc[:, cols].divide(df.loc[:, weight_name], axis="index")
 
 
-def apply_weight_campaign(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
+def apply_weight_campaign(
+    df: pd.DataFrame, exclude: Optional[List[str]] = None
+) -> None:
     """Multiply nominal and systematic weights by the campaign weight.
 
     This is useful for samples that were produced without the campaign

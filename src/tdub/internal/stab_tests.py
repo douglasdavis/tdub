@@ -20,6 +20,7 @@ SUBSET_FIGSIZE = (4.0, 4.6)
 
 def restore_cwd(func):
     """Restore current working directory decorator."""
+
     @functools.wraps(func)
     def decorator(*args, **kwargs):
         cwd = os.getcwd()
@@ -30,7 +31,9 @@ def restore_cwd(func):
     return decorator
 
 
-def make_delta_mu_plot(ax: plt.Axes, nom_down, nom_up, xvals, xerlo, xerhi, ylabs) -> plt.Axes:
+def make_delta_mu_plot(
+    ax: plt.Axes, nom_down, nom_up, xvals, xerlo, xerhi, ylabs
+) -> plt.Axes:
     """Skeleton for making a delta mu plot."""
     yvals = np.arange(1, len(xvals) + 1)
     ax.fill_betweenx(
@@ -92,7 +95,9 @@ def excluded_systematics_delta_mu_summary(rex_dir: Path, poi: str = "SigXsecOver
         labels.append(res.label)
         vals.append(tr.delta_param(nominal_result, res))
 
-    vals = np.array(vals, dtype=[("c", np.float64), ("u", np.float64), ("d", np.float64)])
+    vals = np.array(
+        vals, dtype=[("c", np.float64), ("u", np.float64), ("d", np.float64)]
+    )
 
     return nominal_result, names, labels, vals
 
@@ -101,8 +106,12 @@ def region_delta_mu_summary(umbrella: Path, fit_name: str = "tW"):
     """Generate a summary of delta mu's for different region setups vs complete fit."""
     nominal = umbrella / f"main.force-data.d/{fit_name}/Fits/{fit_name}.txt"
     only_1j1b = umbrella / f"main_1j1b.force-data.d/{fit_name}/Fits/{fit_name}.txt"
-    only_1j1b2j1b = umbrella / f"main_1j1b2j1b.force-data.d/{fit_name}/Fits/{fit_name}.txt"
-    only_1j1b2j2b = umbrella / f"main_1j1b2j2b.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    only_1j1b2j1b = (
+        umbrella / f"main_1j1b2j1b.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    )
+    only_1j1b2j2b = (
+        umbrella / f"main_1j1b2j2b.force-data.d/{fit_name}/Fits/{fit_name}.txt"
+    )
     fit_n = tr.fit_parameter(nominal, name="SigXsecOverSM")
     fit_1j1b = tr.fit_parameter(only_1j1b, name="SigXsecOverSM")
     fit_1j1b2j1b = tr.fit_parameter(only_1j1b2j1b, name="SigXsecOverSM")
@@ -111,12 +120,7 @@ def region_delta_mu_summary(umbrella: Path, fit_name: str = "tW"):
     labels = ["1j1b only", "1j1b + 2j1b", "1j1b + 2j2b"]
     deltas = [tr.delta_param(fit_n, f) for f in (fit_1j1b, fit_1j1b2j1b, fit_1j1b2j2b)]
     vals = np.array(
-        deltas,
-        dtype=[
-            ("c", np.float64),
-            ("u", np.float64),
-            ("d", np.float64)
-        ]
+        deltas, dtype=[("c", np.float64), ("u", np.float64), ("d", np.float64)]
     )
 
     return fit_n, labels, labels, vals
@@ -135,7 +139,9 @@ def indiv_camp_delta_mu_summary(umbrella: Path, fit_name: str = "tW"):
 
     labels = ["2015/2016", "2017", "2018"]
     deltas = [tr.delta_param(fit_n, f) for f in (fit_a, fit_d, fit_e)]
-    vals = np.array(deltas, dtype=[("c", np.float64), ("u", np.float64), ("d", np.float64)])
+    vals = np.array(
+        deltas, dtype=[("c", np.float64), ("u", np.float64), ("d", np.float64)]
+    )
 
     return fit_n, labels, labels, vals
 
@@ -156,7 +162,7 @@ def b0_by_year_fig_and_ax(umbrella: Path, fit_name: str = "tW"):
             ("c", np.float64),
             ("u", np.float64),
             ("d", np.float64),
-        ]
+        ],
     )
     ylabs = ["2015/2016", "2017", "2018", "Complete"]
     yvals = np.arange(1, len(ylabs) + 1)
@@ -169,7 +175,15 @@ def b0_by_year_fig_and_ax(umbrella: Path, fit_name: str = "tW"):
     ax.set_yticks(yvals)
     ax.set_yticklabels(ylabs)
     ax.set_ylim([0.0, len(yvals) + 1])
-    ax.errorbar(vals["c"], yvals, xerr=[abs(vals["d"]), vals["u"]], fmt="ko", lw=2, elinewidth=2.25, capsize=3.5)
+    ax.errorbar(
+        vals["c"],
+        yvals,
+        xerr=[abs(vals["d"]), vals["u"]],
+        fmt="ko",
+        lw=2,
+        elinewidth=2.25,
+        capsize=3.5,
+    )
     for xv, yv in zip(vals["c"], yvals):
         t = f"{xv:1.3f}"
         ax.text(xv, yv + 0.075, t, ha="center", va="bottom", size=10)
@@ -247,27 +261,33 @@ def ps_impact_r1j1b(h7v_dir: Path, poi: str):
         h7v = "704"
     else:
         h7v = "713"
-    configs = reversed([
-        ("main.d", "Complete"),
-        ("main_1j1b.d", "1j1b Only"),
-        ("main_1j1b2j1b.d", "1j1b + 2j1b"),
-        ("main_1j1b2j2b.d", "1j1b + 2j2b"),
-        ("main_only1516.d", "201(5,6)/MC16a only"),
-        ("main_only17.d", "2017/MC16d only"),
-        ("main_only18.d", "2018/MC16e only"),
-    ])
+    configs = reversed(
+        [
+            ("main.d", "Complete"),
+            ("main_1j1b.d", "1j1b Only"),
+            ("main_1j1b2j1b.d", "1j1b + 2j1b"),
+            ("main_1j1b2j2b.d", "1j1b + 2j2b"),
+            ("main_only1516.d", "201(5,6)/MC16a only"),
+            ("main_only17.d", "2017/MC16d only"),
+            ("main_only18.d", "2018/MC16e only"),
+        ]
+    )
     nps = [tr.nuispar_impact(f"{sd}/tW", poi, sl) for sd, sl in configs]
     df = tr.nuispar_impact_plot_df(nps)
     fig, ax = plt.subplots(figsize=SUBSET_FIGSIZE)
     ax, ax2 = ta.draw_impact_barh(ax, df, height_fill=0.4, height_line=0.6)
     ys = np.array(df.ys)
-    ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(-0.85, 1.11), fontsize="x-small")
+    ax.legend(
+        ncol=1, loc="upper left", bbox_to_anchor=(-0.85, 1.11), fontsize="x-small"
+    )
     ax.set_xticks([-0.2, -0.1, 0.0, 0.1, 0.2])
     ax.set_ylim([-1, ys[-1] + 2.4])
     ax.set_yticklabels([p.label for p in nps], size="x-small")
     ax2.legend(loc="lower left", bbox_to_anchor=(-0.85, -0.1), fontsize="x-small")
     ax2.set_xlabel(r"$\Delta\mu$", labelpad=20, size="x-small")
-    ax.set_xlabel(r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=18, size="x-small")
+    ax.set_xlabel(
+        r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=18, size="x-small"
+    )
     ax.text(
         0.05,
         0.95,
@@ -292,26 +312,32 @@ def ps_impact_r2j1b(h7v_dir: Path, poi: str):
         h7v = "704"
     else:
         h7v = "713"
-    configs = reversed([
-        ("main.d", "Complete"),
-        ("main_2j1b.d", "2j1b Only"),
-        ("main_1j1b2j1b.d", "1j1b + 2j1b"),
-        ("main_only1516.d", "201(5,6)/MC16a only"),
-        ("main_only17.d", "2017/MC16d only"),
-        ("main_only18.d", "2018/MC16e only"),
-    ])
+    configs = reversed(
+        [
+            ("main.d", "Complete"),
+            ("main_2j1b.d", "2j1b Only"),
+            ("main_1j1b2j1b.d", "1j1b + 2j1b"),
+            ("main_only1516.d", "201(5,6)/MC16a only"),
+            ("main_only17.d", "2017/MC16d only"),
+            ("main_only18.d", "2018/MC16e only"),
+        ]
+    )
     nps = [tr.nuispar_impact(f"{sd}/tW", poi, sl) for sd, sl in configs]
     df = tr.nuispar_impact_plot_df(nps)
     fig, ax = plt.subplots(figsize=SUBSET_FIGSIZE)
     ax, ax2 = ta.draw_impact_barh(ax, df, height_fill=0.4, height_line=0.6)
     ys = np.array(df.ys)
-    ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(-0.85, 1.11), fontsize="x-small")
+    ax.legend(
+        ncol=1, loc="upper left", bbox_to_anchor=(-0.85, 1.11), fontsize="x-small"
+    )
     ax.set_xticks([-0.2, -0.1, 0.0, 0.1, 0.2])
     ax.set_ylim([-1, ys[-1] + 2.4])
     ax.set_yticklabels([p.label for p in nps], size="x-small")
     ax2.legend(loc="lower left", bbox_to_anchor=(-0.85, -0.1), fontsize="x-small")
     ax2.set_xlabel(r"$\Delta\mu$", labelpad=20, size="x-small")
-    ax.set_xlabel(r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=18, size="x-small")
+    ax.set_xlabel(
+        r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=18, size="x-small"
+    )
     ax.text(
         0.05,
         0.95,
@@ -336,26 +362,32 @@ def ps_impact_r2j2b(h7v_dir: Path, poi: str):
         h7v = "704"
     else:
         h7v = "713"
-    configs = reversed([
-        ("main.d", "Complete"),
-        ("main_2j2b.d", "2j2b Only"),
-        ("main_1j1b2j2b.d", "1j1b + 2j2b"),
-        ("main_only1516.d", "201(5,6)/MC16a only"),
-        ("main_only17.d", "2017/MC16d only"),
-        ("main_only18.d", "2018/MC16e only"),
-    ])
+    configs = reversed(
+        [
+            ("main.d", "Complete"),
+            ("main_2j2b.d", "2j2b Only"),
+            ("main_1j1b2j2b.d", "1j1b + 2j2b"),
+            ("main_only1516.d", "201(5,6)/MC16a only"),
+            ("main_only17.d", "2017/MC16d only"),
+            ("main_only18.d", "2018/MC16e only"),
+        ]
+    )
     nps = [tr.nuispar_impact(f"{sd}/tW", poi, sl) for sd, sl in configs]
     df = tr.nuispar_impact_plot_df(nps)
     fig, ax = plt.subplots(figsize=SUBSET_FIGSIZE)
     ax, ax2 = ta.draw_impact_barh(ax, df, height_fill=0.4, height_line=0.6)
     ys = np.array(df.ys)
-    ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(-0.85, 1.11), fontsize="x-small")
+    ax.legend(
+        ncol=1, loc="upper left", bbox_to_anchor=(-0.85, 1.11), fontsize="x-small"
+    )
     ax.set_xticks([-0.2, -0.1, 0.0, 0.1, 0.2])
     ax.set_ylim([-1, ys[-1] + 2.4])
     ax.set_yticklabels([p.label for p in nps], size="x-small")
     ax2.legend(loc="lower left", bbox_to_anchor=(-0.85, -0.1), fontsize="x-small")
     ax2.set_xlabel(r"$\Delta\mu$", labelpad=20, size="x-small")
-    ax.set_xlabel(r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=18, size="x-small")
+    ax.set_xlabel(
+        r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=18, size="x-small"
+    )
     ax.text(
         0.05,
         0.95,
@@ -380,29 +412,35 @@ def ps_impact_norm_mig(h7v_dir: Path, poi: str):
         h7v = "704"
     else:
         h7v = "713"
-    configs = reversed([
-        ("main.d", "Complete"),
-        ("main_1j1b.d", "1j1b Only"),
-        ("main_2j1b.d", "2j1b Only"),
-        ("main_2j2b.d", "2j2b Only"),
-        ("main_1j1b2j1b.d", "1j1b + 2j1b"),
-        ("main_1j1b2j2b.d", "1j1b + 2j2b"),
-        ("main_only1516.d", "201(5,6)/MC16a only"),
-        ("main_only17.d", "2017/MC16d only"),
-        ("main_only18.d", "2018/MC16e only"),
-    ])
+    configs = reversed(
+        [
+            ("main.d", "Complete"),
+            ("main_1j1b.d", "1j1b Only"),
+            ("main_2j1b.d", "2j1b Only"),
+            ("main_2j2b.d", "2j2b Only"),
+            ("main_1j1b2j1b.d", "1j1b + 2j1b"),
+            ("main_1j1b2j2b.d", "1j1b + 2j2b"),
+            ("main_only1516.d", "201(5,6)/MC16a only"),
+            ("main_only17.d", "2017/MC16d only"),
+            ("main_only18.d", "2018/MC16e only"),
+        ]
+    )
     nps = [tr.nuispar_impact(f"{sd}/tW", poi, sl) for sd, sl in configs]
     df = tr.nuispar_impact_plot_df(nps)
     fig, ax = plt.subplots(figsize=SUBSET_FIGSIZE)
     ax, ax2 = ta.draw_impact_barh(ax, df, height_fill=0.4, height_line=0.6)
     ys = np.array(df.ys)
-    ax.legend(ncol=1, loc="upper left", bbox_to_anchor=(-0.85, 1.11), fontsize="x-small")
+    ax.legend(
+        ncol=1, loc="upper left", bbox_to_anchor=(-0.85, 1.11), fontsize="x-small"
+    )
     ax.set_xticks([-0.2, -0.1, 0.0, 0.1, 0.2])
     ax.set_ylim([-1, ys[-1] + 2.4])
     ax.set_yticklabels([p.label for p in nps], size="x-small")
     ax2.legend(loc="lower left", bbox_to_anchor=(-0.85, -0.1), fontsize="x-small")
     ax2.set_xlabel(r"$\Delta\mu$", labelpad=20, size="x-small")
-    ax.set_xlabel(r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=18, size="x-small")
+    ax.set_xlabel(
+        r"$(\hat{\theta}-\theta_0)/\Delta\theta$", labelpad=18, size="x-small"
+    )
     ax.text(
         0.05,
         0.95,

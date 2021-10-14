@@ -102,7 +102,9 @@ class FeatureSelector:
         name: Optional[str] = None,
     ) -> None:
         assert np.unique(labels).shape[0] == 2, "labels should have 2 unique values"
-        assert labels.shape == weights.shape, "labels and weights must have identical shape"
+        assert (
+            labels.shape == weights.shape
+        ), "labels and weights must have identical shape"
         assert corr_threshold < 1.0, "corr_threshold must be less than 1.0"
         assert (
             df.shape[0] == weights.shape[0]
@@ -211,7 +213,9 @@ class FeatureSelector:
             log.info("we didn't find any features with single unique values")
         if to_drop and and_drop:
             for d in to_drop:
-                log.info(f"dropping {d} because it's a feature with a single unique value")
+                log.info(
+                    f"dropping {d} because it's a feature with a single unique value"
+                )
             self._df.drop(columns=to_drop, inplace=True)
 
     def check_collinearity(self, threshold: Optional[float] = None) -> None:
@@ -254,7 +258,9 @@ class FeatureSelector:
         uptri = np.triu(np.ones(self.corr_matrix.shape), k=1).astype(np.bool)
         uptri = self.corr_matrix.where(uptri)
         log.info(f"testing correlations above threshold: {self.corr_threshold}")
-        dropcols = [c for c in uptri.columns if any(uptri[c].abs() > self.corr_threshold)]
+        dropcols = [
+            c for c in uptri.columns if any(uptri[c].abs() > self.corr_threshold)
+        ]
         log.info(f"found {len(dropcols)} features with correlations above threshold")
 
         self._correlated = pd.DataFrame(columns=["drop_this", "because", "coeff"])
@@ -264,7 +270,9 @@ class FeatureSelector:
             coeffs = list(uptri[col][above_threshold])
             this_col = [col for _ in range(len(other_features))]
             self._correlated.append(
-                pd.DataFrame(dict(drop_this=this_col, because=other_features, coeff=coeffs))
+                pd.DataFrame(
+                    dict(drop_this=this_col, because=other_features, coeff=coeffs)
+                )
             )
 
         log.info("correlations now calculated")
@@ -387,7 +395,9 @@ class FeatureSelector:
             log.error("correlations are not calculated; call check_collinearity()")
             return None
         if self._importances is None:
-            log.error("feature importances are not calculated; call check_importances()")
+            log.error(
+                "feature importances are not calculated; call check_importances()"
+            )
             return None
 
         log.info(f"checking for top {n} candidates")
@@ -399,7 +409,9 @@ class FeatureSelector:
             if f not in drop_because_corr:
                 n_top.append(f)
                 continue
-            log.info(f"{f} is in the top {n}; but correlations say drop it; closer look:")
+            log.info(
+                f"{f} is in the top {n}; but correlations say drop it; closer look:"
+            )
             dropped_df = self.correlations.query("drop == '{f}'")
             for corr_feat in dropped_df.because.to_list():
                 if corr_feat not in drop_because_corr:

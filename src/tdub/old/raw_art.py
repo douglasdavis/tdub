@@ -215,7 +215,9 @@ def draw_stack(
     ax.legend(handles, labels, loc="upper right", ncol=legend_ncol)
 
     axr.errorbar(centers, ratio, yerr=ratio_err, fmt="ko", zorder=999)
-    axr.plot([edges[0], edges[-1]], [1, 1], color="gray", linestyle="solid", marker=None)
+    axr.plot(
+        [edges[0], edges[-1]], [1, 1], color="gray", linestyle="solid", marker=None
+    )
     axr.set_ylim([0.8, 1.2])
     axr.set_yticks([0.9, 1.0, 1.1])
     axr.autoscale(enable=True, axis="x", tight=True)

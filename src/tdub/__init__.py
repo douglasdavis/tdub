@@ -12,14 +12,14 @@ def setup_logging():
     )
     logging.addLevelName(
         logging.WARNING,
-        "\033[1;31m{}\033[1;0m".format(logging.getLevelName(logging.WARNING)),
+        f"\033[1;31m{logging.getLevelName(logging.WARNING)}\033[1;0m",
     )
     logging.addLevelName(
-        logging.ERROR, "\033[1;35m{}\033[1;0m".format(logging.getLevelName(logging.ERROR))
+        logging.ERROR, f"\033[1;35m{logging.getLevelName(logging.ERROR)}\033[1;0m"
     )
     logging.addLevelName(
-        logging.INFO, "\033[1;32m{}\033[1;0m".format(logging.getLevelName(logging.INFO))
+        logging.INFO, f"\033[1;32m{logging.getLevelName(logging.INFO)}\033[1;0m"
     )
     logging.addLevelName(
-        logging.DEBUG, "\033[1;34m{}\033[1;0m".format(logging.getLevelName(logging.DEBUG))
+        logging.DEBUG, f"\033[1;34m{logging.getLevelName(logging.DEBUG)}\033[1;0m"
     )

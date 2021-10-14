@@ -81,7 +81,9 @@ def get_blank_systematics(config_file: str) -> Tuple[List[NuisPar], Set[str]]:
                     continue
                 block = block.replace("\n  ", "\n")
                 s = yaml.load(block, Loader=yaml.FullLoader)
-                np = NuisPar(name=s["Systematic"], category=s["Category"], title=s["Title"])
+                np = NuisPar(
+                    name=s["Systematic"], category=s["Category"], title=s["Title"]
+                )
                 nps.append(np)
     categories = set()
     nps = {np.name: np for np in nps}
@@ -116,7 +118,9 @@ def draw_pulls(args: Any, nps: List[NuisPar]) -> Tuple[plt.Figure, plt.Axes]:
     yval = np.array([(i + 1) for i in range(len(xval))])
     xerr_lo = np.array([np.minus for np in nps])
     xerr_hi = np.array([np.plus for np in nps])
-    ylabels = [np.title.replace("ttbar", "$t\\bar{t}$").replace("tW", "$tW$") for np in nps]
+    ylabels = [
+        np.title.replace("ttbar", "$t\\bar{t}$").replace("tW", "$tW$") for np in nps
+    ]
 
     fig, ax = plt.subplots(figsize=(7, 1.0 + len(yval) * 0.38))
     fig.subplots_adjust(left=0.5, right=0.95)
@@ -175,7 +179,9 @@ def run_pulls(args: Any) -> None:
             systematics[elements[0]].mean = float(elements[1])
             systematics[elements[0]].plus = float(elements[2])
             systematics[elements[0]].minus = float(elements[3])
-            np_by_cat[systematics[elements[0]].category].append(systematics[elements[0]])
+            np_by_cat[systematics[elements[0]].category].append(
+                systematics[elements[0]]
+            )
 
     if args.out_dir is None:
         outd = f"{args.workspace}/MPL"

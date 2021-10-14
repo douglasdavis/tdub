@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import  Tuple
+from typing import Tuple
 
 import tdub.art
 import tdub.data
@@ -27,7 +27,7 @@ def dist_comparison_plot(
     meta_table,
     outdir: Path,
 ) -> None:
-    """Compare shapes of BDT variable. """
+    """Compare shapes of BDT variable."""
     is_tW = y == 1
     is_tt = y == 0
     w_tW = w[is_tW]

@@ -207,7 +207,9 @@ def test_selection_as_root():
     newsel = selection_as_root(sel)
     assert "(reg1j1b == true) && (OS == true) && (mass_lep1jet1 < 155)"
     sel = "(reg1j1b == true) && (OS == true) && (mass_lep1jet1 < 155)"
-    newsel = selection_as_root("(reg1j1b == true) && (OS == true) && (mass_lep1jet1 < 155)")
+    newsel = selection_as_root(
+        "(reg1j1b == true) && (OS == true) && (mass_lep1jet1 < 155)"
+    )
     assert newsel == "(reg1j1b == true) && (OS == true) && (mass_lep1jet1 < 155)"
 
 

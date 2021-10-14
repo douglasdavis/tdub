@@ -138,8 +138,8 @@ def to_uniform_bins(bin_edges: np.ndarray):
 
 
 def edges_and_centers(
-    bins: Union[int, Iterable], range: Optional[Tuple[float, float]] = None
-) -> Tuple[np.ndarray, np.ndarray]:
+    bins: int | Iterable, range: tuple[float, float] | None = None
+) -> tuple[np.ndarray, np.ndarray]:
     """Create arrays for edges and bin centers.
 
     Parameters

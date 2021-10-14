@@ -47,7 +47,10 @@ def test_drop_avoid():
 
 
 def test_drop_jet2():
-    files = [str(test_file_root / "testfile1.root"), str(test_file_root / "testfile3.root")]
+    files = [
+        str(test_file_root / "testfile1.root"),
+        str(test_file_root / "testfile3.root"),
+    ]
     df = iterative_selection(files, "(OS == True)")
     j2s = [col for col in df.columns if "jet2" in col]
     df.drop_jet2()
@@ -56,18 +59,26 @@ def test_drop_jet2():
 
 
 def test_selection_augmented():
-    files = [str(test_file_root / "testfile1.root"), str(test_file_root / "testfile3.root")]
+    files = [
+        str(test_file_root / "testfile1.root"),
+        str(test_file_root / "testfile3.root"),
+    ]
     df = iterative_selection(
         files, "(OS == True) & (reg1j1b == True) & (mass_lep1jet1 < 155)"
     )
     sel_vars = set(selection_branches(df.selection_used))
     manual = {"OS", "reg1j1b", "mass_lep1jet1"}
     assert sel_vars == manual
-    assert df.selection_used == "(OS == True) & (reg1j1b == True) & (mass_lep1jet1 < 155)"
+    assert (
+        df.selection_used == "(OS == True) & (reg1j1b == True) & (mass_lep1jet1 < 155)"
+    )
 
 
 def test_selection_strings():
-    files = [str(test_file_root / "testfile1.root"), str(test_file_root / "testfile3.root")]
+    files = [
+        str(test_file_root / "testfile1.root"),
+        str(test_file_root / "testfile3.root"),
+    ]
     root_sel1 = "OS == 1 && reg2j2b == 1 && mass_lep1jet1 < 155"
     nume_sel1 = "(OS == 1) & (reg2j2b == 1) & (mass_lep1jet1 < 155)"
     root_sel2 = "OS == true && reg2j2b == true && mass_lep1jet1 < 155"

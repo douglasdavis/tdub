@@ -64,7 +64,9 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
         subprocess.Popen(
             f"tdub rex stacks --no-chisq --no-internal --png {rex_dir}", shell=True
         ).wait()
-        subprocess.Popen(f"python3 -m tdub.internal.cramped {rex_dir}", shell=True).wait()
+        subprocess.Popen(
+            f"python3 -m tdub.internal.cramped {rex_dir}", shell=True
+        ).wait()
 
     img_pairs = []
     for entry in mpl_dir.glob("*.png"):
@@ -99,7 +101,7 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
         p("Prefit combined")
         with div(cls="row"):
             with a(href=str(allrs_pdf_pair[0])):
-                   img(src=str(allrs_png_pair[0]), cls="marginauto")
+                img(src=str(allrs_png_pair[0]), cls="marginauto")
         p("Postfit individuals")
         with div(cls="row"):
             with a(href=str(r1j1b_pdf_pair[1])):
@@ -111,8 +113,7 @@ def index_dot_html(rex_dir: Union[str, Path]) -> None:
         p("Postfit combined")
         with div(cls="row"):
             with a(href=str(allrs_pdf_pair[1])):
-                   img(src=str(allrs_png_pair[1]), cls="marginauto")
-
+                img(src=str(allrs_png_pair[1]), cls="marginauto")
 
         h2("Grouped Uncertainty Impacts (alphabetical then descending)")
         with div():

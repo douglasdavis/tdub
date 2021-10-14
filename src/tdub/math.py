@@ -44,7 +44,9 @@ def kolmogorov_prob(z: float) -> float:
         return 1.0
     elif u < 0.755:
         v = 1.0 / (u * u)
-        return float(1 - w * (math.exp(c1 * v) + math.exp(c2 * v) + math.exp(c3 * v)) / u)
+        return float(
+            1 - w * (math.exp(c1 * v) + math.exp(c2 * v) + math.exp(c3 * v)) / u
+        )
     elif u < 6.8116:
         fj = np.array([-2, -8, -18, -32], dtype=np.float64)
         r = np.zeros((4,), dtype=np.float64)

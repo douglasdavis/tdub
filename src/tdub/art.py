@@ -487,7 +487,9 @@ def one_sided_comparison_plot(
     ax.set_ylabel("Number of Events", horizontalalignment="right", y=1.0)
     ax.legend()
 
-    axr.hist(centers, bins=edges, weights=c.percent_diff_up, color="red", histtype="step")
+    axr.hist(
+        centers, bins=edges, weights=c.percent_diff_up, color="red", histtype="step"
+    )
     axr.hist(
         centers, bins=edges, weights=c.percent_diff_down, color="blue", histtype="step"
     )

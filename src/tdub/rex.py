@@ -671,7 +671,11 @@ def stack_canvas(
         ax1.set_yticks([0.9, 0.95, 1.0, 1.05])
     if show_chisq:
         ax1.text(
-            0.02, 0.8, chisq_text(rex_dir, region, stage), transform=ax1.transAxes, size=11
+            0.02,
+            0.8,
+            chisq_text(rex_dir, region, stage),
+            transform=ax1.transAxes,
+            size=11,
         )
     ax1.legend(loc="lower left", fontsize=11)
 
@@ -766,7 +770,7 @@ def plot_all_regions(
     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
     pool.map(plot_region_stage_ff, args)
     plt.close("all")
-    log.info("Done creating %s-fit plots in %s." % (stage, outdir))
+    log.info(f"Done creating {stage}-fit plots in {outdir}.")
 
 
 def nuispar_impact(
@@ -1020,7 +1024,7 @@ def fit_parameter(fit_file: Path, name: str, prettify: bool = False) -> FitParam
                 )
 
     # if we don't find the name, raise ValueError
-    raise ValueError("{} parameter not found in {}".format(name, str(fit_file)))
+    raise ValueError(f"{name} parameter not found in {str(fit_file)}")
 
 
 def delta_poi(
@@ -1244,10 +1248,14 @@ def compare_nuispar(
     print(f"{'-' * 60}", file=print_to)
 
     if abs(np1.pre_down) > abs(np2.pre_down):
-        print(f"{p1} has larger prefit down variation impact from {name}", file=print_to)
+        print(
+            f"{p1} has larger prefit down variation impact from {name}", file=print_to
+        )
         plarger = (abs(np1.pre_down) - abs(np2.pre_down)) / abs(np2.pre_down) * 100.0
     else:
-        print(f"{p2} has larger prefit down variation impact from {name}", file=print_to)
+        print(
+            f"{p2} has larger prefit down variation impact from {name}", file=print_to
+        )
         plarger = (abs(np2.pre_down) - abs(np1.pre_down)) / abs(np1.pre_down) * 100.0
     print(f"{p1:<24}: {np1.pre_down}", file=print_to)
     print(f"{p2:<24}: {np2.pre_down}", file=print_to)
@@ -1268,10 +1276,14 @@ def compare_nuispar(
     print(f"{'-' * 60}", file=print_to)
 
     if abs(np1.post_down) > abs(np2.post_down):
-        print(f"{p1} has larger postfit down variation impact from {name}", file=print_to)
+        print(
+            f"{p1} has larger postfit down variation impact from {name}", file=print_to
+        )
         plarger = (abs(np1.post_down) - abs(np2.post_down)) / abs(np2.post_down) * 100.0
     else:
-        print(f"{p2} has larger postfit down variation impact from {name}", file=print_to)
+        print(
+            f"{p2} has larger postfit down variation impact from {name}", file=print_to
+        )
         plarger = (abs(np2.post_down) - abs(np1.post_down)) / abs(np1.post_down) * 100.0
     print(f"{p1:<24}: {np1.post_down}", file=print_to)
     print(f"{p2:<24}: {np2.post_down}", file=print_to)

@@ -69,14 +69,14 @@ html_theme_options = {
 }
 
 
-#html_theme = "pydata_sphinx_theme"
-#html_css_files = [
+# html_theme = "pydata_sphinx_theme"
+# html_css_files = [
 #    'css/custom.css',
-#]
+# ]
 
-#html_theme_options = {
+# html_theme_options = {
 #    "github_url": "https://github.com/douglasdavis/tdub",
-#}
+# }
 
 # html_theme = "alabaster"
 # html_theme_options = {
