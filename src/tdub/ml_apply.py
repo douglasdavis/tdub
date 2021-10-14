@@ -1,5 +1,7 @@
 """Module for applying trained models."""
 
+from __future__ import annotations
+
 # stdlib
 import json
 import logging
@@ -25,7 +27,7 @@ class BaseTrainSummary:
     """Base class for describing a completed training to apply to other data."""
 
     @property
-    def features(self) -> List[str]:
+    def features(self) -> list[str]:
         """Features used by the model."""
         return self._features
 
@@ -40,7 +42,7 @@ class BaseTrainSummary:
         return self._selection_used
 
     @property
-    def summary(self) -> Dict[str, Any]:
+    def summary(self) -> dict[str, Any]:
         """Training summary dictionary from the training json."""
         return self._summary
 
@@ -280,7 +282,7 @@ class SingleTrainSummary(BaseTrainSummary):
             df[column_name] = yhat
 
 
-def build_array(summaries: List[BaseTrainSummary], df: pd.DataFrame) -> np.ndarray:
+def build_array(summaries: list[BaseTrainSummary], df: pd.DataFrame) -> np.ndarray:
     """Get a NumPy array which is the response for all events in `df`.
 
     This will use the :py:func:`~BaseTrainSummary.apply_to_dataframe`

@@ -34,6 +34,9 @@ requires importing a module or parsing some data from the web).
 
 """
 
+from __future__ import annotations
+
+
 RANDOM_STATE = 414
 """
 int: Seed for various random tasks requiring reproducibility.

@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Union
 
-from ..rex import grouped_impacts_table
-
 from dominate import document
 from dominate.tags import a, div, h1, h2, img, p
 from dominate.util import raw
+
+from ..rex import grouped_impacts_table
 
 CSS = r"""
 <style>
@@ -53,7 +55,7 @@ def add_images(d, vs, r, s, t=None):
         d.add(a(img(src=fig(v, r, s, "png"), width="250px"), href=fig(v, r, s, "pdf")))
 
 
-def index_dot_html(rex_dir: Union[str, Path]) -> None:
+def index_dot_html(rex_dir: str | Path) -> None:
     rex_dir = Path(rex_dir)
     doc = document(title="tW Fit")
     with doc.head:

@@ -1,26 +1,29 @@
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Tuple
 
 import tdub.art
-import tdub.data
 import tdub.config
-from tdub.hist import bin_centers
+import tdub.data
+
 from tdub.art import setup_tdub_style
-from tdub.rex import meta_axis_label
+from tdub.hist import bin_centers
 from tdub.ml_train import load_prepped, var_and_binning_for_region
+from tdub.rex import meta_axis_label
 
 setup_tdub_style()
 
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from pygram11 import histogram
 
 
 def dist_comparison_plot(
     var: str,
     region: str,
-    binning: Tuple[int, float, float],
+    binning: tuple[int, float, float],
     df: pd.DataFrame,
     y: np.ndarray,
     w: np.ndarray,

@@ -1,5 +1,7 @@
 """Utilities for parsing TRExFitter."""
 
+from __future__ import annotations
+
 # stdlib
 import io
 import logging
@@ -123,7 +125,7 @@ class GroupedImpact:
         return f"{self.name} | {100 * self.avg}"
 
 
-def available_regions(rex_dir: Union[str, Path]) -> List[str]:
+def available_regions(rex_dir: str | Path) -> list[str]:
     """Get a list of available regions from a TRExFitter result directory.
 
     Parameters
@@ -141,7 +143,7 @@ def available_regions(rex_dir: Union[str, Path]) -> List[str]:
     return [rf.name[:-12] for rf in root_files if "asimov" not in rf.name]
 
 
-def data_histogram(rex_dir: Union[str, Path], region: str, fit_name: str = "tW") -> TH1:
+def data_histogram(rex_dir: str | Path, region: str, fit_name: str = "tW") -> TH1:
     """Get the histogram for the Data in a region from a TRExFitter result.
 
     Parameters
@@ -164,8 +166,8 @@ def data_histogram(rex_dir: Union[str, Path], region: str, fit_name: str = "tW")
 
 
 def chisq(
-    rex_dir: Union[str, Path], region: str, stage: str = "pre"
-) -> Tuple[float, int, float]:
+    rex_dir: str | Path, region: str, stage: str = "pre"
+) -> tuple[float, int, float]:
     r"""Get prefit :math:`\chi^2` information from TRExFitter region.
 
     Parameters
@@ -194,7 +196,7 @@ def chisq(
     return table["chi2"], table["ndof"], table["probability"]
 
 
-def chisq_text(rex_dir: Union[str, Path], region: str, stage: str = "pre") -> str:
+def chisq_text(rex_dir: str | Path, region: str, stage: str = "pre") -> str:
     r"""Generate nicely formatted text for :math:`\chi^2` information.
 
     Deploys :py:func:`tdub.rex.chisq` for grab the info.
@@ -250,11 +252,11 @@ def prefit_histogram(root_file: ReadOnlyDirectory, sample: str, region: str) -> 
 
 
 def prefit_histograms(
-    rex_dir: Union[str, Path],
+    rex_dir: str | Path,
     samples: Iterable[str],
     region: str,
     fit_name: str = "tW",
-) -> Dict[str, TH1]:
+) -> dict[str, TH1]:
     """Retrieve sample prefit histograms for a region.
 
     Parameters
@@ -286,10 +288,10 @@ def prefit_histograms(
 
 
 def hepdata(
-    rex_dir: Union[str, Path],
+    rex_dir: str | Path,
     region: str,
     stage: str = "pre",
-) -> Dict[Any, Any]:
+) -> dict[Any, Any]:
     """Parse HEPData information.
 
     Parameters
@@ -307,8 +309,8 @@ def hepdata(
 
 
 def prefit_total_and_uncertainty(
-    rex_dir: Union[str, Path], region: str
-) -> Tuple[TH1, TGraphAsymmErrors]:
+    rex_dir: str | Path, region: str
+) -> tuple[TH1, TGraphAsymmErrors]:
     """Get the prefit total MC prediction and uncertainty band for a region.
 
     Parameters
@@ -333,7 +335,7 @@ def prefit_total_and_uncertainty(
     return tot, err
 
 
-def postfit_available(rex_dir: Union[str, Path]) -> bool:
+def postfit_available(rex_dir: str | Path) -> bool:
     """Check if TRExFitter result directory contains postFit information.
 
     Parameters
@@ -380,8 +382,8 @@ def postfit_histogram(root_file: ReadOnlyDirectory, sample: str) -> TH1:
 
 
 def postfit_histograms(
-    rex_dir: Union[str, Path], samples: Iterable[str], region: str
-) -> Dict[str, TH1]:
+    rex_dir: str | Path, samples: Iterable[str], region: str
+) -> dict[str, TH1]:
     """Retrieve sample postfit histograms for a region.
 
     Parameters
@@ -412,9 +414,7 @@ def postfit_histograms(
     return histograms
 
 
-def postfit_total_and_uncertainty(
-    rex_dir: Union[str, Path], region: str
-) -> Tuple[Any, Any]:
+def postfit_total_and_uncertainty(rex_dir: str | Path, region: str) -> tuple[Any, Any]:
     """Get the postfit total MC prediction and uncertainty band for a region.
 
     Parameters
@@ -473,8 +473,8 @@ def meta_text(region: str, stage: str) -> str:
 
 
 def meta_axis_label(
-    region: str, bin_width: float, meta_table: Optional[Dict[str, Any]] = None
-) -> Tuple[str, str]:
+    region: str, bin_width: float, meta_table: dict[str, Any] | None = None
+) -> tuple[str, str]:
     """Construct an axis label from metadata table.
 
     Parameters
@@ -524,11 +524,11 @@ def meta_axis_label(
 
 
 def region_plot_raw_material(
-    rex_dir: Union[str, Path],
+    rex_dir: str | Path,
     region: str,
     stage: str = "pre",
     fit_name: str = "tW",
-) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], TH1, TH1, TGraphAsymmErrors]:
+) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray], TH1, TH1, TGraphAsymmErrors]:
     """Raw materials for a plot in a region.
 
     Parameters
@@ -572,17 +572,17 @@ def region_plot_raw_material(
 
 
 def stack_canvas(
-    rex_dir: Union[str, Path],
+    rex_dir: str | Path,
     region: str,
     stage: str = "pre",
     fit_name: str = "tW",
     show_chisq: bool = True,
-    meta_table: Optional[Dict[str, Any]] = None,
-    log_patterns: Optional[List[Any]] = None,
+    meta_table: dict[str, Any] | None = None,
+    log_patterns: list[Any] | None = None,
     internal: bool = True,
     thesis: bool = False,
     combine_minor: bool = True,
-) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
+) -> tuple[plt.Figure, plt.Axes, plt.Axes]:
     r"""Create a pre- or post-fit plot canvas for a TRExFitter region.
 
     Parameters
@@ -712,8 +712,8 @@ def plot_region_stage_ff(args):
 
 
 def plot_all_regions(
-    rex_dir: Union[str, Path],
-    outdir: Union[str, Path],
+    rex_dir: str | Path,
+    outdir: str | Path,
     stage: str = "pre",
     fit_name: str = "tW",
     show_chisq: bool = True,
@@ -774,7 +774,7 @@ def plot_all_regions(
 
 
 def nuispar_impact(
-    rex_dir: Union[str, Path], name: str, label: Optional[str] = None
+    rex_dir: str | Path, name: str, label: str | None = None
 ) -> FitParam:
     """Extract a specific nuisance parameter from a fit.
 
@@ -812,7 +812,7 @@ def nuispar_impact(
     return npar
 
 
-def nuispar_impacts(rex_dir: Union[str, Path], sort: bool = True) -> List[FitParam]:
+def nuispar_impacts(rex_dir: str | Path, sort: bool = True) -> list[FitParam]:
     """Extract a list of nuisance parameter impacts from a fit.
 
     Parameters
@@ -847,7 +847,7 @@ def nuispar_impacts(rex_dir: Union[str, Path], sort: bool = True) -> List[FitPar
     return nuispars
 
 
-def nuispar_impact_plot_df(nuispars: List[FitParam]) -> pd.DataFrame:
+def nuispar_impact_plot_df(nuispars: list[FitParam]) -> pd.DataFrame:
     """Construct a DataFrame to organize impact plot ingredients.
 
     Parameters
@@ -929,7 +929,7 @@ def prettify_label(label: str) -> str:
     )
 
 
-def nuispar_impact_plot_top20(rex_dir: Union[str, Path], thesis: bool = False) -> None:
+def nuispar_impact_plot_top20(rex_dir: str | Path, thesis: bool = False) -> None:
     """Plot the top 20 nuisance parameters based on impact.
 
     Parameters
@@ -1028,12 +1028,12 @@ def fit_parameter(fit_file: Path, name: str, prettify: bool = False) -> FitParam
 
 
 def delta_poi(
-    rex_dir1: Union[str, Path],
-    rex_dir2: Union[str, Path],
+    rex_dir1: str | Path,
+    rex_dir2: str | Path,
     fit_name1: str = "tW",
     fit_name2: str = "tW",
     poi: str = "SigXsecOverSM",
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     r"""Calculate difference of a POI between two results directories.
 
     The default arguments will perform a calculation of
@@ -1074,7 +1074,7 @@ def delta_poi(
     return delta_param(mu1, mu2)
 
 
-def delta_param(param1: FitParam, param2: FitParam) -> Tuple[float, float, float]:
+def delta_param(param1: FitParam, param2: FitParam) -> tuple[float, float, float]:
     r"""Calculate difference between two fit parameters.
 
     Parameters
@@ -1101,14 +1101,14 @@ def delta_param(param1: FitParam, param2: FitParam) -> Tuple[float, float, float
 
 
 def compare_uncertainty(
-    rex_dir1: Union[str, Path],
-    rex_dir2: Union[str, Path],
+    rex_dir1: str | Path,
+    rex_dir2: str | Path,
     fit_name1: str = "tW",
     fit_name2: str = "tW",
-    label1: Optional[str] = None,
-    label2: Optional[str] = None,
+    label1: str | None = None,
+    label2: str | None = None,
     poi: str = "SigXsecOverSM",
-    print_to: Optional[io.TextIOBase] = None,
+    print_to: io.TextIOBase | None = None,
 ) -> None:
     """Compare uncertainty between two fits.
 
@@ -1172,12 +1172,12 @@ def compare_uncertainty(
 
 def compare_nuispar(
     name: str,
-    rex_dir1: Union[str, Path],
-    rex_dir2: Union[str, Path],
-    label1: Optional[str] = None,
-    label2: Optional[str] = None,
-    np_label: Optional[str] = None,
-    print_to: Optional[io.TextIOBase] = None,
+    rex_dir1: str | Path,
+    rex_dir2: str | Path,
+    label1: str | None = None,
+    label2: str | None = None,
+    np_label: str | None = None,
+    print_to: io.TextIOBase | None = None,
 ) -> None:
     """Compare nuisance parameter info between two fits.
 
@@ -1295,12 +1295,12 @@ def comparison_summary(
     rex_dir2,
     fit_name1: str = "tW",
     fit_name2: str = "tW",
-    label1: Optional[str] = None,
-    label2: Optional[str] = None,
+    label1: str | None = None,
+    label2: str | None = None,
     fit_poi: str = "SigXsecOverSM",
-    nuispars: Optional[Iterable[str]] = None,
-    nuispar_labels: Optional[Iterable[str]] = None,
-    print_to: Optional[io.TextIOBase] = None,
+    nuispars: Iterable[str] | None = None,
+    nuispar_labels: Iterable[str] | None = None,
+    print_to: io.TextIOBase | None = None,
 ) -> None:
     """Summarize a comparison of two fits.
 
@@ -1370,8 +1370,8 @@ def comparison_summary(
 
 def stability_test_standard(
     umbrella: Path,
-    outdir: Optional[Path] = None,
-    tests: Union[str, List[str]] = "all",
+    outdir: Path | None = None,
+    tests: str | list[str] = "all",
 ) -> None:
     """Perform a battery of standard stability tests.
 
@@ -1458,7 +1458,7 @@ def stability_test_standard(
 def stability_test_parton_shower_impacts(
     herwig704: Path,
     herwig713: Path,
-    outdir: Optional[Path] = None,
+    outdir: Path | None = None,
 ) -> None:
     """Perform a battery of parton shower impact stability tests.
 
@@ -1567,7 +1567,7 @@ def stability_test_parton_shower_impacts(
 
 
 def grouped_impacts(
-    rex_dir: Union[str, Path], include_total: bool = False
+    rex_dir: str | Path, include_total: bool = False
 ) -> Iterator[GroupedImpact]:
     """Grab grouped impacts from a fit workspace.
 
@@ -1600,7 +1600,7 @@ def grouped_impacts(
 
 
 def grouped_impacts_table(
-    rex_dir: Union[str, Path],
+    rex_dir: str | Path,
     tablefmt: str = "orgtbl",
     descending: bool = False,
     **kwargs,

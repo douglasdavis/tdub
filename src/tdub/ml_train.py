@@ -1,5 +1,7 @@
 """Module for training BDTs."""
 
+from __future__ import annotations
+
 # stdlib
 import json
 import logging
@@ -223,7 +225,7 @@ class ResponseHistograms:
         """float: Two sample binned KS p-value for background."""
         return round(float(self.ks_bkg[1]), 5)
 
-    def as_dict(self) -> Dict[str, np.ndarray]:
+    def as_dict(self) -> dict[str, np.ndarray]:
         """dict: The histogram information as a dictionary."""
         return {
             "train_sig": list(self.train_sig_h),
@@ -235,9 +237,9 @@ class ResponseHistograms:
 
     def draw(
         self,
-        ax: Optional[plt.Axes] = None,
-        xlabel: Optional[str] = None,
-    ) -> Tuple[plt.Figure, plt.Axes]:
+        ax: plt.Axes | None = None,
+        xlabel: str | None = None,
+    ) -> tuple[plt.Figure, plt.Axes]:
         """Draw the response histograms.
 
         Parameters
@@ -328,20 +330,20 @@ class ResponseHistograms:
 
 
 def prepare_from_root(
-    sig_files: List[str],
-    bkg_files: List[str],
-    region: Union[Region, str],
-    branches: Optional[List[str]] = None,
-    override_selection: Optional[str] = None,
-    weight_mean: Optional[float] = None,
-    weight_scale: Optional[float] = None,
+    sig_files: list[str],
+    bkg_files: list[str],
+    region: Region | str,
+    branches: list[str] | None = None,
+    override_selection: str | None = None,
+    weight_mean: float | None = None,
+    weight_scale: float | None = None,
     scale_sum_weights: bool = True,
     use_campaign_weight: bool = False,
     use_tptrw: bool = False,
     use_trrw: bool = False,
-    test_case_size: Optional[int] = None,
-    bkg_sample_frac: Optional[float] = None,
-) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
+    test_case_size: int | None = None,
+    bkg_sample_frac: float | None = None,
+) -> tuple[pd.DataFrame, np.ndarray, np.ndarray]:
     """Prepare the data to train in a region with signal and background ROOT files.
 
     Parameters
@@ -479,7 +481,7 @@ def prepare_from_root(
 
 
 def persist_prepared_data(
-    out_dir: Union[str, os.PathLike],
+    out_dir: str | os.PathLike,
     df: pd.DataFrame,
     labels: np.ndarray,
     weights: np.ndarray,
@@ -528,7 +530,7 @@ def tdub_train_axes(
     num_leaves: int = 31,
     reg_lambda: float = 0.0,
     **kwargs,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Construct a dictionary of default tdub training tune.
 
     Extra keyword arguments are swallowed but never used.
@@ -564,7 +566,7 @@ def tdub_train_axes(
 def sklearn_gen_classifier(
     early_stopping_rounds: int = 10,
     validation_fraction: float = 0.20,
-    train_axes: Optional[Dict[str, Any]] = None,
+    train_axes: dict[str, Any] | None = None,
     **clf_params,
 ) -> BaseEstimator:
     """Create a classifier using scikit-learn.
@@ -656,7 +658,7 @@ def sklearn_train_classifier(
 
 
 def lgbm_gen_classifier(
-    train_axes: Dict[str, Any] = None, **clf_params
+    train_axes: dict[str, Any] = None, **clf_params
 ) -> BaseEstimator:
     """Create a classifier using LightGBM.
 
@@ -748,7 +750,7 @@ def lgbm_train_classifier(
 
 
 def xgb_gen_classifier(
-    train_axes: Dict[str, Any] = None, **clf_params
+    train_axes: dict[str, Any] = None, **clf_params
 ) -> BaseEstimator:
     """Create a classifier using XGBoost.
 
@@ -837,11 +839,11 @@ def single_training(
     df: pd.DataFrame,
     labels: np.ndarray,
     weights: np.ndarray,
-    train_axes: Dict[str, Any],
-    output_dir: Union[str, os.PathLike],
+    train_axes: dict[str, Any],
+    output_dir: str | os.PathLike,
     test_size: float = 0.40,
-    early_stopping_rounds: Optional[int] = None,
-    extra_summary_entries: Optional[Dict[str, Any]] = None,
+    early_stopping_rounds: int | None = None,
+    extra_summary_entries: dict[str, Any] | None = None,
     use_sklearn: bool = False,
     use_xgboost: bool = False,
     save_lgbm_txt: bool = False,
@@ -1077,11 +1079,11 @@ def folded_training(
     df: pd.DataFrame,
     labels: np.ndarray,
     weights: np.ndarray,
-    params: Dict[str, Any],
-    fit_kw: Dict[str, Any],
-    output_dir: Union[str, os.PathLike],
+    params: dict[str, Any],
+    fit_kw: dict[str, Any],
+    output_dir: str | os.PathLike,
     region: str,
-    kfold_kw: Dict[str, Any] = None,
+    kfold_kw: dict[str, Any] = None,
 ) -> float:
     """Execute a folded training.
 
@@ -1343,7 +1345,7 @@ def folded_training(
     # fig_rocs.subplots_adjust(**_fig_adjustment_dict)
     fig_rocs.savefig("roc.pdf")
 
-    summary: Dict[str, Any] = {}
+    summary: dict[str, Any] = {}
     summary["selection_used"] = df.selection_used
     summary["region"] = region
     summary["features"] = [str(c) for c in df.columns]
@@ -1373,11 +1375,11 @@ _ifit = None
 
 def gp_minimize_auc(
     data_dir: str,
-    region: Union[Region, str],
+    region: Region | str,
     nlo_method: str,
-    output_dir: Union[str, os.PathLike] = "_unnamed_optimization",
+    output_dir: str | os.PathLike = "_unnamed_optimization",
     n_calls: int = 15,
-    esr: Optional[int] = 10,
+    esr: int | None = 10,
 ):
     """Minimize AUC using Gaussian processes.
 
@@ -1645,7 +1647,7 @@ def gp_minimize_auc(
     return 0
 
 
-def load_prepped(datadir: PosixPath) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
+def load_prepped(datadir: PosixPath) -> tuple[pd.DataFrame, np.ndarray, np.ndarray]:
     """Load prepped training data.
 
     Parameters
@@ -1670,7 +1672,7 @@ def load_prepped(datadir: PosixPath) -> Tuple[pd.DataFrame, np.ndarray, np.ndarr
 
 
 def var_and_binning_for_region(
-    df: pd.DataFrame, region: Union[str, Region], meta_table: Any
+    df: pd.DataFrame, region: str | Region, meta_table: Any
 ) -> Any:
     """Create list of training variables associated with a region.
 
@@ -1698,7 +1700,7 @@ def var_and_binning_for_region(
     return results
 
 
-def default_bdt_parameters(region: Union[str, Region]) -> Region:
+def default_bdt_parameters(region: str | Region) -> Region:
     r = as_region(region)
     if r == Region.r1j1b:
         return dict(

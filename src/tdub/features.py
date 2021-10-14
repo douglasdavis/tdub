@@ -1,5 +1,7 @@
 """Module for selecting features."""
 
+from __future__ import annotations
+
 # stdlib
 import copy
 import gc
@@ -99,7 +101,7 @@ class FeatureSelector:
         weights: np.ndarray,
         importance_type: str = "gain",
         corr_threshold: float = 0.85,
-        name: Optional[str] = None,
+        name: str | None = None,
     ) -> None:
         assert np.unique(labels).shape[0] == 2, "labels should have 2 unique values"
         assert (
@@ -161,7 +163,7 @@ class FeatureSelector:
         return self._labels
 
     @property
-    def raw_features(self) -> List[str]:
+    def raw_features(self) -> list[str]:
         return self._raw_features
 
     @property
@@ -177,15 +179,15 @@ class FeatureSelector:
         return self._importances
 
     @property
-    def candidates(self) -> List[str]:
+    def candidates(self) -> list[str]:
         return self._candidates
 
     @property
-    def iterative_add_aucs(self) -> List[str]:
+    def iterative_add_aucs(self) -> list[str]:
         return self._iterative_add_aucs
 
     @property
-    def model_params(self) -> Dict[str, Any]:
+    def model_params(self) -> dict[str, Any]:
         return self._model_params
 
     def check_for_uniques(self, and_drop: bool = True) -> None:
@@ -218,7 +220,7 @@ class FeatureSelector:
                 )
             self._df.drop(columns=to_drop, inplace=True)
 
-    def check_collinearity(self, threshold: Optional[float] = None) -> None:
+    def check_collinearity(self, threshold: float | None = None) -> None:
         """Calculate the correlations of the features.
 
         Given a correlation threshold this will construct a list of
@@ -279,8 +281,8 @@ class FeatureSelector:
 
     def check_importances(
         self,
-        extra_clf_opts: Optional[Dict[str, Any]] = None,
-        extra_fit_opts: Optional[Dict[str, Any]] = None,
+        extra_clf_opts: dict[str, Any] | None = None,
+        extra_fit_opts: dict[str, Any] | None = None,
         n_fits: int = 5,
         test_size: float = 0.5,
     ) -> None:
@@ -430,9 +432,9 @@ class FeatureSelector:
 
     def check_iterative_remove_aucs(
         self,
-        max_features: Optional[int] = None,
-        extra_clf_opts: Optional[Dict[str, Any]] = None,
-        extra_fit_opts: Optional[Dict[str, Any]] = None,
+        max_features: int | None = None,
+        extra_clf_opts: dict[str, Any] | None = None,
+        extra_fit_opts: dict[str, Any] | None = None,
     ) -> None:
         """Calculate the aucs iteratively removing one feature at a time.
 
@@ -534,9 +536,9 @@ class FeatureSelector:
 
     def check_iterative_add_aucs(
         self,
-        max_features: Optional[int] = None,
-        extra_clf_opts: Optional[Dict[str, Any]] = None,
-        extra_fit_opts: Optional[Dict[str, Any]] = None,
+        max_features: int | None = None,
+        extra_clf_opts: dict[str, Any] | None = None,
+        extra_fit_opts: dict[str, Any] | None = None,
     ) -> None:
         """Calculate aucs iteratively adding the next best feature.
 
@@ -665,9 +667,9 @@ class FeatureSelector:
 
 
 def create_parquet_files(
-    qf_dir: Union[str, os.PathLike],
-    out_dir: Optional[Union[str, os.PathLike]] = None,
-    entrysteps: Optional[Any] = None,
+    qf_dir: str | os.PathLike,
+    out_dir: str | os.PathLike | None = None,
+    entrysteps: Any | None = None,
     use_campaign_weight: bool = False,
 ) -> None:
     """Create slimmed and selected parquet files from ROOT files.
@@ -733,15 +735,15 @@ def create_parquet_files(
 
 
 def prepare_from_parquet(
-    data_dir: Union[str, os.PathLike],
-    region: Union[str, Region],
+    data_dir: str | os.PathLike,
+    region: str | Region,
     nlo_method: str = "DR",
-    ttbar_frac: Optional[Union[str, float]] = None,
-    weight_mean: Optional[float] = None,
-    weight_scale: Optional[float] = None,
+    ttbar_frac: str | float | None = None,
+    weight_mean: float | None = None,
+    weight_scale: float | None = None,
     scale_sum_weights: bool = True,
-    test_case_size: Optional[int] = None,
-) -> Tuple[pd.DataFrame, np.ndarray, np.ndarray]:
+    test_case_size: int | None = None,
+) -> tuple[pd.DataFrame, np.ndarray, np.ndarray]:
     """Prepare feature selection data from parquet files.
 
     this function requires pyarrow_.

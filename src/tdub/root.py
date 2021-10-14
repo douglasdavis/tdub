@@ -1,5 +1,7 @@
 """Module to work with ROOT-like objects."""
 
+from __future__ import annotations
+
 # external
 from uproot.model import Model as ROOTModel
 from uproot.behaviors.TH1 import Histogram as ROOTHistogram

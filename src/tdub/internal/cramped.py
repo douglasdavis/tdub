@@ -1,19 +1,17 @@
 """Cramped plot."""
 
+from __future__ import annotations
+
 import json
 import os
 import pathlib
-import sys
-
-from typing import Tuple
 
 import click
 import matplotlib.pyplot as plt
 import numpy as np
 
-from tdub.art import canvas_from_counts, legend_last_to_first, draw_atlas_label
-from tdub.rex import meta_text
-from tdub.rex import region_plot_raw_material
+from tdub.art import canvas_from_counts, draw_atlas_label, legend_last_to_first
+from tdub.rex import meta_text, region_plot_raw_material
 
 helps = ["-h", "--help"]
 
@@ -32,7 +30,7 @@ def cli():
 def bdt(td1j1b, td2j1b, td2j2b, style):
     """Generate cramped BDT distributions plot."""
     fig: plt.Figure
-    ax: Tuple[plt.Axes, ...]
+    ax: tuple[plt.Axes, ...]
     fig, ax = plt.subplots(1, 3, figsize=(11.5, 5.5))
 
     sf1j1b = pathlib.Path(td1j1b) / "summary.json"
@@ -60,19 +58,19 @@ def bdt(td1j1b, td2j1b, td2j2b, style):
     train_sig1j1b = d1j1b["train_sig"]
     train_bkg1j1b = d1j1b["train_bkg"]
     test_sig1j1b = d1j1b["test_sig"]
-    test_bkg1j1b = d1j1b["test_pkg"]
+    test_bkg1j1b = d1j1b["test_bkg"]
     bins1j1b = d1j1b["bins"]
 
     train_sig2j1b = d2j1b["train_sig"]
     train_bkg2j1b = d2j1b["train_bkg"]
     test_sig2j1b = d2j1b["test_sig"]
-    test_bkg2j1b = d2j1b["test_pkg"]
+    test_bkg2j1b = d2j1b["test_bkg"]
     bins2j1b = d2j1b["bins"]
 
     train_sig2j2b = d2j2b["train_sig"]
     train_bkg2j2b = d2j2b["train_bkg"]
     test_sig2j2b = d2j2b["test_sig"]
-    test_bkg2j2b = d2j2b["test_pkg"]
+    test_bkg2j2b = d2j2b["test_bkg"]
     bins2j2b = d2j2b["bins"]
 
 
@@ -88,7 +86,7 @@ def stack(rex_dir, stage="both"):
         return 0
 
     fig: plt.Figure
-    ax: Tuple[Tuple[plt.Axes, ...], ...]
+    ax: tuple[tuple[plt.Axes, ...], ...]
     heights = [3.25, 1]
     fig, ax = plt.subplots(
         2,

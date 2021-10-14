@@ -1,5 +1,7 @@
 """tdub command line interface."""
 
+from __future__ import annotations
+
 # stdlib
 import json
 import logging

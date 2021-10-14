@@ -1,5 +1,7 @@
 """Module with some mathematical utilities."""
 
+from __future__ import annotations
+
 # stdlib
 from typing import Tuple
 import math
@@ -61,7 +63,7 @@ def kolmogorov_prob(z: float) -> float:
 
 def ks_twosample_binned(
     hist1: np.ndarray, hist2: np.ndarray, err1: np.ndarray, err2: np.ndarray
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     """Calculate KS statistic and p-value for two binned distributions.
 
     See ROOT's implementation in TH1_ (TH1::KolmogorovTest).
@@ -149,7 +151,7 @@ def chisquared_test(
     err1: np.ndarray,
     h2: np.ndarray,
     err2: np.ndarray,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     r"""Perform :math:`\chi^2` test on two histograms.
 
     Parameters

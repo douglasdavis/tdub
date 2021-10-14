@@ -1,5 +1,7 @@
 """Module to help running batch jobs."""
 
+from __future__ import annotations
+
 # stdlib
 import logging
 import os
@@ -26,7 +28,7 @@ GetEnv          = {getenv}
 
 
 def create_condor_workspace(
-    name: Union[str, os.PathLike], overwrite: bool = False
+    name: str | os.PathLike, overwrite: bool = False
 ) -> PosixPath:
     """Create a condor workspace given a name.
 
@@ -75,8 +77,8 @@ def create_condor_workspace(
 
 
 def condor_preamble(
-    workspace: Union[str, os.PathLike],
-    exe: Union[str, os.PathLike],
+    workspace: str | os.PathLike,
+    exe: str | os.PathLike,
     universe: str = "vanilla",
     memory: str = "2GB",
     email: str = "ddavis@phy.duke.edu",
@@ -166,7 +168,7 @@ def add_condor_arguments(arguments: str, to_file: TextIO) -> None:
     to_file.write("Queue\n")
 
 
-def condor_submit(workspace: Union[str, os.PathLike]) -> None:
+def condor_submit(workspace: str | os.PathLike) -> None:
     """Execute condor_submit on the condor.sub file in a workspace.
 
     Parameters

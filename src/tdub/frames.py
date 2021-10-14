@@ -1,5 +1,7 @@
 """Module for handling dataframes."""
 
+from __future__ import annotations
+
 # stdlib
 import logging
 import re
@@ -26,10 +28,10 @@ log = logging.getLogger(__name__)
 
 
 def raw_dataframe(
-    files: Union[str, List[str]],
+    files: str | list[str],
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
-    branches: Optional[Iterable[str]] = None,
+    branches: Iterable[str] | None = None,
     drop_weight_sys: bool = False,
     **kwargs,
 ) -> pd.DataFrame:
@@ -94,17 +96,17 @@ def raw_dataframe(
 
 
 def iterative_selection(
-    files: Union[str, List[str]],
+    files: str | list[str],
     selection: str,
     tree: str = "WtLoop_nominal",
     weight_name: str = "weight_nominal",
-    branches: Optional[Iterable[str]] = None,
-    keep_category: Optional[str] = None,
+    branches: Iterable[str] | None = None,
+    keep_category: str | None = None,
     exclude_avoids: bool = False,
     use_campaign_weight: bool = False,
     use_tptrw: bool = False,
     use_trrw: bool = False,
-    sample_frac: Optional[float] = None,
+    sample_frac: float | None = None,
     **kwargs,
 ) -> pd.DataFrame:
     """Build a selected dataframe via uproot's iterate.
@@ -244,7 +246,7 @@ def iterative_selection(
     return result
 
 
-def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> List[pd.DataFrame]:
+def satisfying_selection(*dfs: pd.DataFrame, selection: str) -> list[pd.DataFrame]:
     """Get subsets of dataframes that satisfy a selection.
 
     The selection string can be in either ROOT or numexpr form (we
@@ -328,7 +330,7 @@ def drop_cols(df: pd.DataFrame, *cols: str) -> None:
     df.drop(columns=in_both, inplace=True)
 
 
-def drop_avoid(df: pd.DataFrame, region: Optional[Union[str, Region]] = None) -> None:
+def drop_avoid(df: pd.DataFrame, region: str | Region | None = None) -> None:
     """Drop columns that we avoid in classifiers.
 
     Uses :py:func:`tdub.frames.drop_cols` with a predefined set of
@@ -391,7 +393,7 @@ def drop_jet2(df: pd.DataFrame) -> None:
 
 
 def apply_weight(
-    df: pd.DataFrame, weight_name: str, exclude: Optional[List[str]] = None
+    df: pd.DataFrame, weight_name: str, exclude: list[str] | None = None
 ) -> None:
     """Apply (multiply) a weight to all other weights in the DataFrame.
 
@@ -431,7 +433,7 @@ def apply_weight(
 
 
 def apply_weight_inverse(
-    df: pd.DataFrame, weight_name: str, exclude: Optional[List[str]] = None
+    df: pd.DataFrame, weight_name: str, exclude: list[str] | None = None
 ) -> None:
     """Apply an inverse weight (via division) to all other weights in the DataFrame.
 
@@ -469,9 +471,7 @@ def apply_weight_inverse(
     df.loc[:, cols] = df.loc[:, cols].divide(df.loc[:, weight_name], axis="index")
 
 
-def apply_weight_campaign(
-    df: pd.DataFrame, exclude: Optional[List[str]] = None
-) -> None:
+def apply_weight_campaign(df: pd.DataFrame, exclude: list[str] | None = None) -> None:
     """Multiply nominal and systematic weights by the campaign weight.
 
     This is useful for samples that were produced without the campaign
@@ -502,7 +502,7 @@ def apply_weight_campaign(
     apply_weight(df, "weight_campaign", exclude=exclude)
 
 
-def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
+def apply_weight_tptrw(df: pd.DataFrame, exclude: list[str] | None = None) -> None:
     """Multiply nominal and systematic weights by the top pt reweight term.
 
     This is useful for samples that were produced without the top pt
@@ -536,7 +536,7 @@ def apply_weight_tptrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) ->
     apply_weight(df, "weight_tptrw_tool", exclude=excludes)
 
 
-def apply_weight_trrw(df: pd.DataFrame, exclude: Optional[List[str]] = None) -> None:
+def apply_weight_trrw(df: pd.DataFrame, exclude: list[str] | None = None) -> None:
     """Multiply nominal and systematic weights by the top recursive reweight term.
 
     This is useful for samples that were produced without the top

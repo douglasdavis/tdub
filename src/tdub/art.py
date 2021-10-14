@@ -1,5 +1,7 @@
 """Art creation utilities."""
 
+from __future__ import annotations
+
 # stdlib
 from typing import Any, Dict, Tuple, Optional, List, Union
 import logging
@@ -56,8 +58,8 @@ def draw_atlas_label(
     ax: plt.Axes,
     follow: str = "Internal",
     cme_and_lumi: bool = True,
-    extra_lines: Optional[List[str]] = None,
-    cme: Union[int, float] = 13,
+    extra_lines: list[str] | None = None,
+    cme: int | float = 13,
     lumi: float = 139,
     x: float = 0.040,
     y: float = 0.905,
@@ -132,7 +134,7 @@ def draw_uncertainty_bands(
     ax: plt.Axes,
     axr: plt.Axes,
     label: str = "Uncertainty",
-    edgecolor: Union[str, int] = "mediumblue",
+    edgecolor: str | int = "mediumblue",
     zero_threshold: float = 0.25,
 ) -> None:
     """Draw uncertainty bands on both axes in stack plot with a ratio.
@@ -189,16 +191,16 @@ def draw_uncertainty_bands(
 
 
 def canvas_from_counts(
-    counts: Dict[str, np.ndarray],
-    errors: Dict[str, np.ndarray],
+    counts: dict[str, np.ndarray],
+    errors: dict[str, np.ndarray],
     bin_edges: np.ndarray,
-    uncertainty: Optional[tdub.root.TGraphAsymmErrors] = None,
-    total_mc: Optional[tdub.root.TH1] = None,
+    uncertainty: tdub.root.TGraphAsymmErrors | None = None,
+    total_mc: tdub.root.TH1 | None = None,
     logy: bool = False,
-    mpl_triplet: Optional[Any] = None,
+    mpl_triplet: Any | None = None,
     combine_minor: bool = True,
     **subplots_kw,
-) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
+) -> tuple[plt.Figure, plt.Axes, plt.Axes]:
     """Create a plot canvas given a dictionary of counts and bin edges.
 
     The ``counts`` and ``errors`` dictionaries are expected to have
@@ -333,7 +335,7 @@ def draw_impact_barh(
     lo_color: str = "mediumturquoise",
     height_fill: float = 0.8,
     height_line: float = 0.8,
-) -> Tuple[plt.Axes, plt.Axes]:
+) -> tuple[plt.Axes, plt.Axes]:
     """Draw the impact plot.
 
     Parameters
@@ -428,7 +430,7 @@ def one_sided_comparison_plot(
     one_up: np.ndarray,
     edges: np.ndarray,
     thesis: bool = False,
-) -> Tuple[plt.Figure, plt.Axes, plt.Axes]:
+) -> tuple[plt.Figure, plt.Axes, plt.Axes]:
     r"""Create plot for one sided systematic comparison.
 
     Parameters

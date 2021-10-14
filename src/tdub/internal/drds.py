@@ -1,16 +1,17 @@
 """Internal module for DS vs DS stuff."""
 
-from typing import Tuple
+from __future__ import annotations
 
-from tdub.frames import raw_dataframe
-from tdub.data import quick_files
-from tdub.art import setup_tdub_style, one_sided_comparison_plot
-import tdub.config
-
-from pygram11 import fix1d
 from pathlib import PosixPath
+
 import matplotlib.pyplot as plt
 import numpy as np
+import tdub.config
+from pygram11 import fix1d
+
+from tdub.art import one_sided_comparison_plot, setup_tdub_style
+from tdub.data import quick_files
+from tdub.frames import raw_dataframe
 
 
 def bdt_cut_plots(
@@ -21,9 +22,9 @@ def bdt_cut_plots(
     hi_2j1b: float = 0.70,
     lo_2j2b: float = 0.45,
     hi_2j2b: float = 0.775,
-    bins_1j1b: Tuple[int, float, float] = (18, 0.2, 0.75),
-    bins_2j1b: Tuple[int, float, float] = (18, 0.2, 0.85),
-    bins_2j2b: Tuple[int, float, float] = (18, 0.2, 0.90),
+    bins_1j1b: tuple[int, float, float] = (18, 0.2, 0.75),
+    bins_2j1b: tuple[int, float, float] = (18, 0.2, 0.85),
+    bins_2j2b: tuple[int, float, float] = (18, 0.2, 0.90),
     thesis: bool = False,
 ) -> None:
     """Geneate plots showing BDT cuts."""
