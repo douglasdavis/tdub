@@ -22,8 +22,7 @@ from pygram11 import histogram
 from scipy import interp
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import KFold, train_test_split
-from sklearn.metrics import auc, roc_auc_score, roc_curve, plot_roc_curve
-from sklearn.experimental import enable_hist_gradient_boosting  # noqa
+from sklearn.metrics import auc, roc_auc_score, roc_curve, RocCurveDisplay
 from sklearn.ensemble import HistGradientBoostingClassifier
 
 # tdub
@@ -151,8 +150,10 @@ class ResponseHistograms:
     ):
         """Class constructor."""
         self.response_type = response_type
-        r_train, r_test = self._eval_model(model, X_train, X_test)
-        self._calculate(r_train, r_test, y_train, y_test, w_train, w_test, nbins)
+        self.r_train, self.r_test = self._eval_model(model, X_train, X_test)
+        self._calculate(
+            self.r_train, self.r_test, y_train, y_test, w_train, w_test, nbins
+        )
 
     def _eval_model(self, model, X_train, X_test):
         if self.response_type == "predict":
@@ -963,16 +964,6 @@ def single_training(
     if use_lgbm and save_lgbm_txt:
         model.booster_.save_model("model.txt")
 
-    # ROC curve
-    fig_roc, ax_roc = plt.subplots(figsize=(4.5, 4))
-    rcd = plot_roc_curve(model, X_test, y_test, sample_weight=w_test, ax=ax_roc, lw=2)
-    ax_roc.set_ylabel("True postive rate")
-    ax_roc.set_xlabel("False positive rate")
-    ax_roc.grid(color="black", alpha=0.125)
-    ax_roc.legend(loc="lower right")
-    fig_roc.subplots_adjust(bottom=0.125, left=0.15)
-    fig_roc.savefig("roc.pdf")
-
     importances_gain = {}
     importances_split = {}
     # Plot Importances
@@ -1025,6 +1016,26 @@ def single_training(
             "predict", model, X_train, X_test, y_train, y_test, w_train, w_test
         )
 
+    # ROC curve
+    fig_roc, ax_roc = plt.subplots(figsize=(4.5, 4))
+    # rcd = plot_roc_curve(model, X_test, y_test, sample_weight=w_test, ax=ax_roc, lw=2)
+    rcd = RocCurveDisplay.from_predictions(
+        y_test,
+        pred_histograms.r_test,
+        sample_weight=w_test,
+        ax=ax_roc,
+        lw=2,
+        label="Test",
+    )
+    rcd_train = RocCurveDisplay.from_predictions(
+        y_train,
+        pred_histograms.r_train,
+        sample_weight=w_train,
+        ax=ax_roc,
+        lw=2,
+        label="Train",
+    )
+
     fig_pred, ax_pred = pred_histograms.draw()
     fig_proba, ax_proba = proba_histograms.draw()
     fig_pred.subplots_adjust(bottom=0.125, left=0.15)
@@ -1038,6 +1049,13 @@ def single_training(
         ks_test_bkg=proba_histograms.ks_bkg_test,
         ks_pvalue_bkg=proba_histograms.ks_bkg_pval,
     )
+
+    ax_roc.set_ylabel("True postive rate")
+    ax_roc.set_xlabel("False positive rate")
+    ax_roc.grid(color="black", alpha=0.125)
+    ax_roc.legend(loc="lower right")
+    fig_roc.subplots_adjust(bottom=0.125, left=0.15)
+    fig_roc.savefig("roc.pdf")
 
     # JSON Summary
     summary = {"auc": round(rcd.roc_auc, 5)}
