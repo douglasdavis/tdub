@@ -8,7 +8,7 @@ import logging
 import os
 from pathlib import PosixPath
 from pprint import pformat
-from typing import Optional, Tuple, List, Union, Dict, Any
+from typing import Any
 
 # externals
 import matplotlib
@@ -1054,6 +1054,17 @@ def single_training(
     ax_roc.set_xlabel("False positive rate")
     ax_roc.grid(color="black", alpha=0.125)
     ax_roc.legend(loc="lower right")
+
+    if extra_summary_entries is not None:
+        r = extra_summary_entries["region"]
+        draw_atlas_label(
+            ax_roc,
+            cme_and_lumi=False,
+            follow="Simulation",
+            extra_lines=[f"{r} Region"],
+            follow_shift=0.25,
+        )
+
     fig_roc.subplots_adjust(bottom=0.125, left=0.15)
     fig_roc.savefig("roc.pdf")
 
