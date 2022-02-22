@@ -21,7 +21,6 @@ matplotlib.use("pdf")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tabulate
 import uproot
 from uproot.reading import ReadOnlyDirectory
 
@@ -1626,6 +1625,8 @@ def grouped_impacts_table(
         Table representation.
 
     """
+    import tabulate
+
     grimps = grouped_impacts(rex_dir, **kwargs)
     if descending:
         grimps = sorted(grimps, key=lambda g: -g.avg)
