@@ -21,6 +21,7 @@ jobs:
       run: |
         pip install pip wheel build -U
         pip install .
+        pip install pytest
         pip list
     - name: run pytest
       run: |
