@@ -9,18 +9,18 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest, macOS-latest]
-        python-version: [3.8]
+        python-version: "3.9"
     runs-on: ${{matrix.platform}}
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: setup Python ${{matrix.python-version}}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{matrix.python-version}}
     - name: install deps
       run: |
-        python -m pip install pip setuptools setuptools_scm[toml] pytest -U
-        pip install --ignore-installed -U -q --no-cache-dir -e .
+        pip install pip wheel build -U
+        pip install .
         pip list
     - name: run pytest
       run: |
